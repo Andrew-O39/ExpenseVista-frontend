@@ -7,11 +7,6 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, Legend,
 } from 'recharts';
 import { useNavigate } from 'react-router-dom';
-import {
-  startOfWeek, endOfWeek,
-  startOfMonth, endOfMonth,
-  startOfYear, endOfYear,
-} from 'date-fns';
 
 import { getSummary, getBudgets, getCurrentUser, getOverview } from '../services/api';
 import { isTokenValid } from '../utils/auth';
@@ -64,6 +59,13 @@ function prettyPeriod(p?: string) {
     case 'yearly':      return 'this year';
     default:            return p || '';
   }
+}
+
+function formatRange(start?: string | null, end?: string | null) {
+  if (!start || !end) return '';
+  const s = new Date(start).toLocaleDateString();
+  const e = new Date(end).toLocaleDateString();
+  return `${s} – ${e}`;
 }
 
 function rangeFor(period: CurrentPeriod) {
@@ -259,7 +261,7 @@ export default function Dashboard() {
         setUsername(user.username ?? 'User');
 
         // Spending summary
-        const rawSummary = await getSummary(token, appliedPeriod as any, appliedCategory || undefined);
+        const rawSummary = await getSummary(t, appliedPeriod as any, appliedCategory || undefined);
         if (!mounted) return;
 
         let normSummary: NormalizedSummary = { period: appliedPeriod, summary: {} };
@@ -288,7 +290,7 @@ export default function Dashboard() {
 
         // --- Budgets for the *current* appliedPeriod window ---
         const { start, end } = rangeFor(appliedPeriod);
-        const rawBudgets = await getBudgets(token, {
+        const rawBudgets = await getBudgets(t, {
            period: appliedPeriod as any,
            startDate: toIso(start),
            endDate: toIso(end),
@@ -305,7 +307,7 @@ export default function Dashboard() {
         setBudgets(mappedBudgets);
 
         // Overview (global income for period; expenses optionally filtered by category)
-        const ov = await getOverview(token, {
+        const ov = await getOverview(t, {
           period: appliedPeriod as any,
           ...(appliedCategory ? { category: appliedCategory } : {}),
         });
@@ -322,7 +324,7 @@ export default function Dashboard() {
 
         // If a category is selected, fetch category-specific expenses + compute net (income always global)
         if (appliedCategory) {
-          const ovCat = await getOverview(token, {
+          const ovCat = await getOverview(t, {
             period: appliedPeriod as any,
             category: appliedCategory,
         });
