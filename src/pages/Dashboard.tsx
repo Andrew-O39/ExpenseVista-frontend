@@ -390,12 +390,6 @@ export default function Dashboard() {
     ...budgets.map(b => b.category),
   ]);
 
-  const combinedData = Array.from(allCategoriesSet).map(cat => {
-    const spent = summary.summary[cat] ?? 0;
-    const budget = budgetMap[cat] ?? 0;
-    return { category: cat, spent, budget };
-  });
-
 
   /* =========================
      Handlers
