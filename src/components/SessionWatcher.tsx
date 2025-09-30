@@ -1,76 +1,125 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { isTokenValid } from "../utils/auth";
 
-export default function SessionWatcher({
-  warnAtMs = 2 * 60 * 1000,  // show modal 2 minutes before expiry
-  checkEveryMs = 1000,        // smooth countdown
-}: {
-  warnAtMs?: number;
-  checkEveryMs?: number;
-}) {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const [msLeft, setMsLeft] = useState<number | null>(null);
-  const [showWarn, setShowWarn] = useState(false);
+const THRESHOLD_MS = 2 * 60 * 1000;      // show prompt when < 2 min left
+const CHECK_EVERY_MS = 1000;             // check every second
+const SNOOZE_MS = 5 * 60 * 1000;         // “remind me later” snooze
+const EXTEND_MS = 30 * 60 * 1000;        // extend by 30 minutes
 
-  const hhmmss = useMemo(() => {
-    if (msLeft == null || msLeft < 0) return "0:00";
-    const totalSeconds = Math.floor(msLeft / 1000);
-    const m = Math.floor(totalSeconds / 60);
-    const s = totalSeconds % 60;
-    return `${m}:${String(s).padStart(2, "0")}`;
-  }, [msLeft]);
+export default function SessionWatcher() {
+  const [timeLeft, setTimeLeft] = useState<number | null>(null);
+  const [snoozeUntil, setSnoozeUntil] = useState<number>(0);
+  const [visible, setVisible] = useState(false);
 
+  // keep timeLeft updated
   useEffect(() => {
-    const id = setInterval(() => {
-      const expStr = localStorage.getItem("token_expiry");
-      if (!expStr) {
-        setMsLeft(null);
-        setShowWarn(false);
+    const tick = () => {
+      const token = localStorage.getItem("access_token");
+      const expiryStr = localStorage.getItem("token_expiry");
+      if (!token || !expiryStr || !isTokenValid()) {
+        setTimeLeft(null);
+        setVisible(false);
         return;
       }
-      const exp = Number(expStr);
-      const left = exp - Date.now();
-      setMsLeft(left);
+      const left = Number(expiryStr) - Date.now();
+      setTimeLeft(left > 0 ? left : 0);
+    };
 
-      if (left <= 0) {
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("token_expiry");
-        navigate(`/login?msg=session_expired&redirect=${encodeURIComponent(location.pathname)}`, { replace: true });
-      } else if (left <= warnAtMs) {
-        setShowWarn(true);
-      } else {
-        setShowWarn(false);
-      }
-    }, checkEveryMs);
-
+    tick();
+    const id = setInterval(tick, CHECK_EVERY_MS);
     return () => clearInterval(id);
-  }, [navigate, location.pathname, warnAtMs, checkEveryMs]);
+  }, []);
 
-  const goLogin = () => {
-    navigate(`/login?redirect=${encodeURIComponent(location.pathname)}`);
+  // show/hide prompt based on timeLeft & snooze
+  useEffect(() => {
+    if (timeLeft === null) {
+      setVisible(false);
+      return;
+    }
+    const now = Date.now();
+    const shouldShow = timeLeft <= THRESHOLD_MS && now >= snoozeUntil;
+    setVisible(shouldShow);
+  }, [timeLeft, snoozeUntil]);
+
+  // sync across tabs
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === "token_expiry" || e.key === "access_token") {
+        // let the “tick” effect recalc on next interval;
+        // also re-evaluate visibility immediately
+        const expiryStr = localStorage.getItem("token_expiry");
+        if (!expiryStr) return;
+        const left = Number(expiryStr) - Date.now();
+        setTimeLeft(left > 0 ? left : 0);
+      }
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
+
+  const mmss = useMemo(() => {
+    if (timeLeft == null) return "";
+    const total = Math.max(0, Math.floor(timeLeft / 1000));
+    const m = Math.floor(total / 60).toString().padStart(2, "0");
+    const s = (total % 60).toString().padStart(2, "0");
+    return `${m}:${s}`;
+  }, [timeLeft]);
+
+  const staySignedIn = () => {
+    // frontend-only “extend”: push expiry forward
+    const newExpiry = Date.now() + EXTEND_MS;
+    localStorage.setItem("token_expiry", String(newExpiry));
+    setVisible(false);
+    // small snooze so it doesn’t immediately reappear if close to threshold
+    setSnoozeUntil(Date.now() + 30 * 1000);
   };
 
-  if (!showWarn) return null;
+  const remindLater = () => {
+    setSnoozeUntil(Date.now() + SNOOZE_MS);
+    setVisible(false);
+  };
 
+  if (!visible) return null;
+
+  // simple, click-through-safe toast (no backdrop that can block clicks)
   return (
-    <div className="modal d-block" tabIndex={-1} role="dialog" style={{ background: "rgba(0,0,0,0.3)" }}>
-      <div className="modal-dialog modal-dialog-centered" role="document">
-        <div className="modal-content">
-          <div className="modal-header">
-            <h5 className="modal-title">Session almost over</h5>
-          </div>
-          <div className="modal-body">
-            <p>Your session will expire in <strong>{hhmmss}</strong>.</p>
-            <p>Click “Stay signed in” to re-authenticate and continue where you left off.</p>
-          </div>
-          <div className="modal-footer">
-            <button className="btn btn-outline-secondary" onClick={() => setShowWarn(false)}>
-              Remind me later
-            </button>
-            <button className="btn btn-primary" onClick={goLogin}>
-              Stay signed in
-            </button>
+    <div
+      style={{
+        position: "fixed",
+        right: 16,
+        bottom: 16,
+        zIndex: 9999,
+        maxWidth: 380,
+      }}
+    >
+      <div className="card shadow-lg border-warning" style={{ borderWidth: 2 }}>
+        <div className="card-body">
+          <div className="d-flex align-items-start">
+            <div className="me-2">
+              <span className="badge text-bg-warning">Session</span>
+            </div>
+            <div className="flex-grow-1">
+              <div className="fw-semibold mb-1">Your session is about to expire</div>
+              <div className="small text-muted mb-2">
+                Time remaining: <strong>{mmss}</strong>
+              </div>
+              <div className="d-flex gap-2 flex-wrap">
+                <button
+                  type="button"
+                  onClick={staySignedIn}
+                  className="btn btn-sm btn-primary"
+                >
+                  Stay signed in
+                </button>
+                <button
+                  type="button"
+                  onClick={remindLater}
+                  className="btn btn-sm btn-outline-secondary"
+                >
+                  Remind me later
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
