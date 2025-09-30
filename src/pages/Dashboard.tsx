@@ -66,39 +66,41 @@ function prettyPeriod(p?: string) {
   }
 }
 
-function formatRange(start?: string | null, end?: string | null) {
-  if (!start || !end) return '';
-  const s = new Date(start).toLocaleDateString();
-  const e = new Date(end).toLocaleDateString();
-  return `${s} – ${e}`;
-}
-
-// Compute current window for *any* supported period
 function rangeFor(period: CurrentPeriod) {
   const now = new Date();
+
   if (period === 'weekly') {
-    return {
-      start: startOfWeek(now, { weekStartsOn: 1 }),
-      end: endOfWeek(now, { weekStartsOn: 1 }),
-    };
-  }
-  if (period === 'monthly') {
-    return { start: startOfMonth(now), end: endOfMonth(now) };
-  }
-  if (period === 'yearly') {
-    return { start: startOfYear(now), end: endOfYear(now) };
-  }
-  if (period === 'quarterly') {
-    const m = now.getMonth(); // 0..11
-    const qStartMonth = Math.floor(m / 3) * 3;
-    const start = new Date(now.getFullYear(), qStartMonth, 1);
-    const end = new Date(now.getFullYear(), qStartMonth + 3, 0, 23, 59, 59, 999);
+    // ISO week: Mon–Sun
+    const day = now.getDay(); // 0..6 (Sun..Sat)
+    const diffToMonday = (day === 0 ? -6 : 1 - day);
+    const start = new Date(now); start.setDate(now.getDate() + diffToMonday); start.setHours(0,0,0,0);
+    const end = new Date(start); end.setDate(start.getDate() + 6); end.setHours(23,59,59,999);
     return { start, end };
   }
-  // half-yearly
-  const firstHalf = now.getMonth() < 6;
-  const start = new Date(now.getFullYear(), firstHalf ? 0 : 6, 1);
-  const end = new Date(now.getFullYear(), firstHalf ? 6 : 12, 0, 23, 59, 59, 999);
+
+  if (period === 'monthly') {
+    const start = new Date(now.getFullYear(), now.getMonth(), 1);
+    const end   = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23,59,59,999);
+    return { start, end };
+  }
+
+  if (period === 'quarterly') {
+    const q = Math.floor(now.getMonth() / 3);
+    const start = new Date(now.getFullYear(), q * 3, 1);
+    const end   = new Date(now.getFullYear(), q * 3 + 3, 0, 23,59,59,999);
+    return { start, end };
+  }
+
+  if (period === 'half-yearly') {
+    const firstHalf = now.getMonth() < 6;
+    const start = new Date(now.getFullYear(), firstHalf ? 0 : 6, 1);
+    const end   = new Date(now.getFullYear(), firstHalf ? 6 : 12, 0, 23,59,59,999);
+    return { start, end };
+  }
+
+  // yearly
+  const start = new Date(now.getFullYear(), 0, 1);
+  const end   = new Date(now.getFullYear(), 11, 31, 23,59,59,999);
   return { start, end };
 }
 
@@ -257,7 +259,7 @@ export default function Dashboard() {
         setUsername(user.username ?? 'User');
 
         // Spending summary
-        const rawSummary = await getSummary(t, appliedPeriod, appliedCategory || undefined);
+        const rawSummary = await getSummary(token, appliedPeriod as any, appliedCategory || undefined);
         if (!mounted) return;
 
         let normSummary: NormalizedSummary = { period: appliedPeriod, summary: {} };
@@ -286,12 +288,13 @@ export default function Dashboard() {
 
         // --- Budgets for the *current* appliedPeriod window ---
         const { start, end } = rangeFor(appliedPeriod);
-        const rawBudgets = await getBudgets(t, {
-          period: appliedPeriod,          // supports weekly|monthly|quarterly|half-yearly|yearly
-          startDate: toIso(start),
-          endDate: toIso(end),
-          page: 1,
-          limit: 100,
+        const rawBudgets = await getBudgets(token, {
+           period: appliedPeriod as any,
+           startDate: toIso(start),
+           endDate: toIso(end),
+           // category: appliedCategory || undefined,
+           page: 1,
+           limit: 100,
         });
 
         const mappedBudgets: BudgetItem[] = (rawBudgets ?? []).map((b: any) => ({
@@ -302,8 +305,8 @@ export default function Dashboard() {
         setBudgets(mappedBudgets);
 
         // Overview (global income for period; expenses optionally filtered by category)
-        const ov = await getOverview(t, {
-          period: appliedPeriod,
+        const ov = await getOverview(token, {
+          period: appliedPeriod as any,
           ...(appliedCategory ? { category: appliedCategory } : {}),
         });
         if (!mounted) return;
@@ -319,10 +322,10 @@ export default function Dashboard() {
 
         // If a category is selected, fetch category-specific expenses + compute net (income always global)
         if (appliedCategory) {
-          const ovCat = await getOverview(t, {
-            period: appliedPeriod,
+          const ovCat = await getOverview(token, {
+            period: appliedPeriod as any,
             category: appliedCategory,
-          });
+        });
           if (!mounted) return;
 
           const catExp = Number(ovCat?.total_expenses) || 0;
@@ -384,7 +387,7 @@ export default function Dashboard() {
               Number(r.total_income ?? r.income ?? 0) - Number(r.total_expenses ?? r.expenses ?? 0)
             )),
           }))
-          .filter((d) => d.label !== '');
+          .filter((d: { label?: string }) => Boolean(d.label));
 
         setOverviewSeries(series);
 
