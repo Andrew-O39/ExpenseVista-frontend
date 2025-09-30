@@ -170,7 +170,6 @@ export default function Dashboard() {
 
   // Auth/session
   const [username, setUsername] = useState<string>('User');
-  const [sessionExpiresIn, setSessionExpiresIn] = useState<number | null>(null);
 
   // UI state
   const [loading, setLoading] = useState(true);
@@ -227,12 +226,6 @@ export default function Dashboard() {
     return () => clearInterval(interval);
   }, []);
 
-  const formatCountdown = (ms: number) => {
-    const totalSeconds = Math.floor(ms / 1000);
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
-    return `${minutes}m ${seconds}s`;
-  };
 
   /* =========================
      Data fetch for TOP section
