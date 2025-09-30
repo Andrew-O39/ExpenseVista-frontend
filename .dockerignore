@@ -3,7 +3,10 @@ dist
 .git
 .gitignore
 Dockerfile
+Dockerfile.*
 docker-compose.yml
 *.log
+*.local
+.env
 .vscode
 .idea

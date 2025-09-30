@@ -1,33 +1,41 @@
 # syntax=docker/dockerfile:1.7
 
-#  Build stage (Node)
+##############################
+# Build stage (Node + Vite)  #
+##############################
 FROM node:20-alpine AS build
-
 WORKDIR /app
 
+# Install deps separately to leverage Docker layer cache
 COPY package*.json ./
 
-RUN npm install
+# Use BuildKit cache mount for npm (faster rebuilds)
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci
 
-# Copy the rest and build
+# Copy the rest of the source
 COPY . .
 
-# Build-time API base URL (set from infra repo's compose)
+# Build-time API base URL (injected by compose build-args)
 ARG VITE_API_BASE_URL
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 
-# Vite build (outputs to /app/dist)
+# Build static assets
 RUN npm run build
 
 
-# Runtime (Nginx)
+##############################
+# Runtime (Nginx)            #
+##############################
 FROM nginx:1.25-alpine
+
 # Copy built assets
 COPY --from=build /app/dist /usr/share/nginx/html
-# Add nginx config for SPA fallback + gzip
+
+# SPA fallback + compression (ensure your nginx.conf handles this)
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Basic health tooling (optional)
+# Health tooling (optional)
 RUN apk add --no-cache curl
 
 # Static health endpoint
