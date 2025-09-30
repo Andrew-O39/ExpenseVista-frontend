@@ -61,6 +61,13 @@ function prettyPeriod(p?: string) {
   }
 }
 
+function formatRange(start?: string | null, end?: string | null) {
+  if (!start || !end) return '';
+  const s = new Date(start).toLocaleDateString();
+  const e = new Date(end).toLocaleDateString();
+  return `${s} – ${e}`;
+}
+
 function rangeFor(period: CurrentPeriod) {
   const now = new Date();
 
@@ -116,14 +123,6 @@ function fmtDDMMYYYY(d: Date) {
   const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
   const yyyy = d.getUTCFullYear();
   return `${dd}.${mm}.${yyyy}`;
-}
-
-// Simple range text helper for badges
-function formatRange(start?: string | null, end?: string | null) {
-  if (!start || !end) return '';
-  const s = new Date(start).toLocaleDateString();
-  const e = new Date(end).toLocaleDateString();
-  return `${s} – ${e}`;
 }
 
 // Turn a label into a start/end span (supports monthly, quarterly, half-yearly)
@@ -197,12 +196,15 @@ export default function Dashboard() {
   const [overviewSeries, setOverviewSeries] = useState<OverviewPoint[]>([]);
   const [overviewTotals, setOverviewTotals] = useState<{ income: number; expenses: number; net: number } | null>(null);
 
-  // Keep logout for the dropdown action
+  /* =========================
+     Session timer
+  ========================= */
   const handleLogout = () => {
     localStorage.removeItem('access_token');
     localStorage.removeItem('token_expiry');
     navigate('/login', { replace: true });
   };
+
 
   /* =========================
      Data fetch for TOP section
@@ -261,11 +263,12 @@ export default function Dashboard() {
         // --- Budgets for the *current* appliedPeriod window ---
         const { start, end } = rangeFor(appliedPeriod);
         const rawBudgets = await getBudgets(t, {
-          period: appliedPeriod as any,
-          startDate: toIso(start),
-          endDate: toIso(end),
-          page: 1,
-          limit: 100,
+           period: appliedPeriod as any,
+           startDate: toIso(start),
+           endDate: toIso(end),
+           // category: appliedCategory || undefined,
+           page: 1,
+           limit: 100,
         });
 
         const mappedBudgets: BudgetItem[] = (rawBudgets ?? []).map((b: any) => ({
@@ -296,7 +299,7 @@ export default function Dashboard() {
           const ovCat = await getOverview(t, {
             period: appliedPeriod as any,
             category: appliedCategory,
-          });
+        });
           if (!mounted) return;
 
           const catExp = Number(ovCat?.total_expenses) || 0;
@@ -390,6 +393,20 @@ export default function Dashboard() {
     ...budgets.map(b => b.category),
   ]);
 
+  const combinedData = Array.from(allCategoriesSet).map(cat => {
+    const spent = summary.summary[cat] ?? 0;
+    const budget = budgetMap[cat] ?? 0;
+    return { category: cat, spent, budget };
+  });
+
+  const filteredCombinedData = appliedCategory
+    ? combinedData.filter(({ category }) => category === cleanCategory(appliedCategory))
+    : combinedData;
+
+  const chartData = combinedData.map(({ category, spent, budget }) => {
+    const isOverspentNoBudget = budget === 0 && spent > 0;
+    return { name: category, value: spent, budget, isOverspentNoBudget };
+  });
 
   /* =========================
      Handlers
@@ -523,7 +540,7 @@ export default function Dashboard() {
 
       {/* Spending summary */}
       <h2 className="mb-3">Spending Summary ({summary.period})</h2>
-      {Object.keys(summary.summary).length === 0 ? (
+      {chartData.length === 0 ? (
         <p className="text-muted">No results found for this filter.</p>
       ) : (
         <div>
@@ -531,22 +548,24 @@ export default function Dashboard() {
             <div className="col-md-6" style={{ height: 300 }}>
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie data={Object.entries(summary.summary).map(([name, value]) => ({ name, value }))} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} label>
-                    {Object.entries(summary.summary).map((_, index) => (
+                  <Pie data={chartData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} label>
+                    {chartData.map((entry, index) => (
                       <Cell
                         key={`cell-${index}`}
-                        fill={/* overspend without budget is highlighted in table section only */ COLORS[index % COLORS.length]}
+                        fill={entry.isOverspentNoBudget ? '#DC3545' : COLORS[index % COLORS.length]}
                       />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(val: number) => `€${Number(val).toFixed(2)}`} />
+                  <Tooltip formatter={(val: number) => `€${val.toFixed(2)}`} />
                   <Legend />
                 </PieChart>
               </ResponsiveContainer>
+              <div className="mt-2 small text-muted">
+                <span style={{ color: '#DC3545', fontWeight: 'bold' }}>■</span> No budget set, but spending occurred
+              </div>
             </div>
           </div>
 
-          {/* Table with budgets/spend/remaining */}
           <div className="table-responsive">
             <table className="table table-striped table-bordered">
               <thead className="table-light">
@@ -558,22 +577,20 @@ export default function Dashboard() {
                 </tr>
               </thead>
               <tbody>
-                {Array.from(new Set([...Object.keys(summary.summary), ...budgets.map(b => b.category)])).map((category, index) => {
-                  const spent = summary.summary[category] ?? 0;
-                  const budget = budgets.find(b => b.category === category)?.amount ?? 0;
-
+                {filteredCombinedData.map(({ category, spent, budget }, index) => {
                   let remaining = 0;
                   let isOverBudget = false;
+
                   if (budget > 0) {
                     remaining = budget - spent;
                     isOverBudget = remaining < 0;
                   } else if (spent > 0) {
-                    remaining = -spent;
+                    remaining = -spent; // negative remaining when no budget but spend exists
                     isOverBudget = true;
                   }
 
                   return (
-                    <tr key={category} style={{ borderLeft: `5px solid ${COLORS[index % COLORS.length]}` }}>
+                    <tr key={index} style={{ borderLeft: `5px solid ${COLORS[index % COLORS.length]}` }}>
                       <td><strong>{category}</strong></td>
                       <td>{budget > 0 ? `€${budget.toFixed(2)}` : 'No Budget'}</td>
                       <td>€{spent.toFixed(2)}</td>
