@@ -396,14 +396,6 @@ export default function Dashboard() {
     return { category: cat, spent, budget };
   });
 
-  const filteredCombinedData = appliedCategory
-    ? combinedData.filter(({ category }) => category === cleanCategory(appliedCategory))
-    : combinedData;
-
-  const chartData = combinedData.map(({ category, spent, budget }) => {
-    const isOverspentNoBudget = budget === 0 && spent > 0;
-    return { name: category, value: spent, budget, isOverspentNoBudget };
-  });
 
   /* =========================
      Handlers
