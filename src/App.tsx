@@ -14,6 +14,7 @@ import BudgetEdit from './pages/BudgetEdit';
 import CreateIncome from './pages/CreateIncome';
 import IncomeList from './pages/IncomeList';
 import EditIncome from './pages/EditIncome';
+import SessionWatcher from './components/SessionWatcher';
 
 function Page({ title, children }: { title: string; children: React.ReactNode }) {
   useEffect(() => {
@@ -37,27 +38,32 @@ function Welcome() {
 
 export default function App() {
   return (
-    <Routes>
-      {/* Public */}
-      <Route path="/" element={<Page title="Welcome"><Welcome /></Page>} />
-      <Route path="/login" element={<Page title="Login"><Login /></Page>} />
-      <Route path="/register" element={<Page title="Register"><Register /></Page>} />
+    <>
+      {/* Session refresh/countdown handler shown globally */}
+      <SessionWatcher />
 
-      {/* App */}
-      <Route path="/dashboard" element={<Page title="Dashboard"><Dashboard /></Page>} />
+      <Routes>
+        {/* Public */}
+        <Route path="/" element={<Page title="Welcome"><Welcome /></Page>} />
+        <Route path="/login" element={<Page title="Login"><Login /></Page>} />
+        <Route path="/register" element={<Page title="Register"><Register /></Page>} />
 
-      {/* CRUD pages */}
-      <Route path="/create-expense" element={<Page title="Create Expense"><CreateExpense /></Page>} />
-      <Route path="/create-budget"  element={<Page title="Create Budget"><CreateBudget /></Page>} />
-      <Route path="/create-income"  element={<Page title="Create Income"><CreateIncome /></Page>} />
+        {/* App */}
+        <Route path="/dashboard" element={<Page title="Dashboard"><Dashboard /></Page>} />
 
-      <Route path="/expenses" element={<Page title="Expenses"><ExpenseList /></Page>} />
-      <Route path="/budgets"  element={<Page title="Budgets"><BudgetList /></Page>} />
-      <Route path="/incomes"  element={<Page title="Incomes"><IncomeList /></Page>} />
+        {/* CRUD pages */}
+        <Route path="/create-expense" element={<Page title="Create Expense"><CreateExpense /></Page>} />
+        <Route path="/create-budget"  element={<Page title="Create Budget"><CreateBudget /></Page>} />
+        <Route path="/create-income"  element={<Page title="Create Income"><CreateIncome /></Page>} />
 
-      <Route path="/edit-expense/:id" element={<Page title="Edit Expense"><ExpenseEdit /></Page>} />
-      <Route path="/edit-budget/:id"  element={<Page title="Edit Budget"><BudgetEdit /></Page>} />
-      <Route path="/edit-income/:id"  element={<Page title="Edit Income"><EditIncome /></Page>} />
-    </Routes>
+        <Route path="/expenses" element={<Page title="Expenses"><ExpenseList /></Page>} />
+        <Route path="/budgets"  element={<Page title="Budgets"><BudgetList /></Page>} />
+        <Route path="/incomes"  element={<Page title="Incomes"><IncomeList /></Page>} />
+
+        <Route path="/edit-expense/:id" element={<Page title="Edit Expense"><ExpenseEdit /></Page>} />
+        <Route path="/edit-budget/:id"  element={<Page title="Edit Budget"><BudgetEdit /></Page>} />
+        <Route path="/edit-income/:id"  element={<Page title="Edit Income"><EditIncome /></Page>} />
+      </Routes>
+    </>
   );
 }

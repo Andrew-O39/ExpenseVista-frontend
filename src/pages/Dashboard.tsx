@@ -479,12 +479,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {sessionExpiresIn !== null && (
-        <div className="alert alert-warning" role="alert">
-          Your session expires in <strong>{formatCountdown(sessionExpiresIn)}</strong>.
-        </div>
-      )}
-
       {/* Overview cards */}
       {overview && (
         <div className="row g-3 mb-4">

@@ -1,23 +1,30 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { login } from "../services/api";
-import { isTokenValid } from "../utils/auth"; // Import token validator
+import { isTokenValid } from "../utils/auth";
 
 export default function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Read query params (e.g. ?redirect=/dashboard&msg=session_expired)
+  const params = new URLSearchParams(location.search);
+  const redirect = params.get("redirect") || "/dashboard";
+  const msg = params.get("msg");
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
 
-  // Redirect logged-in users with valid sessions away from login page
+  // If already signed in with a valid token, bounce to the redirect target
   useEffect(() => {
     const token = localStorage.getItem("access_token");
     if (token && isTokenValid()) {
-      navigate("/dashboard", { replace: true });
+      navigate(redirect, { replace: true });
     }
-  }, [navigate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [navigate, redirect]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,15 +32,14 @@ export default function Login() {
 
     try {
       const data = await login(username, password);
-      console.log("Login response:", data);
 
+      // Save token + 30-minute expiry (matches backend)
       localStorage.setItem("access_token", data.access_token);
-
-      // Store expiry timestamp (30 mins from now)
       const expiryTime = Date.now() + 30 * 60 * 1000;
-      localStorage.setItem("token_expiry", expiryTime.toString());
+      localStorage.setItem("token_expiry", String(expiryTime));
 
-      navigate("/dashboard", { replace: true });
+      // Go back to where the user came from (or /dashboard)
+      navigate(redirect, { replace: true });
     } catch (err) {
       console.error(err);
       setError("Invalid username or password");
@@ -43,25 +49,36 @@ export default function Login() {
   return (
     <div className="d-flex flex-column justify-content-center align-items-center vh-100 bg-light">
       <h2 className="mb-4">Login</h2>
+
+      {/* Optional alert if session expired */}
+      {msg === "session_expired" && (
+        <div className="alert alert-warning w-100" style={{ maxWidth: 360 }}>
+          Your session expired. Please sign in again to continue.
+        </div>
+      )}
+
       <form
         onSubmit={handleSubmit}
         className="bg-white p-4 rounded shadow"
-        style={{ width: "300px", position: "relative" }}
+        style={{ width: 300, position: "relative" }}
       >
         <div className="mb-3">
           <input
             type="text"
             placeholder="Username"
+            autoComplete="username"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             className="form-control"
             required
           />
         </div>
+
         <div className="mb-3 position-relative">
           <input
             type={showPassword ? "text" : "password"}
             placeholder="Password"
+            autoComplete="current-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="form-control"
@@ -78,7 +95,9 @@ export default function Login() {
             {showPassword ? "Hide" : "Show"}
           </button>
         </div>
+
         {error && <p className="text-danger small mb-3">{error}</p>}
+
         <button type="submit" className="btn btn-primary w-100">
           Login
         </button>
