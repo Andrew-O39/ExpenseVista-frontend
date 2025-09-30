@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, useCallback } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { getIncomes, deleteIncome } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 import { isTokenValid } from '../utils/auth';
@@ -27,13 +27,13 @@ export default function IncomeList() {
   const [searchInput, setSearchInput] = useState('');
 
   const [range, setRange] = useState<QuickRange>('all');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  const [startDate, setStartDate] = useState(''); // yyyy-mm-dd
+  const [endDate, setEndDate] = useState('');     // yyyy-mm-dd
 
-  const token = localStorage.getItem('access_token');
+  const token = localStorage.getItem('access_token'); // string | null
 
   // helper
-  const euro = (n: number) => `€${n.toFixed(2)}`;
+  const euro = (n: number) => `€${Number(n || 0).toFixed(2)}`;
 
   const toISO = (d: Date) => d.toISOString();
   const computeRange = (r: QuickRange): { start?: string; end?: string } => {
@@ -41,29 +41,29 @@ export default function IncomeList() {
     if (r === 'week') {
       const start = new Date(now);
       start.setDate(now.getDate() - 6);
-      start.setHours(0,0,0,0);
+      start.setHours(0, 0, 0, 0);
       const end = new Date(now);
-      end.setHours(23,59,59,999);
+      end.setHours(23, 59, 59, 999);
       return { start: toISO(start), end: toISO(end) };
     }
     if (r === 'month') {
       const start = new Date(now.getFullYear(), now.getMonth(), 1);
-      const end   = new Date(now.getFullYear(), now.getMonth()+1, 0, 23,59,59,999);
+      const end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
       return { start: toISO(start), end: toISO(end) };
     }
     if (r === 'quarter') {
       const q = Math.floor(now.getMonth() / 3);
-      const start = new Date(now.getFullYear(), q*3, 1);
-      const end   = new Date(now.getFullYear(), q*3+3, 0, 23,59,59,999);
+      const start = new Date(now.getFullYear(), q * 3, 1);
+      const end = new Date(now.getFullYear(), q * 3 + 3, 0, 23, 59, 59, 999);
       return { start: toISO(start), end: toISO(end) };
     }
     if (r === 'half-year') {
       const firstHalf = now.getMonth() < 6;
       const start = new Date(now.getFullYear(), firstHalf ? 0 : 6, 1);
-      const end   = new Date(now.getFullYear(), firstHalf ? 6 : 12, 0, 23,59,59,999);
+      const end = new Date(now.getFullYear(), firstHalf ? 6 : 12, 0, 23, 59, 59, 999);
       return { start: toISO(start), end: toISO(end) };
     }
-    return {};
+    return {}; // 'all' or 'custom' handled elsewhere
   };
 
   const fetchIncomes = async (pageToLoad = 1) => {
@@ -77,15 +77,15 @@ export default function IncomeList() {
       let endISO: string | undefined;
 
       if (range === 'custom') {
-        if (startDate) startISO = new Date(startDate + 'T00:00:00').toISOString();
-        if (endDate)   endISO   = new Date(endDate   + 'T23:59:59').toISOString();
+        if (startDate) startISO = new Date(`${startDate}T00:00:00`).toISOString();
+        if (endDate) endISO = new Date(`${endDate}T23:59:59`).toISOString();
       } else if (range !== 'all') {
         const r = computeRange(range);
         startISO = r.start;
         endISO = r.end;
       }
 
-      const data: Income[] = await getIncomes(token, {
+      const data: Income[] = await getIncomes(token as string, {
         search,
         startDate: startISO,
         endDate: endISO,
@@ -94,6 +94,7 @@ export default function IncomeList() {
       });
 
       if (data.length < 10) setHasMore(false);
+
       setIncomes(prev =>
         pageToLoad === 1
           ? data
@@ -115,10 +116,13 @@ export default function IncomeList() {
   }, [navigate, search, range]);
 
   const handleDelete = async (id: number) => {
-    if (!token) return alert('You must be logged in to delete income.');
+    if (!token) {
+      alert('You must be logged in to delete income.');
+      return;
+    }
     if (!window.confirm('Delete this income?')) return;
     try {
-      await deleteIncome(token, id);
+      await deleteIncome(token as string, id);
       setIncomes(prev => prev.filter(i => i.id !== id));
       alert('Income deleted.');
     } catch (err: any) {
@@ -130,10 +134,14 @@ export default function IncomeList() {
   const handleSearchApply = () => {
     setPage(1);
     setHasMore(true);
-    setSearch(searchInput);
+    setSearch(searchInput.trim());
   };
 
   const handleRangeApply = () => {
+    if (range === 'custom' && startDate && endDate && startDate > endDate) {
+      alert('Start date must be before end date.');
+      return;
+    }
     setPage(1);
     setHasMore(true);
     fetchIncomes(1);
@@ -177,12 +185,18 @@ export default function IncomeList() {
               value={searchInput}
               onChange={e => setSearchInput(e.target.value)}
             />
-            <button className="btn btn-primary" onClick={handleSearchApply}>Search</button>
+            <button className="btn btn-primary" onClick={handleSearchApply} disabled={loading}>
+              Search
+            </button>
           </div>
         </div>
 
         <div className="col-md-3">
-          <select className="form-select" value={range} onChange={e => setRange(e.target.value as QuickRange)}>
+          <select
+            className="form-select"
+            value={range}
+            onChange={e => setRange(e.target.value as QuickRange)}
+          >
             <option value="all">All time</option>
             <option value="week">This week</option>
             <option value="month">This month</option>
@@ -193,16 +207,30 @@ export default function IncomeList() {
         </div>
 
         <div className="col-md-2">
-          <input type="date" className="form-control" disabled={range !== 'custom'}
-                 value={startDate} onChange={e => setStartDate(e.target.value)} />
+          <input
+            type="date"
+            className="form-control"
+            disabled={range !== 'custom'}
+            value={startDate}
+            onChange={e => setStartDate(e.target.value)}
+          />
         </div>
         <div className="col-md-2">
-          <input type="date" className="form-control" disabled={range !== 'custom'}
-                 value={endDate} onChange={e => setEndDate(e.target.value)} />
+          <input
+            type="date"
+            className="form-control"
+            disabled={range !== 'custom'}
+            value={endDate}
+            onChange={e => setEndDate(e.target.value)}
+          />
         </div>
         {range === 'custom' && (
           <div className="col-12 col-md-auto">
-            <button className="btn btn-outline-primary w-100" onClick={handleRangeApply}>
+            <button
+              className="btn btn-outline-primary w-100"
+              onClick={handleRangeApply}
+              disabled={loading}
+            >
               Apply Range
             </button>
           </div>
@@ -224,45 +252,64 @@ export default function IncomeList() {
           </tr>
         </thead>
         <tbody>
-          {incomes.map(i => (
-            <tr key={i.id}>
-              <td>{i.source || '-'}</td>
-              <td>{i.category}</td>
-              <td>€{i.amount.toFixed(2)}</td>
-              <td>{i.notes || '-'}</td>
-              <td>{fmt(i.received_at)}</td>
-              <td>{fmt(i.created_at)}</td>
-              <td>
-                <div className="dropdown">
-                  <button className="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
-                    Actions
-                  </button>
-                  <ul className="dropdown-menu">
-                    <li>
-                      <button className="dropdown-item" onClick={() => navigate(`/edit-income/${i.id}`)}>
-                        Edit
-                      </button>
-                    </li>
-                    <li>
-                      <button className="dropdown-item text-danger" onClick={() => handleDelete(i.id)}>
-                        Delete
-                      </button>
-                    </li>
-                  </ul>
-                </div>
-              </td>
+          {incomes.length === 0 ? (
+            <tr>
+              <td colSpan={7} className="text-center text-muted py-4">No incomes found.</td>
             </tr>
-          ))}
+          ) : (
+            incomes.map(i => (
+              <tr key={i.id}>
+                <td>{i.source || '-'}</td>
+                <td>{i.category}</td>
+                <td>€{i.amount.toFixed(2)}</td>
+                <td>{i.notes || '-'}</td>
+                <td>{fmt(i.received_at)}</td>
+                <td>{fmt(i.created_at)}</td>
+                <td>
+                  <div className="dropdown">
+                    <button
+                      className="btn btn-sm btn-outline-secondary dropdown-toggle"
+                      data-bs-toggle="dropdown"
+                    >
+                      Actions
+                    </button>
+                    <ul className="dropdown-menu">
+                      <li>
+                        <button
+                          className="dropdown-item"
+                          onClick={() => navigate(`/edit-income/${i.id}`)}
+                        >
+                          Edit
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          className="dropdown-item text-danger"
+                          onClick={() => handleDelete(i.id)}
+                        >
+                          Delete
+                        </button>
+                      </li>
+                    </ul>
+                  </div>
+                </td>
+              </tr>
+            ))
+          )}
         </tbody>
       </table>
 
-        {/* Totals row */}
+      {/* Totals row */}
       <div className="mt-3 alert alert-info">
         <strong>Total Income:</strong> {euro(totalIncome)}
       </div>
 
       {hasMore && (
-        <button className="btn btn-primary mt-3" disabled={loading} onClick={loadMore}>
+        <button
+          className="btn btn-primary mt-3"
+          disabled={loading || !hasMore}
+          onClick={loadMore}
+        >
           {loading ? 'Loading...' : 'Load More'}
         </button>
       )}

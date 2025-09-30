@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getIncomeById, updateIncome } from '../services/api';
 import { isTokenValid } from '../utils/auth';
@@ -8,14 +8,15 @@ type IncomeForm = {
   source: string;
   category: string;
   notes: string;
-  received_at: string; // ISO string
+  received_at?: string; // ISO from server (optional)
 };
 
 // --- helpers for datetime-local input ---
 function isoToLocalDatetimeValue(iso?: string): string {
   if (!iso) return '';
   const d = new Date(iso);
-  // datetime-local expects "YYYY-MM-DDTHH:mm"
+  if (isNaN(d.getTime())) return '';
+  // "YYYY-MM-DDTHH:mm"
   const pad = (n: number) => String(n).padStart(2, '0');
   const year = d.getFullYear();
   const month = pad(d.getMonth() + 1);
@@ -27,13 +28,12 @@ function isoToLocalDatetimeValue(iso?: string): string {
 
 function localDatetimeValueToIso(localValue?: string): string | undefined {
   if (!localValue) return undefined;
-  // localValue like "YYYY-MM-DDTHH:mm"
   const dt = new Date(localValue);
   if (isNaN(dt.getTime())) return undefined;
   return dt.toISOString();
 }
 
-// --- simple normalization like your frontend pattern ---
+// --- normalization like elsewhere in your app ---
 function normalizeText(s: string): string {
   return s.toLowerCase().trim().replace(/\s+/g, ' ').normalize();
 }
@@ -47,8 +47,11 @@ export default function EditIncome() {
     source: '',
     category: '',
     notes: '',
-    received_at: '',
+    received_at: undefined,
   });
+
+  // keep a separate local value for the datetime-local input
+  const [receivedAtLocal, setReceivedAtLocal] = useState<string>('');
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -71,14 +74,18 @@ export default function EditIncome() {
       setLoading(true);
       setError(null);
       try {
-        const data = await getIncomeById(token, Number(id));
+        // token! => we already guarded above; helps TS narrow type
+        const data = await getIncomeById(token!, Number(id));
+        const iso = data.received_at ?? data.created_at ?? undefined;
+
         setIncome({
           amount: Number(data.amount) || 0,
           source: data.source ?? '',
           category: data.category ?? '',
           notes: data.notes ?? '',
-          received_at: data.received_at ?? data.created_at ?? '',
+          received_at: iso,
         });
+        setReceivedAtLocal(isoToLocalDatetimeValue(iso));
       } catch (e: any) {
         setError('Failed to load income');
       } finally {
@@ -99,8 +106,7 @@ export default function EditIncome() {
       return;
     }
     if (name === 'received_at') {
-      // keep local datetime value in state as local string (we’ll convert on submit)
-      setIncome(prev => ({ ...prev, received_at: value }));
+      setReceivedAtLocal(value); // keep local string only here
       return;
     }
 
@@ -128,12 +134,13 @@ export default function EditIncome() {
     setSaving(true);
     setError(null);
     try {
-      await updateIncome(token, Number(id), {
+      await updateIncome(token!, Number(id), {
         amount: Number(income.amount),
         source: normalizeText(income.source),
         category: normalizeText(income.category),
         notes: income.notes?.trim() || undefined,
-        received_at: localDatetimeValueToIso(income.received_at) || undefined,
+        // convert local control value → ISO only when sending
+        received_at: localDatetimeValueToIso(receivedAtLocal),
       });
       navigate('/incomes'); // redirect to income list
     } catch (e: any) {
@@ -197,7 +204,7 @@ export default function EditIncome() {
             type="datetime-local"
             name="received_at"
             className="form-control"
-            value={isoToLocalDatetimeValue(income.received_at)}
+            value={receivedAtLocal}
             onChange={handleChange}
           />
           <div className="form-text">Optional. Leave empty to keep existing server timestamp.</div>
@@ -217,7 +224,12 @@ export default function EditIncome() {
         <button type="submit" className="btn btn-primary me-2" disabled={saving}>
           {saving ? 'Saving...' : 'Save Changes'}
         </button>
-        <button type="button" className="btn btn-secondary" onClick={() => navigate('/incomes')} disabled={saving}>
+        <button
+          type="button"
+          className="btn btn-secondary"
+          onClick={() => navigate('/incomes')}
+          disabled={saving}
+        >
           Cancel
         </button>
       </form>

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { getBudgets, deleteBudget } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 import { isTokenValid } from '../utils/auth';

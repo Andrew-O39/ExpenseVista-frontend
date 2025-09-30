@@ -1,14 +1,9 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createExpense } from '../services/api';
 
-// Utility to normalize category input on frontend
-function normalizeCategory(cat: string): string {
-  return cat.toLowerCase().trim().replace(/\s+/g, ' ').normalize();
-}
-
 export default function CreateExpense() {
-  const navigate = useNavigate(); // initialize navigate
+  const navigate = useNavigate();
 
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState('');
@@ -46,17 +41,15 @@ export default function CreateExpense() {
       });
 
       setSuccess('Expense created successfully!');
-
-      // Navigate after a short delay (optional)
-      setTimeout(() => {
-        navigate('/expenses');
-      }, 800);
       setAmount('');
       setCategory('');
       setDescription('');
       setNotes('');
+
+      // Navigate after a short delay (optional)
+      setTimeout(() => navigate('/expenses'), 800);
     } catch (err: any) {
-      setError(err.message || 'Failed to create expense.');
+      setError(err?.response?.data?.detail || err.message || 'Failed to create expense.');
     }
   };
 
@@ -70,9 +63,7 @@ export default function CreateExpense() {
         <h3 className="mb-4 text-center">Create Expense</h3>
 
         <div className="mb-3">
-          <label htmlFor="amount" className="form-label">
-            Amount (€)
-          </label>
+          <label htmlFor="amount" className="form-label">Amount (€)</label>
           <input
             id="amount"
             type="number"
@@ -86,9 +77,7 @@ export default function CreateExpense() {
         </div>
 
         <div className="mb-3">
-          <label htmlFor="category" className="form-label">
-            Category
-          </label>
+          <label htmlFor="category" className="form-label">Category</label>
           <input
             id="category"
             type="text"
@@ -100,9 +89,7 @@ export default function CreateExpense() {
         </div>
 
         <div className="mb-3">
-          <label htmlFor="description" className="form-label">
-            Description (optional)
-          </label>
+          <label htmlFor="description" className="form-label">Description (optional)</label>
           <input
             id="description"
             type="text"
@@ -113,9 +100,7 @@ export default function CreateExpense() {
         </div>
 
         <div className="mb-3">
-          <label htmlFor="notes" className="form-label">
-            Notes (optional)
-          </label>
+          <label htmlFor="notes" className="form-label">Notes (optional)</label>
           <textarea
             id="notes"
             value={notes}
@@ -128,9 +113,7 @@ export default function CreateExpense() {
         {error && <div className="alert alert-danger">{error}</div>}
         {success && <div className="alert alert-success">{success}</div>}
 
-        <button type="submit" className="btn btn-primary w-100">
-          Create Expense
-        </button>
+        <button type="submit" className="btn btn-primary w-100">Create Expense</button>
       </form>
     </div>
   );

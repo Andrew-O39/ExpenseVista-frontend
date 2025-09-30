@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { getExpenses, deleteExpense } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 import { isTokenValid } from '../utils/auth';
@@ -29,7 +29,7 @@ export default function ExpenseList() {
   const [startDate, setStartDate] = useState(''); // yyyy-mm-dd
   const [endDate, setEndDate] = useState('');     // yyyy-mm-dd
 
-  const token = localStorage.getItem('access_token');
+  const token = (typeof window !== 'undefined' ? localStorage.getItem('access_token') : null) as string | null;
 
   // helper (fixed)
   const euro = (n: number) => `€${Number(n || 0).toFixed(2)}`;
@@ -138,10 +138,14 @@ export default function ExpenseList() {
   };
 
   const handleRangeApply = () => {
-    setPage(1);
-    setHasMore(true);
-    fetchExpenses(1);
-  };
+  if (range === 'custom' && startDate && endDate && startDate > endDate) {
+    alert('Start date must be before end date.');
+    return;
+  }
+  setPage(1);
+  setHasMore(true);
+  fetchExpenses(1);
+};
 
   const loadMore = () => {
     const next = page + 1;
@@ -296,8 +300,12 @@ export default function ExpenseList() {
       </div>
 
       {hasMore && (
-        <button className="btn btn-primary mt-3" disabled={loading} onClick={loadMore}>
-          {loading ? 'Loading...' : 'Load More'}
+        <button
+            className="btn btn-primary mt-3"
+            disabled={loading || !hasMore}
+            onClick={loadMore}
+        >
+            {loading ? 'Loading...' : 'Load More'}
         </button>
       )}
     </div>

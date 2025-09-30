@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   ResponsiveContainer,
   BarChart, Bar,
@@ -130,7 +130,7 @@ export default function BudgetVsExpensesChart({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string|null>(null);
 
-  // NEW: local category filter controls
+  // Local category filter controls
   const [catInput, setCatInput] = useState<string>(category ?? '');
   const [catApplied, setCatApplied] = useState<string>(category ?? '');
 
@@ -144,8 +144,11 @@ export default function BudgetVsExpensesChart({
       setLoading(true);
       setError(null);
       try {
+        // re-assert token as a string within this scope to satisfy TS
+        const tk = token as string;
+
         // 1) EXPENSES from overview
-        const ov = await getOverview(token, {
+        const ov = await getOverview(tk, {
           period: windowPeriod,
           group_by: groupBy,
           ...(catApplied ? { category: catApplied } : {}),
@@ -186,7 +189,7 @@ export default function BudgetVsExpensesChart({
         }
 
         // 3) BUDGETS in the same window (paginated), filtered by category if any
-        const budgets = await fetchBudgetsInWindow(token, {
+        const budgets = await fetchBudgetsInWindow(tk, {
           startDate: startISO,
           endDate: endISO,
           category: catApplied || undefined,
@@ -310,79 +313,52 @@ export default function BudgetVsExpensesChart({
       )}
 
       {/* Totals (match series colors) */}
-<div className="row g-3 mb-3">
-  <div className="col-md-4">
-    <div className="card shadow-sm">
-      <div className="card-body">
-        <div className="text-muted small">Total Budget ({windowPeriod})</div>
-        <div className="fs-4 fw-bold" style={{ color: COLOR_BUDGET }}>
-          {euro(totals.budget)}
+      <div className="row g-3 mb-3">
+        <div className="col-md-4">
+          <div className="card shadow-sm">
+            <div className="card-body">
+              <div className="text-muted small">Total Budget ({windowPeriod})</div>
+              <div className="fs-4 fw-bold" style={{ color: COLOR_BUDGET }}>
+                {euro(totals.budget)}
+              </div>
+              <div className="small mt-1">
+                <span style={{ display: 'inline-block', width: 10, height: 10, background: COLOR_BUDGET, marginRight: 6, borderRadius: 2 }} />
+                Budget series color
+              </div>
+            </div>
+          </div>
         </div>
-        <div className="small mt-1">
-          <span
-            style={{
-              display: 'inline-block',
-              width: 10,
-              height: 10,
-              background: COLOR_BUDGET,
-              marginRight: 6,
-              borderRadius: 2,
-            }}
-          />
-          Budget series color
-        </div>
-      </div>
-    </div>
-  </div>
 
-  <div className="col-md-4">
-    <div className="card shadow-sm">
-      <div className="card-body">
-        <div className="text-muted small">Total Expenses ({windowPeriod})</div>
-        <div className="fs-4 fw-bold" style={{ color: COLOR_EXP }}>
-          {euro(totals.expenses)}
+        <div className="col-md-4">
+          <div className="card shadow-sm">
+            <div className="card-body">
+              <div className="text-muted small">Total Expenses ({windowPeriod})</div>
+              <div className="fs-4 fw-bold" style={{ color: COLOR_EXP }}>
+                {euro(totals.expenses)}
+              </div>
+              <div className="small mt-1">
+                <span style={{ display: 'inline-block', width: 10, height: 10, background: COLOR_EXP, marginRight: 6, borderRadius: 2 }} />
+                Expenses series color
+              </div>
+            </div>
+          </div>
         </div>
-        <div className="small mt-1">
-          <span
-            style={{
-              display: 'inline-block',
-              width: 10,
-              height: 10,
-              background: COLOR_EXP,
-              marginRight: 6,
-              borderRadius: 2,
-            }}
-          />
-          Expenses series color
-        </div>
-      </div>
-    </div>
-  </div>
 
-  <div className="col-md-4">
-    <div className="card shadow-sm">
-      <div className="card-body">
-        <div className="text-muted small">Remaining ({windowPeriod})</div>
-        <div className="fs-4 fw-bold" style={{ color: COLOR_REM }}>
-          {euro(totals.remaining)}
-        </div>
-        <div className="small mt-1">
-          <span
-            style={{
-              display: 'inline-block',
-              width: 10,
-              height: 10,
-              background: COLOR_REM,
-              marginRight: 6,
-              borderRadius: 2,
-            }}
-          />
-          Remaining series color
+        <div className="col-md-4">
+          <div className="card shadow-sm">
+            <div className="card-body">
+              <div className="text-muted small">Remaining ({windowPeriod})</div>
+              <div className="fs-4 fw-bold" style={{ color: COLOR_REM }}>
+                {euro(totals.remaining)}
+              </div>
+              <div className="small mt-1">
+                <span style={{ display: 'inline-block', width: 10, height: 10, background: COLOR_REM, marginRight: 6, borderRadius: 2 }} />
+                Remaining series color
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
-  </div>
-</div>
 
       {/* Chart */}
       <div className="card shadow-sm">

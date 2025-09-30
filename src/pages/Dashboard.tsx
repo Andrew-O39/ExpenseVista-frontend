@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   ResponsiveContainer,
   PieChart, Pie, Cell,
@@ -7,8 +7,11 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, Legend,
 } from 'recharts';
 import { useNavigate } from 'react-router-dom';
-import { format, getISOWeek } from 'date-fns';
-import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear } from 'date-fns';
+import {
+  startOfWeek, endOfWeek,
+  startOfMonth, endOfMonth,
+  startOfYear, endOfYear,
+} from 'date-fns';
 
 import { getSummary, getBudgets, getCurrentUser, getOverview } from '../services/api';
 import { isTokenValid } from '../utils/auth';
@@ -43,7 +46,6 @@ type OverviewPoint = { label: string; income: number; expenses: number; net: num
 
 type CurrentPeriod = 'weekly' | 'monthly' | 'quarterly' | 'half-yearly' | 'yearly';
 
-
 /* =========================
    Helpers
 ========================= */
@@ -53,21 +55,14 @@ function cleanCategory(cat: string): string {
   return cat.toLowerCase().trim().replace(/\s+/g, ' ').normalize();
 }
 
-function getCurrentWeek(): string {
-  const now = new Date();
-  const week = getISOWeek(now);
-  const year = now.getFullYear();
-  return `${year}-W${week}`;
-}
-
 function prettyPeriod(p?: string) {
   switch (p) {
-    case 'weekly': return 'this week';
-    case 'monthly': return 'this month';
-    case 'quarterly':    return 'this quarter';
-    case 'half-yearly':  return 'this half-year';
-    case 'yearly': return 'this year';
-    default: return p || '';
+    case 'weekly':      return 'this week';
+    case 'monthly':     return 'this month';
+    case 'quarterly':   return 'this quarter';
+    case 'half-yearly': return 'this half-year';
+    case 'yearly':      return 'this year';
+    default:            return p || '';
   }
 }
 
@@ -78,33 +73,36 @@ function formatRange(start?: string | null, end?: string | null) {
   return `${s} – ${e}`;
 }
 
-// Reuseable date range formatter (safe)
-function formatGroupRange(start?: string | null, end?: string | null) {
-  if (!start || !end) return '';
-  const s = new Date(start).toLocaleDateString();
-  const e = new Date(end).toLocaleDateString();
-  return `${s} – ${e}`;
-}
-
-// compact range helper
-function rangeFor(period: 'weekly'|'monthly'|'yearly') {
+// Compute current window for *any* supported period
+function rangeFor(period: CurrentPeriod) {
   const now = new Date();
-  if (period === 'weekly')  return { start: startOfWeek(now, { weekStartsOn: 1 }), end: endOfWeek(now, { weekStartsOn: 1 }) }; // ISO: Mon–Sun
-  if (period === 'monthly') return { start: startOfMonth(now), end: endOfMonth(now) };
-  return { start: startOfYear(now), end: endOfYear(now) };
-}
-const toIso = (d: Date) => d.toISOString();
-
-// label helper for the grouped totals
-const prettyGroup = (g: 'weekly' | 'monthly' | 'quarterly' | 'half-yearly') => {
-  switch (g) {
-    case 'weekly': return 'Weekly';
-    case 'monthly': return 'Monthly';
-    case 'quarterly': return 'Quarterly';
-    case 'half-yearly': return 'Half-yearly';
-    default: return g;
+  if (period === 'weekly') {
+    return {
+      start: startOfWeek(now, { weekStartsOn: 1 }),
+      end: endOfWeek(now, { weekStartsOn: 1 }),
+    };
   }
-};
+  if (period === 'monthly') {
+    return { start: startOfMonth(now), end: endOfMonth(now) };
+  }
+  if (period === 'yearly') {
+    return { start: startOfYear(now), end: endOfYear(now) };
+  }
+  if (period === 'quarterly') {
+    const m = now.getMonth(); // 0..11
+    const qStartMonth = Math.floor(m / 3) * 3;
+    const start = new Date(now.getFullYear(), qStartMonth, 1);
+    const end = new Date(now.getFullYear(), qStartMonth + 3, 0, 23, 59, 59, 999);
+    return { start, end };
+  }
+  // half-yearly
+  const firstHalf = now.getMonth() < 6;
+  const start = new Date(now.getFullYear(), firstHalf ? 0 : 6, 1);
+  const end = new Date(now.getFullYear(), firstHalf ? 6 : 12, 0, 23, 59, 59, 999);
+  return { start, end };
+}
+
+const toIso = (d: Date) => d.toISOString();
 
 // Human label for the fixed grouped window (we use 'yearly' today)
 const prettyGroupedWindow = (w: 'weekly' | 'monthly' | 'yearly') => {
@@ -122,7 +120,6 @@ function fmtDDMMYYYY(d: Date) {
   const yyyy = d.getUTCFullYear();
   return `${dd}.${mm}.${yyyy}`;
 }
-
 
 // Turn a label into a start/end span (supports monthly, quarterly, half-yearly)
 const spanFromLabel = (label: string) => {
@@ -161,7 +158,6 @@ const spanFromLabel = (label: string) => {
   return null;
 };
 
-
 /* =========================
    Component
 ========================= */
@@ -196,9 +192,6 @@ export default function Dashboard() {
   const [chartType, setChartType] = useState<'bar' | 'line'>('bar');
   const [overviewSeries, setOverviewSeries] = useState<OverviewPoint[]>([]);
   const [overviewTotals, setOverviewTotals] = useState<{ income: number; expenses: number; net: number } | null>(null);
-  const [groupedMeta, setGroupedMeta] = useState<{ start: string | null; end: string | null; groupBy: 'weekly' | 'monthly' | 'quarterly' | 'half-yearly' }>(
-  { start: null, end: null, groupBy: 'monthly' });
-
 
   /* =========================
      Session timer
@@ -251,6 +244,7 @@ export default function Dashboard() {
       navigate('/login', { replace: true });
       return;
     }
+    const t = token as string;
 
     async function fetchTop() {
       setLoading(true);
@@ -258,60 +252,57 @@ export default function Dashboard() {
 
       try {
         // Current user
-        const user = await getCurrentUser(token);
+        const user = await getCurrentUser(t);
         if (!mounted) return;
         setUsername(user.username ?? 'User');
 
         // Spending summary
-        const rawSummary = await getSummary(token, appliedPeriod, appliedCategory || undefined);
+        const rawSummary = await getSummary(t, appliedPeriod, appliedCategory || undefined);
         if (!mounted) return;
 
         let normSummary: NormalizedSummary = { period: appliedPeriod, summary: {} };
         if (rawSummary && typeof rawSummary === 'object') {
-          if ('total_spent' in rawSummary && typeof rawSummary.total_spent === 'number') {
-            const cat = cleanCategory(rawSummary.category ?? 'category');
+          if ('total_spent' in rawSummary && typeof (rawSummary as any).total_spent === 'number') {
+            const cat = cleanCategory((rawSummary as any).category ?? 'category');
             normSummary = {
-              period: rawSummary.period ?? appliedPeriod,
-              summary: { [cat]: Number(rawSummary.total_spent) || 0 },
+              period: (rawSummary as any).period ?? appliedPeriod,
+              summary: { [cat]: Number((rawSummary as any).total_spent) || 0 },
             };
-          } else if ('summary' in rawSummary && typeof rawSummary.summary === 'object') {
+          } else if ('summary' in rawSummary && typeof (rawSummary as any).summary === 'object') {
             const map: Record<string, number> = {};
-            Object.entries(rawSummary.summary).forEach(([k, v]) => {
+            Object.entries((rawSummary as any).summary).forEach(([k, v]) => {
               if (typeof k === 'string') {
                 const cleanedCat = cleanCategory(k);
                 map[cleanedCat] = Number(v) || 0;
               }
             });
             normSummary = {
-              period: rawSummary.period ?? appliedPeriod,
+              period: (rawSummary as any).period ?? appliedPeriod,
               summary: map,
             };
           }
         }
         setSummary(normSummary);
 
-// --- Budgets for the *current* appliedPeriod window ---
-const { start, end } = rangeFor(appliedPeriod);
+        // --- Budgets for the *current* appliedPeriod window ---
+        const { start, end } = rangeFor(appliedPeriod);
+        const rawBudgets = await getBudgets(t, {
+          period: appliedPeriod,          // supports weekly|monthly|quarterly|half-yearly|yearly
+          startDate: toIso(start),
+          endDate: toIso(end),
+          page: 1,
+          limit: 100,
+        });
 
-const rawBudgets = await getBudgets(token, {
-  period: appliedPeriod,          // 'weekly' | 'monthly' | 'yearly'
-  startDate: toIso(start),        // narrow to current week/month/year
-  endDate: toIso(end),
-  // optionally: category: appliedCategory || undefined, // if you want category-specific budgets here
-  page: 1,
-  limit: 100,                     // raise if you expect many categories
-});
+        const mappedBudgets: BudgetItem[] = (rawBudgets ?? []).map((b: any) => ({
+          category: cleanCategory(b.category ?? ''),
+          amount: Number(b.limit_amount) || 0,
+          period: String(b.period ?? ''),
+        }));
+        setBudgets(mappedBudgets);
 
-const mappedBudgets: BudgetItem[] = (rawBudgets ?? []).map((b: any) => ({
-  category: cleanCategory(b.category ?? ''),
-  amount: Number(b.limit_amount) || 0,
-  period: String(b.period ?? ''),
-}));
-
-setBudgets(mappedBudgets);
-
-        // Overview (global income for period)
-        const ov = await getOverview(token, {
+        // Overview (global income for period; expenses optionally filtered by category)
+        const ov = await getOverview(t, {
           period: appliedPeriod,
           ...(appliedCategory ? { category: appliedCategory } : {}),
         });
@@ -328,7 +319,7 @@ setBudgets(mappedBudgets);
 
         // If a category is selected, fetch category-specific expenses + compute net (income always global)
         if (appliedCategory) {
-          const ovCat = await getOverview(token, {
+          const ovCat = await getOverview(t, {
             period: appliedPeriod,
             category: appliedCategory,
           });
@@ -367,56 +358,52 @@ setBudgets(mappedBudgets);
      Data fetch for GROUPED chart
      (independent; uses only groupBy)
   ========================= */
-  // Choose a fixed window just for the grouped overview (historical scope)
-const GROUPED_WINDOW: 'weekly' | 'monthly' | 'yearly' = 'yearly';
+  const GROUPED_WINDOW: 'weekly' | 'monthly' | 'yearly' = 'yearly';
 
-// Grouped Income vs Expenses (independent of the top card)
-useEffect(() => {
-  let mounted = true;
-  const token = localStorage.getItem('access_token');
-  if (!token || !isTokenValid()) return;
+  useEffect(() => {
+    let mounted = true;
+    const token = localStorage.getItem('access_token');
+    if (!token || !isTokenValid()) return;
+    const t = token as string;
 
-  async function fetchGrouped() {
-    try {
-      const ov = await getOverview(token, {
-        period: GROUPED_WINDOW,     // independent window
-        group_by: groupBy,          // weekly | monthly | quarterly | half-yearly
-        // no category here
-      });
-      if (!mounted) return;
+    async function fetchGrouped() {
+      try {
+        const ov = await getOverview(t, {
+          period: GROUPED_WINDOW,     // independent window
+          group_by: groupBy,          // weekly | monthly | quarterly | half-yearly
+        });
+        if (!mounted) return;
 
-      const raw = Array.isArray(ov?.results) ? ov.results : [];
-      const series = raw
-        .map((r: any) => ({
-          label: String(r.period ?? r.label ?? r.bucket ?? ''),
-          income: Number(r.total_income ?? r.income ?? r.sum_income ?? 0),
-          expenses: Number(r.total_expenses ?? r.expenses ?? r.sum_expenses ?? 0),
-          net: Number(r.net_balance ?? r.net ?? (
-            Number(r.total_income ?? r.income ?? 0) - Number(r.total_expenses ?? r.expenses ?? 0)
-          )),
-        }))
-        .filter(d => d.label);
+        const raw = Array.isArray(ov?.results) ? ov.results : [];
+        const series: OverviewPoint[] = raw
+          .map((r: any): OverviewPoint => ({
+            label: String(r.period ?? r.label ?? r.bucket ?? ''),
+            income: Number(r.total_income ?? r.income ?? r.sum_income ?? 0),
+            expenses: Number(r.total_expenses ?? r.expenses ?? r.sum_expenses ?? 0),
+            net: Number(r.net_balance ?? r.net ?? (
+              Number(r.total_income ?? r.income ?? 0) - Number(r.total_expenses ?? r.expenses ?? 0)
+            )),
+          }))
+          .filter((d) => d.label !== '');
 
-      setOverviewSeries(series);
+        setOverviewSeries(series);
 
-      // Totals always derived from what's plotted
-      const totalIncome = series.reduce((a, s) => a + (s.income || 0), 0);
-      const totalExpenses = series.reduce((a, s) => a + (s.expenses || 0), 0);
-      const net = totalIncome - totalExpenses;
+        // Totals always derived from what's plotted
+        const totalIncome = series.reduce((a, s) => a + (s.income || 0), 0);
+        const totalExpenses = series.reduce((a, s) => a + (s.expenses || 0), 0);
+        const net = totalIncome - totalExpenses;
 
-      setOverviewTotals({ income: totalIncome, expenses: totalExpenses, net });
-      setGroupedMeta({ start: ov?.start ?? null, end: ov?.end ?? null, groupBy });
-    } catch (e) {
-      console.error('Grouped overview fetch failed:', e);
-      setOverviewSeries([]);
-      setOverviewTotals({ income: 0, expenses: 0, net: 0 });
-      setGroupedMeta({ start: null, end: null, groupBy });
+        setOverviewTotals({ income: totalIncome, expenses: totalExpenses, net });
+      } catch (e) {
+        console.error('Grouped overview fetch failed:', e);
+        setOverviewSeries([]);
+        setOverviewTotals({ income: 0, expenses: 0, net: 0 });
+      }
     }
-  }
 
-  fetchGrouped();
-  return () => { mounted = false; };
-}, [groupBy]); // only responds to grouped selector
+    fetchGrouped();
+    return () => { mounted = false; };
+  }, [groupBy]);
 
   /* =========================
      Derived data for table & chart
@@ -444,8 +431,6 @@ useEffect(() => {
     return { name: category, value: spent, budget, isOverspentNoBudget };
   });
 
-  const categorySuffix = appliedCategory ? ` for ${appliedCategory}` : '';
-
   /* =========================
      Handlers
   ========================= */
@@ -465,7 +450,7 @@ useEffect(() => {
      Render
   ========================= */
   if (loading) return <div className="container mt-5">Loading your dashboard...</div>;
-  if (error) return <div className="container mt-5 text-danger">{String(error)}</div>;
+  if (error)   return <div className="container mt-5 text-danger">{String(error)}</div>;
 
   return (
     <div className="container p-4">
@@ -647,14 +632,12 @@ useEffect(() => {
               </tbody>
             </table>
 
-
             {/* Budget vs Expenses overview */}
             <BudgetVsExpensesChart
-            windowPeriod="yearly"         // yearly scope by default
-            initialGroupBy="monthly"      // initial grouping
-            // category={appliedCategory || undefined}  // optionally connect your filter
+              windowPeriod="yearly"
+              initialGroupBy="monthly"
+              // category={appliedCategory || undefined}
             />
-
 
             {/* Income vs Expenses (grouped, independent) */}
             <div className="mt-5">
@@ -671,89 +654,63 @@ useEffect(() => {
                 </div>
               </div>
 
-  {/* Totals for grouped chart (independent) */}
-<div className="row g-3 mb-3">
-  {/* Income (green) */}
-  <div className="col-md-4">
-    <div className="card shadow-sm h-100">
-      <div className="card-body">
-        <div className="text-muted small">
-          Total Income for {prettyGroupedWindow('yearly')}
-        </div>
-        <div className="fs-4 fw-bold" style={{ color: '#2ecc71' }}>
-          €{(overviewTotals?.income ?? 0).toFixed(2)}
-        </div>
-        <div className="small mt-1">
-          <span
-            style={{
-              display: 'inline-block',
-              width: 10,
-              height: 10,
-              background: '#2ecc71',
-              marginRight: 6,
-              borderRadius: 2,
-            }}
-          />
-          Income series color in chart
-        </div>
-      </div>
-    </div>
-  </div>
+              {/* Totals for grouped chart (independent) */}
+              <div className="row g-3 mb-3">
+                {/* Income (green) */}
+                <div className="col-md-4">
+                  <div className="card shadow-sm h-100">
+                    <div className="card-body">
+                      <div className="text-muted small">
+                        Total Income for {prettyGroupedWindow('yearly')}
+                      </div>
+                      <div className="fs-4 fw-bold" style={{ color: '#2ecc71' }}>
+                        €{(overviewTotals?.income ?? 0).toFixed(2)}
+                      </div>
+                      <div className="small mt-1">
+                        <span style={{ display: 'inline-block', width: 10, height: 10, background: '#2ecc71', marginRight: 6, borderRadius: 2 }} />
+                        Income series color in chart
+                      </div>
+                    </div>
+                  </div>
+                </div>
 
-  {/* Expenses (red) */}
-  <div className="col-md-4">
-    <div className="card shadow-sm h-100">
-      <div className="card-body">
-        <div className="text-muted small">
-          Total Expenses for {prettyGroupedWindow('yearly')}
-        </div>
-        <div className="fs-4 fw-bold" style={{ color: '#e74c3c' }}>
-          €{(overviewTotals?.expenses ?? 0).toFixed(2)}
-        </div>
-        <div className="small mt-1">
-          <span
-            style={{
-              display: 'inline-block',
-              width: 10,
-              height: 10,
-              background: '#e74c3c',
-              marginRight: 6,
-              borderRadius: 2,
-            }}
-          />
-          Expenses series color in chart
-        </div>
-      </div>
-    </div>
-  </div>
+                {/* Expenses (red) */}
+                <div className="col-md-4">
+                  <div className="card shadow-sm h-100">
+                    <div className="card-body">
+                      <div className="text-muted small">
+                        Total Expenses for {prettyGroupedWindow('yearly')}
+                      </div>
+                      <div className="fs-4 fw-bold" style={{ color: '#e74c3c' }}>
+                        €{(overviewTotals?.expenses ?? 0).toFixed(2)}
+                      </div>
+                      <div className="small mt-1">
+                        <span style={{ display: 'inline-block', width: 10, height: 10, background: '#e74c3c', marginRight: 6, borderRadius: 2 }} />
+                        Expenses series color in chart
+                      </div>
+                    </div>
+                  </div>
+                </div>
 
-  {/* Net (blue) */}
-  <div className="col-md-4">
-    <div className="card shadow-sm h-100">
-      <div className="card-body">
-        <div className="text-muted small">
-          Net Balance for {prettyGroupedWindow('yearly')}
-        </div>
-        <div className="fs-4 fw-bold" style={{ color: '#3498db' }}>
-          €{(overviewTotals?.net ?? 0).toFixed(2)}
-        </div>
-        <div className="small mt-1">
-          <span
-            style={{
-              display: 'inline-block',
-              width: 10,
-              height: 10,
-              background: '#3498db',
-              marginRight: 6,
-              borderRadius: 2,
-            }}
-          />
-          Net series color in chart
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+                {/* Net (blue) */}
+                <div className="col-md-4">
+                  <div className="card shadow-sm h-100">
+                    <div className="card-body">
+                      <div className="text-muted small">
+                        Net Balance for {prettyGroupedWindow('yearly')}
+                      </div>
+                      <div className="fs-4 fw-bold" style={{ color: '#3498db' }}>
+                        €{(overviewTotals?.net ?? 0).toFixed(2)}
+                      </div>
+                      <div className="small mt-1">
+                        <span style={{ display: 'inline-block', width: 10, height: 10, background: '#3498db', marginRight: 6, borderRadius: 2 }} />
+                        Net series color in chart
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {/* Chart type toggle */}
               <div className="d-flex justify-content-end mb-2">
                 <div className="btn-group btn-group-sm" role="group" aria-label="Chart type">
@@ -783,100 +740,99 @@ useEffect(() => {
                     <div style={{ height: 360 }}>
                       <ResponsiveContainer width="100%" height="100%">
                         {chartType === 'bar' ? (
-                        <BarChart data={overviewSeries} margin={{ top: 16, right: 24, left: 0, bottom: 8 }}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="label" />
-                        <YAxis />
-                        <Tooltip
-                        content={({ active, payload, label }) => {
-                            if (!active || !payload?.length) return null;
-                            const inc = payload.find(p => p.dataKey === 'income')?.value ?? 0;
-                            const exp = payload.find(p => p.dataKey === 'expenses')?.value ?? 0;
-                            const net = payload.find(p => p.dataKey === 'net')?.value ?? 0;
-                            const span = typeof label === 'string' ? spanFromLabel(label) : null;
+                          <BarChart data={overviewSeries} margin={{ top: 16, right: 24, left: 0, bottom: 8 }}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="label" />
+                            <YAxis />
+                            <Tooltip
+                              content={({ active, payload, label }) => {
+                                if (!active || !payload?.length) return null;
+                                const inc = payload.find(p => (p as any).dataKey === 'income')?.value ?? 0;
+                                const exp = payload.find(p => (p as any).dataKey === 'expenses')?.value ?? 0;
+                                const net = payload.find(p => (p as any).dataKey === 'net')?.value ?? 0;
+                                const span = typeof label === 'string' ? spanFromLabel(label) : null;
 
-                            return (
-                                <div className="card shadow-sm p-2" style={{ minWidth: 220 }}>
-                                <div className="fw-semibold mb-1">{String(label ?? '')}</div>
-                                {span && (
-                                <div className="text-muted small mb-2">
-                                    {fmtDDMMYYYY(span.start)} — {fmtDDMMYYYY(span.end)}
-                                </div>
-                                )}
-                                <div className="small">
-                                <div>
-                                    <span style={{ display: 'inline-block', width: 8, height: 8, background: '#2ecc71', marginRight: 6, borderRadius: 2 }} />
-                                    Income: €{Number(inc).toFixed(2)}
-                                </div>
-                                <div>
-                                    <span style={{ display: 'inline-block', width: 8, height: 8, background: '#e74c3c', marginRight: 6, borderRadius: 2 }} />
-                                    Expenses: €{Number(exp).toFixed(2)}
-                                </div>
-                                <div>
-                                    <span style={{ display: 'inline-block', width: 8, height: 8, background: '#3498db', marginRight: 6, borderRadius: 2 }} />
-                                    Net: €{Number(net).toFixed(2)}
-                                </div>
-                                </div>
-                            </div>
-                            );
-                        }}
-                        />
-                        <Legend />
-                        <Bar dataKey="income" name="Income" fill="#2ecc71" />
-                        <Bar dataKey="expenses" name="Expenses" fill="#e74c3c" />
-                        <Bar dataKey="net" name="Net Balance" fill="#3498db" />
-                    </BarChart>
-                    ) : (
-                    <LineChart data={overviewSeries} margin={{ top: 16, right: 24, left: 0, bottom: 8 }}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="label" />
-                        <YAxis />
-                        <Tooltip
-                        content={({ active, payload, label }) => {
-                            if (!active || !payload?.length) return null;
-                            const inc = payload.find(p => p.dataKey === 'income')?.value ?? 0;
-                            const exp = payload.find(p => p.dataKey === 'expenses')?.value ?? 0;
-                            const net = payload.find(p => p.dataKey === 'net')?.value ?? 0;
-                            const span = typeof label === 'string' ? spanFromLabel(label) : null;
+                                return (
+                                  <div className="card shadow-sm p-2" style={{ minWidth: 220 }}>
+                                    <div className="fw-semibold mb-1">{String(label ?? '')}</div>
+                                    {span && (
+                                      <div className="text-muted small mb-2">
+                                        {fmtDDMMYYYY(span.start)} — {fmtDDMMYYYY(span.end)}
+                                      </div>
+                                    )}
+                                    <div className="small">
+                                      <div>
+                                        <span style={{ display: 'inline-block', width: 8, height: 8, background: '#2ecc71', marginRight: 6, borderRadius: 2 }} />
+                                        Income: €{Number(inc).toFixed(2)}
+                                      </div>
+                                      <div>
+                                        <span style={{ display: 'inline-block', width: 8, height: 8, background: '#e74c3c', marginRight: 6, borderRadius: 2 }} />
+                                        Expenses: €{Number(exp).toFixed(2)}
+                                      </div>
+                                      <div>
+                                        <span style={{ display: 'inline-block', width: 8, height: 8, background: '#3498db', marginRight: 6, borderRadius: 2 }} />
+                                        Net: €{Number(net).toFixed(2)}
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              }}
+                            />
+                            <Legend />
+                            <Bar dataKey="income" name="Income" fill="#2ecc71" />
+                            <Bar dataKey="expenses" name="Expenses" fill="#e74c3c" />
+                            <Bar dataKey="net" name="Net Balance" fill="#3498db" />
+                          </BarChart>
+                        ) : (
+                          <LineChart data={overviewSeries} margin={{ top: 16, right: 24, left: 0, bottom: 8 }}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="label" />
+                            <YAxis />
+                            <Tooltip
+                              content={({ active, payload, label }) => {
+                                if (!active || !payload?.length) return null;
+                                const inc = payload.find(p => (p as any).dataKey === 'income')?.value ?? 0;
+                                const exp = payload.find(p => (p as any).dataKey === 'expenses')?.value ?? 0;
+                                const net = payload.find(p => (p as any).dataKey === 'net')?.value ?? 0;
+                                const span = typeof label === 'string' ? spanFromLabel(label) : null;
 
-                            return (
-                            <div className="card shadow-sm p-2" style={{ minWidth: 220 }}>
-                                <div className="fw-semibold mb-1">{String(label ?? '')}</div>
-                                {span && (
-                                <div className="text-muted small mb-2">
-                                    {fmtDDMMYYYY(span.start)} — {fmtDDMMYYYY(span.end)}
-                                </div>
-                                )}
-                                <div className="small">
-                                <div>
-                                    <span style={{ display: 'inline-block', width: 8, height: 8, background: '#2ecc71', marginRight: 6, borderRadius: 2 }} />
-                                    Income: €{Number(inc).toFixed(2)}
-                                </div>
-                                <div>
-                                    <span style={{ display: 'inline-block', width: 8, height: 8, background: '#e74c3c', marginRight: 6, borderRadius: 2 }} />
-                                    Expenses: €{Number(exp).toFixed(2)}
-                                </div>
-                                <div>
-                                    <span style={{ display: 'inline-block', width: 8, height: 8, background: '#3498db', marginRight: 6, borderRadius: 2 }} />
-                                    Net: €{Number(net).toFixed(2)}
-                                </div>
-                                </div>
-                                </div>
-                            );
-                        }}
-                        />
-                        <Legend />
-                        <Line type="monotone" dataKey="income" name="Income" stroke="#2ecc71" strokeWidth={2} dot={false} activeDot={{ r: 5 }} />
-                        <Line type="monotone" dataKey="expenses" name="Expenses" stroke="#e74c3c" strokeWidth={2} dot={false} activeDot={{ r: 5 }} />
-                        <Line type="monotone" dataKey="net" name="Net Balance" stroke="#3498db" strokeWidth={2} dot={false} activeDot={{ r: 5 }} />
-                    </LineChart>
-                    )}
+                                return (
+                                  <div className="card shadow-sm p-2" style={{ minWidth: 220 }}>
+                                    <div className="fw-semibold mb-1">{String(label ?? '')}</div>
+                                    {span && (
+                                      <div className="text-muted small mb-2">
+                                        {fmtDDMMYYYY(span.start)} — {fmtDDMMYYYY(span.end)}
+                                      </div>
+                                    )}
+                                    <div className="small">
+                                      <div>
+                                        <span style={{ display: 'inline-block', width: 8, height: 8, background: '#2ecc71', marginRight: 6, borderRadius: 2 }} />
+                                        Income: €{Number(inc).toFixed(2)}
+                                      </div>
+                                      <div>
+                                        <span style={{ display: 'inline-block', width: 8, height: 8, background: '#e74c3c', marginRight: 6, borderRadius: 2 }} />
+                                        Expenses: €{Number(exp).toFixed(2)}
+                                      </div>
+                                      <div>
+                                        <span style={{ display: 'inline-block', width: 8, height: 8, background: '#3498db', marginRight: 6, borderRadius: 2 }} />
+                                        Net: €{Number(net).toFixed(2)}
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              }}
+                            />
+                            <Legend />
+                            <Line type="monotone" dataKey="income"   name="Income"      stroke="#2ecc71" strokeWidth={2} dot={false} activeDot={{ r: 5 }} />
+                            <Line type="monotone" dataKey="expenses" name="Expenses"    stroke="#e74c3c" strokeWidth={2} dot={false} activeDot={{ r: 5 }} />
+                            <Line type="monotone" dataKey="net"      name="Net Balance" stroke="#3498db" strokeWidth={2} dot={false} activeDot={{ r: 5 }} />
+                          </LineChart>
+                        )}
                       </ResponsiveContainer>
                     </div>
                   )}
                 </div>
               </div>
-
             </div>{/* /grouped section */}
           </div>
         </div>

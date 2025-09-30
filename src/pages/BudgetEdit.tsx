@@ -5,7 +5,7 @@ import { isTokenValid } from '../utils/auth';
 
 type BudgetForm = {
   category: string;
-  limit_amount: string;
+  limit_amount: string; // keep as string for the input
   period: 'weekly' | 'monthly' | 'quarterly' | 'half-yearly' | 'yearly';
   notes: string;
 };
@@ -18,58 +18,66 @@ export default function BudgetEdit() {
   const [loading, setLoading] = useState(true);
   const [budget, setBudget] = useState<BudgetForm>({
     category: '',
-    limit_amount: '',   // empty string
+    limit_amount: '', // empty so you can type freely
     period: 'monthly',
-    notes: ''
+    notes: '',
   });
 
   const token = localStorage.getItem('access_token');
 
   useEffect(() => {
+    // auth guard
     if (!token || !isTokenValid()) {
       navigate('/login', { replace: true });
       return;
     }
     if (!id) {
-      navigate('/budgets');
+      navigate('/budgets', { replace: true });
       return;
     }
 
-    getBudgetById(token, parseInt(id))
-      .then(data => {
+    (async () => {
+      try {
+        const data = await getBudgetById(token, parseInt(id, 10));
         setBudget({
           category: data.category || '',
-          limit_amount: data.limit_amount || 0,
-          period: data.period || 'monthly',
-          notes: data.notes || ''
+          // normalize to string; empty if missing
+          limit_amount:
+            data.limit_amount === null || data.limit_amount === undefined
+              ? ''
+              : String(data.limit_amount),
+          period: (data.period as BudgetForm['period']) || 'monthly',
+          notes: data.notes || '',
         });
-      })
-      .catch(() => setError('Failed to load budget'))
-      .finally(() => setLoading(false));
+      } catch {
+        setError('Failed to load budget');
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, [id, navigate, token]);
 
   const handleChange = (
-  e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
-) => {
-  const { name, value } = e.target;
-
-  setBudget(prev => ({
-    ...prev,
-    [name]: value
-  }));
-};
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setBudget(prev => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!token || !id) return;
 
     try {
-      await updateBudget(token, parseInt(id), {
-  category: budget.category,
-  limit_amount: Number(budget.limit_amount) || 0, // safe conversion
-  period: budget.period,
-  notes: budget.notes
-});
+      await updateBudget(token, parseInt(id, 10), {
+        category: budget.category.trim(),
+        limit_amount: Number(budget.limit_amount) || 0, // convert at the edge
+        period: budget.period,
+        notes: budget.notes.trim(),
+      });
       navigate('/budgets');
     } catch {
       setError('Failed to update budget');
@@ -140,7 +148,11 @@ export default function BudgetEdit() {
         <button type="submit" className="btn btn-primary me-2">
           Save Changes
         </button>
-        <button type="button" className="btn btn-secondary" onClick={() => navigate('/budgets')}>
+        <button
+          type="button"
+          className="btn btn-secondary"
+          onClick={() => navigate('/budgets')}
+        >
           Cancel
         </button>
       </form>
