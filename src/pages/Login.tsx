@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { login } from "../services/api";
 import { isTokenValid } from "../utils/auth";
 
@@ -94,6 +94,9 @@ export default function Login() {
           >
             {showPassword ? "Hide" : "Show"}
           </button>
+        </div>
+        <div className="mt-3 text-center">
+            <Link to="/forgot-password">Forgot your password?</Link>
         </div>
 
         {error && <p className="text-danger small mb-3">{error}</p>}

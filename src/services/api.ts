@@ -1,4 +1,3 @@
-// services/api.ts
 import axios from "axios";
 
 // Pick from Vite env at build time; fallback to localhost for dev
@@ -357,5 +356,37 @@ export async function getOverview(
   } catch (error: any) {
     console.error("Failed to fetch overview:", error.response?.data || error.message);
     throw error;
+  }
+}
+
+
+// ------------------ PASSWORD RESET (Forgot & Reset) ------------------
+
+/**
+ * Request a password reset link.
+ * Backend always returns 200 to avoid email enumeration.
+ */
+export async function forgotPassword(email: string) {
+  try {
+    const { data } = await axios.post(`${API_BASE_URL}/forgot-password`, { email }, {
+      headers: { "Content-Type": "application/json" },
+    });
+    return data; // { msg: "If this email is registered, you will receive a reset link shortly." }
+  } catch (err: any) {
+    throw new Error(extractFastAPIError(err));
+  }
+}
+
+/**
+ * Reset the password using the token sent via email.
+ */
+export async function resetPassword(token: string, new_password: string) {
+  try {
+    const { data } = await axios.post(`${API_BASE_URL}/reset-password`, { token, new_password }, {
+      headers: { "Content-Type": "application/json" },
+    });
+    return data; // { msg: "Password has been reset successfully." }
+  } catch (err: any) {
+    throw new Error(extractFastAPIError(err));
   }
 }

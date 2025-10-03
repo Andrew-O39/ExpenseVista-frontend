@@ -4,6 +4,9 @@ import { Routes, Route, Link } from 'react-router-dom';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
+import ChangePassword from "./pages/ChangePassword";
 
 import CreateExpense from './pages/CreateExpense';
 import CreateBudget from './pages/CreateBudget';
@@ -47,6 +50,9 @@ export default function App() {
         <Route path="/" element={<Page title="Welcome"><Welcome /></Page>} />
         <Route path="/login" element={<Page title="Login"><Login /></Page>} />
         <Route path="/register" element={<Page title="Register"><Register /></Page>} />
+        <Route path="/forgot-password" element={<Page title="Forgot Password"><ForgotPassword /></Page>} />
+        <Route path="/reset-password"  element={<Page title="Reset Password"><ResetPassword /></Page>} />
+        <Route path="/change-password" element={<Page title="Change Password"><ChangePassword /></Page>} />
 
         {/* App */}
         <Route path="/dashboard" element={<Page title="Dashboard"><Dashboard /></Page>} />
