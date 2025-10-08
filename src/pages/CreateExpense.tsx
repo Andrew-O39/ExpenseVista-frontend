@@ -18,7 +18,7 @@ export default function CreateExpense() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [suggesting, setSuggesting] = useState(false);
-  const [suggestInfo, setSuggestInfo] = useState<{cat?: string; conf?: number; why?: string}>({});
+  const [suggestInfo, setSuggestInfo] = useState<{ cat?: string; conf?: number; why?: string }>({});
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,7 +55,7 @@ export default function CreateExpense() {
       setNotes('');
       setSuggestInfo({});
 
-      // Navigate after a short delay (optional)
+      // Navigate after short delay
       setTimeout(() => navigate('/expenses'), 800);
     } catch (err: any) {
       setError(err?.response?.data?.detail || err.message || 'Failed to create expense.');
@@ -82,7 +82,6 @@ export default function CreateExpense() {
       });
 
       if (resp.suggested_category) {
-        setCategory(resp.suggested_category);
         setSuggestInfo({
           cat: resp.suggested_category,
           conf: resp.confidence ?? 0,
@@ -108,6 +107,7 @@ export default function CreateExpense() {
       >
         <h3 className="mb-4 text-center">Create Expense</h3>
 
+        {/* Description */}
         <div className="mb-3">
           <label htmlFor="description" className="form-label">Description (optional)</label>
           <input
@@ -120,6 +120,7 @@ export default function CreateExpense() {
           />
         </div>
 
+        {/* Amount */}
         <div className="mb-3">
           <label htmlFor="amount" className="form-label">Amount (€)</label>
           <input
@@ -134,68 +135,63 @@ export default function CreateExpense() {
           />
         </div>
 
+        {/* Category + AI Suggestion */}
         <div className="mb-2">
-  <label htmlFor="category" className="form-label">Category</label>
-  <div className="input-group">
-    <input
-      id="category"
-      type="text"
-      value={category}
-      onChange={(e) => setCategory(e.target.value)}
-      className="form-control"
-      placeholder="e.g., transport, groceries"
-      required
-    />
-    <button
-      type="button"
-      className="btn btn-outline-secondary"
-      onClick={handleSuggest}
-      disabled={suggesting}
-      title="Suggest a category from description and history"
-    >
-      {suggesting ? 'Suggesting…' : 'Suggest'}
-    </button>
-  </div>
-  <div className="form-text">
-    Tip: enter a description first, then click “Suggest”.
-  </div>
+          <label htmlFor="category" className="form-label">Category</label>
+          <div className="input-group">
+            <input
+              id="category"
+              type="text"
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              className="form-control"
+              placeholder="e.g., transport, groceries"
+              required
+            />
+            <button
+              type="button"
+              className="btn btn-outline-secondary"
+              onClick={handleSuggest}
+              disabled={suggesting}
+              title="Suggest a category from description and history"
+            >
+              {suggesting ? 'Suggesting…' : 'Suggest'}
+            </button>
+          </div>
+          <div className="form-text">Tip: enter a description first, then click “Suggest”.</div>
 
-  {/* Show AI suggestion preview */}
-  {!!suggestInfo.cat && (
-    <div className="alert alert-light border mt-2 py-2 px-3 small d-flex justify-content-between align-items-center">
-      <div>
-   <AnimatePresence>
-  {suggestInfo.cat && (
-    <motion.div
-      key="suggest-banner"
-      initial={{ opacity: 0, y: -6 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -6 }}
-      transition={{ duration: 0.25 }}
-      className="alert alert-light border mt-2 py-2 px-3 small d-flex justify-content-between align-items-center"
-      style={{ borderColor: '#dee2e6' }}
-    >
-      <div>
-        💡 Suggested: <strong>{suggestInfo.cat}</strong>
-        {typeof suggestInfo.conf === 'number' && (
-          <> ({Math.round(suggestInfo.conf * 100)}% confidence)</>
-        )}
-        {suggestInfo.why ? <> – {suggestInfo.why}</> : null}
-      </div>
+          <AnimatePresence>
+            {suggestInfo.cat && (
+              <motion.div
+                key="suggest-banner"
+                initial={{ opacity: 0, y: -6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.25 }}
+                className="alert alert-light border mt-2 py-2 px-3 small d-flex justify-content-between align-items-center"
+              >
+                <div>
+                  💡 Suggested: <strong>{suggestInfo.cat}</strong>
+                  {typeof suggestInfo.conf === 'number' && (
+                    <> ({Math.round(suggestInfo.conf * 100)}% confidence)</>
+                  )}
+                  {suggestInfo.why ? <> – {suggestInfo.why}</> : null}
+                </div>
+                <motion.button
+                  type="button"
+                  className="btn btn-sm btn-outline-primary ms-2"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setCategory(suggestInfo.cat!)}
+                >
+                  Use suggestion
+                </motion.button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
 
-      <motion.button
-        type="button"
-        className="btn btn-sm btn-outline-primary ms-2"
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        onClick={() => setCategory(suggestInfo.cat!)}
-      >
-        Use suggestion
-      </motion.button>
-    </motion.div>
-  )}
-</AnimatePresence>
-
+        {/* Notes */}
         <div className="mb-3">
           <label htmlFor="notes" className="form-label">Notes (optional)</label>
           <textarea
@@ -207,9 +203,11 @@ export default function CreateExpense() {
           />
         </div>
 
+        {/* Alerts */}
         {error && <div className="alert alert-danger">{error}</div>}
         {success && <div className="alert alert-success">{success}</div>}
 
+        {/* Submit */}
         <button type="submit" className="btn btn-primary w-100">
           Create Expense
         </button>
