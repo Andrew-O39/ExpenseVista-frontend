@@ -88,6 +88,39 @@ export default function CreateExpense() {
           />
         </div>
 
+        // inside the form, near Category input
+<div className="mb-3">
+  <label htmlFor="category" className="form-label">Category</label>
+  <div className="input-group">
+    <input
+      id="category"
+      type="text"
+      value={category}
+      onChange={(e) => setCategory(e.target.value)}
+      className="form-control"
+      required
+    />
+    <button
+      type="button"
+      className="btn btn-outline-secondary"
+      onClick={async () => {
+        try {
+          const token = localStorage.getItem("access_token");
+          if (!token) return alert("Please sign in first.");
+          const { category: suggestion } = await aiSuggestCategory(token, description || category || "transaction", Number(amount) || undefined);
+          if (suggestion) setCategory(suggestion);
+          else alert("No suggestion available.");
+        } catch (e: any) {
+          alert("Suggestion unavailable.");
+        }
+      }}
+    >
+      Suggest
+    </button>
+  </div>
+  <div className="form-text">Tip: enter description first, then tap “Suggest”.</div>
+</div>
+
         <div className="mb-3">
           <label htmlFor="description" className="form-label">Description (optional)</label>
           <input

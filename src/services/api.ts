@@ -390,3 +390,25 @@ export async function resetPassword(token: string, new_password: string) {
     throw new Error(extractFastAPIError(err));
   }
 }
+
+/**
+ * AI Frontend hooks
+ */
+
+export async function aiSuggestCategory(token: string, text: string, amount?: number) {
+  const resp = await axios.post(
+    `${API_BASE_URL}/ai/suggest-category`,
+    { text, amount },
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  return resp.data as { category: string | null };
+}
+
+export async function aiCategoryFeedback(token: string, text: string, category: string) {
+  const resp = await axios.post(
+    `${API_BASE_URL}/ai/category-feedback`,
+    { text, category },
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  return resp.data; // { msg }
+}
