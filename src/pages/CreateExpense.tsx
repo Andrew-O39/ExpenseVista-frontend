@@ -106,11 +106,28 @@ export default function CreateExpense() {
       onClick={async () => {
         try {
           const token = localStorage.getItem("access_token");
-          if (!token) return alert("Please sign in first.");
-          const { category: suggestion } = await aiSuggestCategory(token, description || category || "transaction", Number(amount) || undefined);
-          if (suggestion) setCategory(suggestion);
-          else alert("No suggestion available.");
+          if (!token) {
+            alert("Please sign in first.");
+            return;
+          }
+
+          const resp = await aiSuggestCategory(token, {
+            description: description || category || "transaction",
+            amount: amount ? Number(amount) : undefined,
+          });
+
+          if (resp.suggested_category) {
+            setCategory(resp.suggested_category);
+            const pct = Math.round((resp.confidence ?? 0) * 100);
+            if (pct) {
+              // optional toast/alert; safe to remove if you don’t want a popup
+              console.info(`Suggested "${resp.suggested_category}" (${pct}% confident)`);
+            }
+          } else {
+            alert("No suggestion available.");
+          }
         } catch (e: any) {
+          console.error(e);
           alert("Suggestion unavailable.");
         }
       }}
