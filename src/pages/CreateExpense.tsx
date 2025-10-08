@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createExpense } from '../services/api';
+import { aiSuggestCategory } from '../services/api';
 
 export default function CreateExpense() {
   const navigate = useNavigate();
@@ -88,7 +89,6 @@ export default function CreateExpense() {
           />
         </div>
 
-        // inside the form, near Category input
 <div className="mb-3">
   <label htmlFor="category" className="form-label">Category</label>
   <div className="input-group">

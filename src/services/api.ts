@@ -391,17 +391,28 @@ export async function resetPassword(token: string, new_password: string) {
   }
 }
 
-/**
- * AI Frontend hooks
- */
+// ------------------ AI ------------------
 
-export async function aiSuggestCategory(token: string, text: string, amount?: number) {
-  const resp = await axios.post(
-    `${API_BASE_URL}/ai/suggest-category`,
-    { text, amount },
-    { headers: { Authorization: `Bearer ${token}` } }
-  );
-  return resp.data as { category: string | null };
+export async function aiSuggestCategory(
+  token: string,
+  payload: { description: string; amount?: number }
+) {
+  try {
+    const resp = await api.post(
+      `/ai/suggest-category`,
+      payload,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    return resp.data as {
+      suggested_category: string | null;
+      confidence: number;
+      rationale?: string | null;
+    };
+  } catch (err: any) {
+    const msg = extractFastAPIError(err);
+    console.error("AI suggest-category failed:", msg);
+    throw new Error(msg);
+  }
 }
 
 export async function aiCategoryFeedback(token: string, text: string, category: string) {
