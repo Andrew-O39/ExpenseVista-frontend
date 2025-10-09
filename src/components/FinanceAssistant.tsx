@@ -8,57 +8,9 @@ type ChatMsg = {
   actions?: Array<{ type: string; label?: string; params?: any }>;
 };
 
-// Build /expenses?start_date=...&end_date=...&category=...&search=...
-function buildExpensesUrl(params: Record<string, any> = {}) {
-  const usp = new URLSearchParams();
-  if (params.category) usp.set("category", params.category);
-  if (params.search)   usp.set("search", params.search);
-  if (params.start)    usp.set("start_date", params.start); // ISO
-  if (params.end)      usp.set("end_date", params.end);     // ISO
-  if (params.limit)    usp.set("limit", String(params.limit));
-  if (params.page)     usp.set("page", String(params.page));
-  const qs = usp.toString();
-  return qs ? `/expenses?${qs}` : `/expenses`;
-}
-
-function AssistantActions({ actions }: { actions?: ChatMsg["actions"] }) {
-  const navigate = useNavigate();
-  if (!actions || actions.length === 0) return null;
-
-  const handle = (a: NonNullable<ChatMsg["actions"]>[number]) => {
-    switch (a.type) {
-      case "view_expenses":
-      case "link": {
-        navigate(buildExpensesUrl(a.params || {}));
-        break;
-      }
-      case "show_breakdown": {
-        navigate("/dashboard?focus=breakdown");
-        break;
-      }
-      default:
-        console.warn("Unknown assistant action:", a);
-    }
-  };
-
-  return (
-    <div className="d-flex flex-wrap gap-2 mt-2">
-      {actions.map((a, i) => (
-        <button
-          key={i}
-          type="button"
-          className="btn btn-sm btn-outline-secondary"
-          onClick={() => handle(a)}
-          title={a.type}
-        >
-          {a.label || a.type}
-        </button>
-      ))}
-    </div>
-  );
-}
-
 export default function FinanceAssistant() {
+  const navigate = useNavigate();
+
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [input, setInput] = useState("");
@@ -77,6 +29,32 @@ export default function FinanceAssistant() {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [msgs, open]);
 
+  function buildExpensesUrl(params?: any) {
+    const qs = new URLSearchParams();
+
+    // We treat category as a search term in the current list API
+    if (params?.category) qs.set("category", String(params.category));
+    if (params?.search) qs.set("search", String(params.search));
+
+    // ISO datetimes expected by our page (we slice to yyyy-mm-dd within the page)
+    if (params?.start_date) qs.set("start_date", String(params.start_date));
+    if (params?.end_date) qs.set("end_date", String(params.end_date));
+
+    // Optional paging knobs
+    if (params?.page) qs.set("page", String(params.page));
+    if (params?.limit) qs.set("limit", String(params.limit));
+
+    return `/expenses?${qs.toString()}`;
+  }
+
+  function handleActionClick(a: { type: string; label?: string; params?: any }) {
+    // For now we only have one actionable type:
+    if (a.type === "open_expenses") {
+      navigate(buildExpensesUrl(a.params));
+    }
+    // You can add more action types here later (e.g., open budgets, create filters, etc.)
+  }
+
   async function sendMessage() {
     const content = input.trim();
     if (!content) return;
@@ -88,10 +66,7 @@ export default function FinanceAssistant() {
     try {
       const token = localStorage.getItem("access_token");
       if (!token) {
-        setMsgs((m) => [
-          ...m,
-          { role: "assistant", text: "Please sign in to use the assistant." },
-        ]);
+        setMsgs((m) => [...m, { role: "assistant", text: "Please sign in to use the assistant." }]);
         return;
       }
 
@@ -121,46 +96,12 @@ export default function FinanceAssistant() {
     }
   }
 
-  // minimal inline styles to avoid extra CSS files
-  const floatingWrap: React.CSSProperties = {
-    position: "fixed",
-    right: 16,
-    bottom: 16,
-    zIndex: 1050,
-  };
-
-  const panel: React.CSSProperties = {
-    width: 340,
-    maxHeight: 520,
-    boxShadow: "0 6px 24px rgba(0,0,0,0.15)",
-    borderRadius: 12,
-    overflow: "hidden",
-  };
-
-  const header: React.CSSProperties = {
-    background: "#0d6efd",
-    color: "#fff",
-    padding: "10px 12px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-  };
-
-  const body: React.CSSProperties = {
-    background: "#fff",
-    height: 360,
-    overflowY: "auto",
-    padding: 12,
-  };
-
-  const inputBar: React.CSSProperties = {
-    background: "#f8f9fa",
-    padding: 10,
-    display: "flex",
-    gap: 8,
-    alignItems: "center",
-  };
-
+  // minimal inline styles
+  const floatingWrap: React.CSSProperties = { position: "fixed", right: 16, bottom: 16, zIndex: 1050 };
+  const panel: React.CSSProperties = { width: 340, maxHeight: 520, boxShadow: "0 6px 24px rgba(0,0,0,0.15)", borderRadius: 12, overflow: "hidden" };
+  const header: React.CSSProperties = { background: "#0d6efd", color: "#fff", padding: "10px 12px", display: "flex", alignItems: "center", justifyContent: "space-between" };
+  const body: React.CSSProperties = { background: "#fff", height: 360, overflowY: "auto", padding: 12 };
+  const inputBar: React.CSSProperties = { background: "#f8f9fa", padding: 10, display: "flex", gap: 8, alignItems: "center" };
   const bubble = (role: ChatMsg["role"]): React.CSSProperties => ({
     whiteSpace: "pre-wrap",
     alignSelf: role === "user" ? "flex-end" : "flex-start",
@@ -201,7 +142,21 @@ export default function FinanceAssistant() {
               {msgs.map((m, i) => (
                 <div key={i} style={bubble(m.role)}>
                   {m.text}
-                  <AssistantActions actions={m.actions} />
+                  {Array.isArray(m.actions) && m.actions.length > 0 && (
+                    <div className="mt-2 d-flex flex-wrap gap-2">
+                      {m.actions.map((a, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          className="btn btn-sm btn-outline-secondary"
+                          onClick={() => handleActionClick(a)}
+                          title={a.type}
+                        >
+                          {a.label || "Open"}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ))}
               {busy && <div style={bubble("assistant")}>Thinking…</div>}
