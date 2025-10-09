@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
 import { getExpenses, deleteExpense } from '../services/api';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { isTokenValid } from '../utils/auth';
 
 type Expense = {
@@ -14,139 +14,169 @@ type Expense = {
 
 type QuickRange = 'all' | 'week' | 'month' | 'quarter' | 'half-year' | 'custom';
 
-function parseFiltersFromQS(qs: string) {
-  const p = new URLSearchParams(qs);
-  const search = p.get('search') || '';
-  const category = p.get('category') || '';
-  const startISO = p.get('start_date') || '';
-  const endISO = p.get('end_date') || '';
-  const page = Math.max(1, Number(p.get('page') || '1'));
-  const limit = Math.max(1, Number(p.get('limit') || '10'));
-  const searchUnified = search || category;
-  return { search: searchUnified, startISO, endISO, page, limit };
-}
-
-function computeRange(r: QuickRange): { start?: string; end?: string } {
-  const toISO = (d: Date) => d.toISOString();
-  const now = new Date();
-
-  if (r === 'week') {
-    const start = new Date(now);
-    start.setDate(now.getDate() - 6);
-    start.setHours(0, 0, 0, 0);
-    const end = new Date(now);
-    end.setHours(23, 59, 59, 999);
-    return { start: toISO(start), end: toISO(end) };
-  }
-  if (r === 'month') {
-    const start = new Date(now.getFullYear(), now.getMonth(), 1);
-    const end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
-    return { start: toISO(start), end: toISO(end) };
-  }
-  if (r === 'quarter') {
-    const q = Math.floor(now.getMonth() / 3);
-    const start = new Date(now.getFullYear(), q * 3, 1);
-    const end = new Date(now.getFullYear(), q * 3 + 3, 0, 23, 59, 59, 999);
-    return { start: toISO(start), end: toISO(end) };
-  }
-  if (r === 'half-year') {
-    const firstHalf = now.getMonth() < 6;
-    const start = new Date(now.getFullYear(), firstHalf ? 0 : 6, 1);
-    const end = new Date(now.getFullYear(), firstHalf ? 6 : 12, 0, 23, 59, 59, 999);
-    return { start: toISO(start), end: toISO(end) };
-  }
-  return {};
-}
-
 export default function ExpenseList() {
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // only keep a controlled input field for the search bar
   const [searchInput, setSearchInput] = useState('');
-
+  const [search, setSearch] = useState('');
   const [range, setRange] = useState<QuickRange>('all');
   const [startDate, setStartDate] = useState(''); // yyyy-mm-dd
   const [endDate, setEndDate] = useState('');     // yyyy-mm-dd
 
-  const token = (typeof window !== 'undefined'
-    ? localStorage.getItem('access_token')
-    : null) as string | null;
+  const token = (typeof window !== 'undefined' ? localStorage.getItem('access_token') : null) as string | null;
 
   const euro = (n: number) => `€${Number(n || 0).toFixed(2)}`;
-  const fmt = (iso: string) => new Date(iso).toLocaleString();
+  const toISO = (d: Date) => d.toISOString();
 
-  const fetchExpenses = async (opts: {
-    pageToLoad: number;
-    limitToUse: number;
-    searchQ: string;
-    startISO?: string;
-    endISO?: string;
-  }) => {
-    if (!token || !isTokenValid()) {
-      navigate('/login', { replace: true });
-      return;
+  const computeRange = (r: QuickRange): { start?: string; end?: string } => {
+    const now = new Date();
+    if (r === 'week') {
+      const start = new Date(now);
+      start.setDate(now.getDate() - 6);
+      start.setHours(0,0,0,0);
+      const end = new Date(now);
+      end.setHours(23,59,59,999);
+      return { start: toISO(start), end: toISO(end) };
     }
-    setLoading(true);
-    setError(null);
-    try {
-      const data: Expense[] = await getExpenses(token, {
-        search: opts.searchQ || undefined,
-        startDate: opts.startISO || undefined,
-        endDate: opts.endISO || undefined,
-        page: opts.pageToLoad,
-        limit: opts.limitToUse,
-      });
-
-      if (data.length < opts.limitToUse) setHasMore(false);
-
-      setExpenses(prev =>
-        opts.pageToLoad === 1
-          ? data
-          : [...prev, ...data.filter(d => !prev.some(p => p.id === d.id))]
-      );
-    } catch (err) {
-      console.error('Failed to load expenses:', err);
-      setError('Failed to load expenses');
-    } finally {
-      setLoading(false);
+    if (r === 'month') {
+      const start = new Date(now.getFullYear(), now.getMonth(), 1);
+      const end   = new Date(now.getFullYear(), now.getMonth()+1, 0, 23,59,59,999);
+      return { start: toISO(start), end: toISO(end) };
     }
+    if (r === 'quarter') {
+      const q = Math.floor(now.getMonth() / 3);
+      const start = new Date(now.getFullYear(), q*3, 1);
+      const end   = new Date(now.getFullYear(), q*3+3, 0, 23,59,59,999);
+      return { start: toISO(start), end: toISO(end) };
+    }
+    if (r === 'half-year') {
+      const firstHalf = now.getMonth() < 6;
+      const start = new Date(now.getFullYear(), firstHalf ? 0 : 6, 1);
+      const end   = new Date(now.getFullYear(), firstHalf ? 6 : 12, 0, 23,59,59,999);
+      return { start: toISO(start), end: toISO(end) };
+    }
+    return {};
   };
 
-  // URL-driven effect
+  /** Single source of truth: whenever the URL changes, we:
+   *  - set the UI state to mirror the URL
+   *  - fetch immediately using the URL values (no need to click "Apply")
+   */
   useEffect(() => {
-    const { search: s, startISO, endISO, page, limit: qpLimit } = parseFiltersFromQS(location.search);
+    const qs = new URLSearchParams(location.search);
 
-    setSearchInput(s);
+    const qpSearch   = qs.get('search') || '';
+    const qpCategory = qs.get('category') || ''; // treated as search
+    const qpStartISO = qs.get('start_date') || '';
+    const qpEndISO   = qs.get('end_date') || '';
+    const qpPage     = Number(qs.get('page') || '1');
+    const qpLimit    = Number(qs.get('limit') || '10');
 
-    if (startISO || endISO) {
+    const effectiveSearch = qpSearch || qpCategory || '';
+    setSearchInput(effectiveSearch);
+    setSearch(effectiveSearch);
+
+    if (qpStartISO || qpEndISO) {
       setRange('custom');
-      setStartDate(startISO ? startISO.slice(0, 10) : '');
-      setEndDate(endISO ? endISO.slice(0, 10) : '');
+      setStartDate(qpStartISO ? qpStartISO.slice(0, 10) : '');
+      setEndDate(qpEndISO ? qpEndISO.slice(0, 10) : '');
     } else {
       setRange('all');
       setStartDate('');
       setEndDate('');
     }
 
-    setLimit(qpLimit);
+    setPage(!Number.isNaN(qpPage) && qpPage > 0 ? qpPage : 1);
+    setLimit(!Number.isNaN(qpLimit) && qpLimit > 0 ? qpLimit : 10);
 
-    setHasMore(true);
-    fetchExpenses({
-      pageToLoad: page,
-      limitToUse: qpLimit,
-      searchQ: s,
-      startISO: startISO || undefined,
-      endISO: endISO || undefined,
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location.search]);
+    // ---- Immediate fetch using the URL values (not the state we just set) ----
+    if (!token || !isTokenValid()) {
+      navigate('/login', { replace: true });
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    getExpenses(token, {
+      search: effectiveSearch || undefined,
+      startDate: qpStartISO || undefined,
+      endDate: qpEndISO || undefined,
+      page: (!Number.isNaN(qpPage) && qpPage > 0 ? qpPage : 1),
+      limit: (!Number.isNaN(qpLimit) && qpLimit > 0 ? qpLimit : 10),
+    })
+      .then((data: Expense[]) => {
+        setExpenses(data);
+        setHasMore(data.length >= (!Number.isNaN(qpLimit) && qpLimit > 0 ? qpLimit : 10));
+      })
+      .catch((err) => {
+        console.error('Failed to load expenses:', err);
+        setError('Failed to load expenses');
+      })
+      .finally(() => setLoading(false));
+  }, [location.search, navigate, token]);
+
+  // ——— User actions update the URL; the effect above will fetch ———
+
+  const updateUrl = (overrides: Record<string, string | number | undefined>) => {
+    const params = new URLSearchParams(searchParams.toString());
+
+    const apply = (k: string, v?: string | number | null) => {
+      if (v === undefined || v === '' || v === null) params.delete(k);
+      else params.set(k, String(v));
+    };
+
+    apply('search', search);
+    apply('page', page);
+    apply('limit', limit);
+
+    if (range === 'custom') {
+      apply('start_date', startDate ? `${startDate}T00:00:00Z` : undefined);
+      apply('end_date',   endDate   ? `${endDate}T23:59:59Z` : undefined);
+    } else {
+      params.delete('start_date');
+      params.delete('end_date');
+    }
+
+    Object.entries(overrides).forEach(([k, v]) => apply(k, v as any));
+    setSearchParams(params);
+  };
+
+  const handleSearchApply = () => {
+    const val = searchInput.trim();
+    setSearch(val);
+    setPage(1);
+    updateUrl({ page: 1, search: val || undefined });
+  };
+
+  const handleRangeApply = () => {
+    if (range === 'custom' && startDate && endDate && startDate > endDate) {
+      alert('Start date must be before end date.');
+      return;
+    }
+    setPage(1);
+    updateUrl({ page: 1 });
+  };
+
+  const loadMore = () => {
+    const next = page + 1;
+    setPage(next);
+    updateUrl({ page: next });
+  };
+
+  const onLimitChange = (v: number) => {
+    setLimit(v);
+    setPage(1);
+    updateUrl({ page: 1, limit: v });
+  };
 
   const handleDelete = async (id: number) => {
     if (!token) {
@@ -159,58 +189,12 @@ export default function ExpenseList() {
       setExpenses(prev => prev.filter(e => e.id !== id));
       alert('Expense deleted successfully.');
     } catch (err: any) {
-      console.error('Failed to delete expense:', err?.response?.data || err?.message);
+      console.error('Failed to delete expense:', err.response?.data || err.message);
       alert('Failed to delete expense. Please try again.');
     }
   };
 
-  // Update URL (triggers fetch via effect)
-  const handleSearchApply = () => {
-    const val = searchInput.trim();
-    const params = new URLSearchParams(location.search);
-    if (val) params.set('search', val);
-    else params.delete('search');
-    params.set('page', '1');
-    navigate(`/expenses?${params.toString()}`);
-  };
-
-  const handleRangeApply = () => {
-    if (range === 'custom' && startDate && endDate && startDate > endDate) {
-      alert('Start date must be before end date.');
-      return;
-    }
-    const params = new URLSearchParams(location.search);
-
-    if (range === 'custom') {
-      if (startDate) params.set('start_date', `${startDate}T00:00:00Z`); else params.delete('start_date');
-      if (endDate)   params.set('end_date', `${endDate}T23:59:59Z`);   else params.delete('end_date');
-    } else if (range === 'all') {
-      params.delete('start_date');
-      params.delete('end_date');
-    } else {
-      const { start, end } = computeRange(range);
-      if (start) params.set('start_date', start); else params.delete('start_date');
-      if (end) params.set('end_date', end); else params.delete('end_date');
-    }
-
-    params.set('page', '1');
-    navigate(`/expenses?${params.toString()}`);
-  };
-
-  const loadMore = () => {
-    const params = new URLSearchParams(location.search);
-    const next = (Number(params.get('page') || '1') || 1) + 1;
-    params.set('page', String(next));
-    navigate(`/expenses?${params.toString()}`);
-  };
-
-  const onLimitChange = (v: number) => {
-    const params = new URLSearchParams(location.search);
-    params.set('limit', String(v));
-    params.set('page', '1');
-    navigate(`/expenses?${params.toString()}`);
-  };
-
+  const fmt = (iso: string) => new Date(iso).toLocaleString();
   const totalExpenses = useMemo(
     () => expenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0),
     [expenses]
@@ -230,7 +214,7 @@ export default function ExpenseList() {
             className="form-select form-select-sm"
             value={limit}
             onChange={e => onLimitChange(Number(e.target.value) || 10)}
-            style={{ width: 120 }}
+            style={{ width: 100 }}
           >
             <option value={10}>10 / page</option>
             <option value={25}>25 / page</option>
@@ -292,15 +276,13 @@ export default function ExpenseList() {
           />
         </div>
 
-        <div className="col-12 col-md-auto">
-          <button
-            className="btn btn-outline-primary w-100"
-            onClick={handleRangeApply}
-            disabled={loading}
-          >
-            Apply Range
-          </button>
-        </div>
+        {range === 'custom' && (
+          <div className="col-12 col-md-auto">
+            <button className="btn btn-outline-primary w-100" onClick={handleRangeApply} disabled={loading}>
+              Apply Range
+            </button>
+          </div>
+        )}
       </div>
 
       {error && <div className="alert alert-danger">{error}</div>}
@@ -313,15 +295,13 @@ export default function ExpenseList() {
             <th>Description</th>
             <th>Notes</th>
             <th>Created At</th>
-            <th style={{ width: 1 }}>Actions</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
           {expenses.length === 0 ? (
             <tr>
-              <td colSpan={6} className="text-center text-muted py-4">
-                No expenses found.
-              </td>
+              <td colSpan={6} className="text-center text-muted py-4">No expenses found.</td>
             </tr>
           ) : (
             expenses.map(e => (
@@ -365,6 +345,7 @@ export default function ExpenseList() {
         </tbody>
       </table>
 
+      {/* Totals row */}
       <div className="mt-3 alert alert-info">
         <strong>Total Expenses:</strong> {euro(totalExpenses)}
       </div>
