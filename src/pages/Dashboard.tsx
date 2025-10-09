@@ -809,7 +809,6 @@ export default function Dashboard() {
           </div>
         </div>
       )}
-  <FinanceAssistant />
     </div>
   );
 }
