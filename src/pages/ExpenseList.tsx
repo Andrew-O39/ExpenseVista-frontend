@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { getExpenses, deleteExpense } from '../services/api';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { isTokenValid } from '../utils/auth';
 
 type Expense = {
@@ -16,6 +16,7 @@ type QuickRange = 'all' | 'week' | 'month' | 'quarter' | 'half-year' | 'custom';
 
 export default function ExpenseList() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [expenses, setExpenses] = useState<Expense[]>([]);
@@ -34,10 +35,9 @@ export default function ExpenseList() {
 
   const token = (typeof window !== 'undefined' ? localStorage.getItem('access_token') : null) as string | null;
 
-  // helper (fixed)
   const euro = (n: number) => `€${Number(n || 0).toFixed(2)}`;
-
   const toISO = (d: Date) => d.toISOString();
+
   const computeRange = (r: QuickRange): { start?: string; end?: string } => {
     const now = new Date();
     if (r === 'week') {
@@ -65,39 +65,13 @@ export default function ExpenseList() {
       const end   = new Date(now.getFullYear(), firstHalf ? 6 : 12, 0, 23,59,59,999);
       return { start: toISO(start), end: toISO(end) };
     }
-    // 'all' or 'custom' handled elsewhere
     return {};
   };
 
-  // Initialize state from URL (category/search/dates/page/limit)
-  useEffect(() => {
-    const qpCategory = searchParams.get('category') || '';
-    const qpSearch   = searchParams.get('search') || '';
-    const qpStartISO = searchParams.get('start_date') || '';
-    const qpEndISO   = searchParams.get('end_date') || '';
-    const qpPage     = Number(searchParams.get('page') || '1');
-    const qpLimit    = Number(searchParams.get('limit') || '10');
-
-    // If category is present, we treat it as a search term for now
-    const initialSearch = qpSearch || qpCategory || '';
-    setSearch(initialSearch);
-    setSearchInput(initialSearch);
-
-    // If date range provided in URL, switch to custom and prefill
-    if (qpStartISO || qpEndISO) {
-      setRange('custom');
-      if (qpStartISO) setStartDate(qpStartISO.slice(0, 10));
-      if (qpEndISO)   setEndDate(qpEndISO.slice(0, 10));
-    }
-
-    if (!Number.isNaN(qpPage) && qpPage > 0) setPage(qpPage);
-    if (!Number.isNaN(qpLimit) && qpLimit > 0) setLimit(qpLimit);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
+  /** Keep URL in sync (only from user actions to avoid loops) */
   const updateUrl = (overrides: Record<string, string | number | undefined>) => {
     const params = new URLSearchParams(searchParams.toString());
-    const apply = (k: string, v?: string | number) => {
+    const apply = (k: string, v?: string | number | null) => {
       if (v === undefined || v === '' || v === null) params.delete(k);
       else params.set(k, String(v));
     };
@@ -107,26 +81,25 @@ export default function ExpenseList() {
     apply('limit', limit);
 
     if (range === 'custom') {
-      if (startDate) apply('start_date', `${startDate}T00:00:00Z`);
-      else params.delete('start_date');
-      if (endDate) apply('end_date', `${endDate}T23:59:59Z`);
-      else params.delete('end_date');
+      apply('start_date', startDate ? `${startDate}T00:00:00.000Z` : undefined);
+      apply('end_date',   endDate   ? `${endDate}T23:59:59.999Z` : undefined);
     } else {
       params.delete('start_date');
       params.delete('end_date');
     }
 
-    // overrides win
     Object.entries(overrides).forEach(([k, v]) => apply(k, v as any));
     setSearchParams(params);
   };
 
+  /** Fetcher */
   const fetchExpenses = async (pageToLoad = 1, limitToUse = limit) => {
     if (!token || !isTokenValid()) {
       navigate('/login', { replace: true });
       return;
     }
     setLoading(true);
+    setError(null);
     try {
       let startISO: string | undefined;
       let endISO: string | undefined;
@@ -163,12 +136,52 @@ export default function ExpenseList() {
     }
   };
 
-  // Load when filters change (search/range/page/limit)
+  /**
+   * Respond to URL changes (arriving from Assistant or manual edits).
+   * Runs on mount and whenever location.search changes.
+   */
   useEffect(() => {
+    const qs = new URLSearchParams(location.search);
+    const qpCategory = qs.get('category') || '';
+    const qpSearch   = qs.get('search') || '';
+    const qpStartISO = qs.get('start_date') || '';
+    const qpEndISO   = qs.get('end_date') || '';
+    const qpPage     = Number(qs.get('page') || '1');
+    const qpLimit    = Number(qs.get('limit') || '10');
+
+    // Treat category as a search term if present
+    const initialSearch = qpSearch || qpCategory || '';
+    setSearch(initialSearch);
+    setSearchInput(initialSearch);
+
+    if (qpStartISO || qpEndISO) {
+      setRange('custom');
+      if (qpStartISO) setStartDate(qpStartISO.slice(0, 10));
+      else setStartDate('');
+      if (qpEndISO)   setEndDate(qpEndISO.slice(0, 10));
+      else setEndDate('');
+    } else {
+      // only reset to 'all' if no custom dates present
+      setRange((prev) => (prev === 'custom' ? 'all' : prev));
+    }
+
+    setPage(!Number.isNaN(qpPage) && qpPage > 0 ? qpPage : 1);
+    setLimit(!Number.isNaN(qpLimit) && qpLimit > 0 ? qpLimit : 10);
+
+    // Fetch using these URL-driven values
+    setHasMore(true);
+    // Important: fetch after state setters—use microtask to ensure latest state
+    queueMicrotask(() => fetchExpenses(!Number.isNaN(qpPage) && qpPage > 0 ? qpPage : 1,
+                                       !Number.isNaN(qpLimit) && qpLimit > 0 ? qpLimit : 10));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.search]); // <-- key line
+
+  /** When user changes filters locally (not from URL), fetch & (optionally) sync URL */
+  useEffect(() => {
+    // This effect handles regular in-page changes (search/range/page/limit).
+    // We do NOT call updateUrl here to avoid loops; handlers below will sync URL.
     setHasMore(true);
     fetchExpenses(page, limit);
-    // Keep URL in sync (optional but handy)
-    updateUrl({});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate, search, range, page, limit]);
 
@@ -190,8 +203,9 @@ export default function ExpenseList() {
 
   const handleSearchApply = () => {
     setPage(1);
-    setSearch(searchInput.trim());
-    updateUrl({ page: 1 });
+    const val = searchInput.trim();
+    setSearch(val);
+    updateUrl({ page: 1, search: val || undefined });
   };
 
   const handleRangeApply = () => {
@@ -200,18 +214,23 @@ export default function ExpenseList() {
       return;
     }
     setPage(1);
-    // fetch will run via effect; also sync URL now:
     updateUrl({ page: 1 });
   };
 
   const loadMore = () => {
     const next = page + 1;
     setPage(next);
+    updateUrl({ page: next });
+  };
+
+  const onLimitChange = (v: number) => {
+    setLimit(v);
+    setPage(1);
+    updateUrl({ page: 1, limit: v });
   };
 
   const fmt = (iso: string) => new Date(iso).toLocaleString();
 
-  // Totals for what’s currently displayed
   const totalExpenses = useMemo(
     () => expenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0),
     [expenses]
@@ -230,11 +249,7 @@ export default function ExpenseList() {
           <select
             className="form-select form-select-sm"
             value={limit}
-            onChange={e => {
-              const v = Number(e.target.value) || 10;
-              setLimit(v);
-              setPage(1);
-            }}
+            onChange={e => onLimitChange(Number(e.target.value) || 10)}
             style={{ width: 100 }}
           >
             <option value={10}>10 / page</option>
