@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { getExpenses, deleteExpense } from '../services/api';
-import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { isTokenValid } from '../utils/auth';
 
 type Expense = {
@@ -14,10 +14,55 @@ type Expense = {
 
 type QuickRange = 'all' | 'week' | 'month' | 'quarter' | 'half-year' | 'custom';
 
+/** Parse filters from the current query string */
+function parseFiltersFromQS(qs: string) {
+  const p = new URLSearchParams(qs);
+  const search = p.get('search') || '';
+  const category = p.get('category') || '';
+  const startISO = p.get('start_date') || '';
+  const endISO = p.get('end_date') || '';
+  const page = Math.max(1, Number(p.get('page') || '1'));
+  const limit = Math.max(1, Number(p.get('limit') || '10'));
+  const searchUnified = search || category;
+  return { search: searchUnified, startISO, endISO, page, limit };
+}
+
+/** Compute ISO start/end for quick ranges */
+function computeRange(r: QuickRange): { start?: string; end?: string } {
+  const toISO = (d: Date) => d.toISOString();
+  const now = new Date();
+
+  if (r === 'week') {
+    const start = new Date(now);
+    start.setDate(now.getDate() - 6);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(now);
+    end.setHours(23, 59, 59, 999);
+    return { start: toISO(start), end: toISO(end) };
+  }
+  if (r === 'month') {
+    const start = new Date(now.getFullYear(), now.getMonth(), 1);
+    const end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+    return { start: toISO(start), end: toISO(end) };
+  }
+  if (r === 'quarter') {
+    const q = Math.floor(now.getMonth() / 3);
+    const start = new Date(now.getFullYear(), q * 3, 1);
+    const end = new Date(now.getFullYear(), q * 3 + 3, 0, 23, 59, 59, 999);
+    return { start: toISO(start), end: toISO(end) };
+  }
+  if (r === 'half-year') {
+    const firstHalf = now.getMonth() < 6;
+    const start = new Date(now.getFullYear(), firstHalf ? 0 : 6, 1);
+    const end = new Date(now.getFullYear(), firstHalf ? 6 : 12, 0, 23, 59, 59, 999);
+    return { start: toISO(start), end: toISO(end) };
+  }
+  return {};
+}
+
 export default function ExpenseList() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [searchParams, setSearchParams] = useSearchParams();
 
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [page, setPage] = useState(1);
@@ -33,67 +78,21 @@ export default function ExpenseList() {
   const [startDate, setStartDate] = useState(''); // yyyy-mm-dd
   const [endDate, setEndDate] = useState('');     // yyyy-mm-dd
 
-  const token = (typeof window !== 'undefined' ? localStorage.getItem('access_token') : null) as string | null;
+  const token = (typeof window !== 'undefined'
+    ? localStorage.getItem('access_token')
+    : null) as string | null;
 
   const euro = (n: number) => `€${Number(n || 0).toFixed(2)}`;
-  const toISO = (d: Date) => d.toISOString();
+  const fmt = (iso: string) => new Date(iso).toLocaleString();
 
-  const computeRange = (r: QuickRange): { start?: string; end?: string } => {
-    const now = new Date();
-    if (r === 'week') {
-      const start = new Date(now);
-      start.setDate(now.getDate() - 6);
-      start.setHours(0,0,0,0);
-      const end = new Date(now);
-      end.setHours(23,59,59,999);
-      return { start: toISO(start), end: toISO(end) };
-    }
-    if (r === 'month') {
-      const start = new Date(now.getFullYear(), now.getMonth(), 1);
-      const end   = new Date(now.getFullYear(), now.getMonth()+1, 0, 23,59,59,999);
-      return { start: toISO(start), end: toISO(end) };
-    }
-    if (r === 'quarter') {
-      const q = Math.floor(now.getMonth() / 3);
-      const start = new Date(now.getFullYear(), q*3, 1);
-      const end   = new Date(now.getFullYear(), q*3+3, 0, 23,59,59,999);
-      return { start: toISO(start), end: toISO(end) };
-    }
-    if (r === 'half-year') {
-      const firstHalf = now.getMonth() < 6;
-      const start = new Date(now.getFullYear(), firstHalf ? 0 : 6, 1);
-      const end   = new Date(now.getFullYear(), firstHalf ? 6 : 12, 0, 23,59,59,999);
-      return { start: toISO(start), end: toISO(end) };
-    }
-    return {};
-  };
-
-  /** Keep URL in sync (only from user actions to avoid loops) */
-  const updateUrl = (overrides: Record<string, string | number | undefined>) => {
-    const params = new URLSearchParams(searchParams.toString());
-    const apply = (k: string, v?: string | number | null) => {
-      if (v === undefined || v === '' || v === null) params.delete(k);
-      else params.set(k, String(v));
-    };
-
-    apply('search', search);
-    apply('page', page);
-    apply('limit', limit);
-
-    if (range === 'custom') {
-      apply('start_date', startDate ? `${startDate}T00:00:00.000Z` : undefined);
-      apply('end_date',   endDate   ? `${endDate}T23:59:59.999Z` : undefined);
-    } else {
-      params.delete('start_date');
-      params.delete('end_date');
-    }
-
-    Object.entries(overrides).forEach(([k, v]) => apply(k, v as any));
-    setSearchParams(params);
-  };
-
-  /** Fetcher */
-  const fetchExpenses = async (pageToLoad = 1, limitToUse = limit) => {
+  /** Single fetcher that only uses explicit args (no hidden state) */
+  const fetchExpenses = async (opts: {
+    pageToLoad: number;
+    limitToUse: number;
+    searchQ: string;
+    startISO?: string;
+    endISO?: string;
+  }) => {
     if (!token || !isTokenValid()) {
       navigate('/login', { replace: true });
       return;
@@ -101,30 +100,18 @@ export default function ExpenseList() {
     setLoading(true);
     setError(null);
     try {
-      let startISO: string | undefined;
-      let endISO: string | undefined;
-
-      if (range === 'custom') {
-        if (startDate) startISO = new Date(`${startDate}T00:00:00Z`).toISOString();
-        if (endDate)   endISO   = new Date(`${endDate}T23:59:59Z`).toISOString();
-      } else if (range !== 'all') {
-        const r = computeRange(range);
-        startISO = r.start;
-        endISO = r.end;
-      }
-
       const data: Expense[] = await getExpenses(token, {
-        search,
-        startDate: startISO,
-        endDate: endISO,
-        page: pageToLoad,
-        limit: limitToUse,
+        search: opts.searchQ || undefined,
+        startDate: opts.startISO || undefined,
+        endDate: opts.endISO || undefined,
+        page: opts.pageToLoad,
+        limit: opts.limitToUse,
       });
 
-      if (data.length < limitToUse) setHasMore(false);
+      if (data.length < opts.limitToUse) setHasMore(false);
 
       setExpenses(prev =>
-        pageToLoad === 1
+        opts.pageToLoad === 1
           ? data
           : [...prev, ...data.filter(d => !prev.some(p => p.id === d.id))]
       );
@@ -137,54 +124,42 @@ export default function ExpenseList() {
   };
 
   /**
-   * Respond to URL changes (arriving from Assistant or manual edits).
-   * Runs on mount and whenever location.search changes.
+   * URL-driven effect: read query params, reflect into state,
+   * and fetch immediately with those values.
    */
   useEffect(() => {
-    const qs = new URLSearchParams(location.search);
-    const qpCategory = qs.get('category') || '';
-    const qpSearch   = qs.get('search') || '';
-    const qpStartISO = qs.get('start_date') || '';
-    const qpEndISO   = qs.get('end_date') || '';
-    const qpPage     = Number(qs.get('page') || '1');
-    const qpLimit    = Number(qs.get('limit') || '10');
+    const { search: s, startISO, endISO, page: qpPage, limit: qpLimit } = parseFiltersFromQS(location.search);
 
-    // Treat category as a search term if present
-    const initialSearch = qpSearch || qpCategory || '';
-    setSearch(initialSearch);
-    setSearchInput(initialSearch);
+    // reflect into controls
+    setSearch(s);
+    setSearchInput(s);
 
-    if (qpStartISO || qpEndISO) {
+    if (startISO || endISO) {
       setRange('custom');
-      if (qpStartISO) setStartDate(qpStartISO.slice(0, 10));
-      else setStartDate('');
-      if (qpEndISO)   setEndDate(qpEndISO.slice(0, 10));
-      else setEndDate('');
+      setStartDate(startISO ? startISO.slice(0, 10) : '');
+      setEndDate(endISO ? endISO.slice(0, 10) : '');
     } else {
-      // only reset to 'all' if no custom dates present
-      setRange((prev) => (prev === 'custom' ? 'all' : prev));
+      setRange('all');
+      setStartDate('');
+      setEndDate('');
     }
 
-    setPage(!Number.isNaN(qpPage) && qpPage > 0 ? qpPage : 1);
-    setLimit(!Number.isNaN(qpLimit) && qpLimit > 0 ? qpLimit : 10);
+    setPage(qpPage);
+    setLimit(qpLimit);
 
-    // Fetch using these URL-driven values
+    // fetch exactly what URL says
     setHasMore(true);
-    // Important: fetch after state setters—use microtask to ensure latest state
-    queueMicrotask(() => fetchExpenses(!Number.isNaN(qpPage) && qpPage > 0 ? qpPage : 1,
-                                       !Number.isNaN(qpLimit) && qpLimit > 0 ? qpLimit : 10));
+    fetchExpenses({
+      pageToLoad: qpPage,
+      limitToUse: qpLimit,
+      searchQ: s,
+      startISO: startISO || undefined,
+      endISO: endISO || undefined,
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location.search]); // <-- key line
+  }, [location.search]);
 
-  /** When user changes filters locally (not from URL), fetch & (optionally) sync URL */
-  useEffect(() => {
-    // This effect handles regular in-page changes (search/range/page/limit).
-    // We do NOT call updateUrl here to avoid loops; handlers below will sync URL.
-    setHasMore(true);
-    fetchExpenses(page, limit);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [navigate, search, range, page, limit]);
-
+  /** Delete handler */
   const handleDelete = async (id: number) => {
     if (!token) {
       alert('You must be logged in to delete an expense.');
@@ -196,16 +171,19 @@ export default function ExpenseList() {
       setExpenses(prev => prev.filter(e => e.id !== id));
       alert('Expense deleted successfully.');
     } catch (err: any) {
-      console.error('Failed to delete expense:', err.response?.data || err.message);
+      console.error('Failed to delete expense:', err?.response?.data || err?.message);
       alert('Failed to delete expense. Please try again.');
     }
   };
 
+  /** Update URL to trigger fetch via effect */
   const handleSearchApply = () => {
-    setPage(1);
     const val = searchInput.trim();
-    setSearch(val);
-    updateUrl({ page: 1, search: val || undefined });
+    const params = new URLSearchParams(location.search);
+    if (val) params.set('search', val);
+    else params.delete('search');
+    params.set('page', '1');
+    navigate(`/expenses?${params.toString()}`);
   };
 
   const handleRangeApply = () => {
@@ -213,24 +191,42 @@ export default function ExpenseList() {
       alert('Start date must be before end date.');
       return;
     }
-    setPage(1);
-    updateUrl({ page: 1 });
+    const params = new URLSearchParams(location.search);
+
+    if (range === 'custom') {
+      if (startDate) params.set('start_date', `${startDate}T00:00:00Z`); else params.delete('start_date');
+      if (endDate)   params.set('end_date', `${endDate}T23:59:59Z`);   else params.delete('end_date');
+    } else if (range === 'all') {
+      params.delete('start_date');
+      params.delete('end_date');
+    } else {
+      // quick ranges -> compute + write ISO
+      const { start, end } = computeRange(range);
+      if (start) params.set('start_date', start);
+      else params.delete('start_date');
+      if (end) params.set('end_date', end);
+      else params.delete('end_date');
+    }
+
+    params.set('page', '1');
+    navigate(`/expenses?${params.toString()}`);
   };
 
   const loadMore = () => {
-    const next = page + 1;
-    setPage(next);
-    updateUrl({ page: next });
+    const params = new URLSearchParams(location.search);
+    const next = (Number(params.get('page') || '1') || 1) + 1;
+    params.set('page', String(next));
+    navigate(`/expenses?${params.toString()}`);
   };
 
   const onLimitChange = (v: number) => {
-    setLimit(v);
-    setPage(1);
-    updateUrl({ page: 1, limit: v });
+    const params = new URLSearchParams(location.search);
+    params.set('limit', String(v));
+    params.set('page', '1');
+    navigate(`/expenses?${params.toString()}`);
   };
 
-  const fmt = (iso: string) => new Date(iso).toLocaleString();
-
+  // Totals for what’s currently displayed
   const totalExpenses = useMemo(
     () => expenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0),
     [expenses]
@@ -250,7 +246,7 @@ export default function ExpenseList() {
             className="form-select form-select-sm"
             value={limit}
             onChange={e => onLimitChange(Number(e.target.value) || 10)}
-            style={{ width: 100 }}
+            style={{ width: 120 }}
           >
             <option value={10}>10 / page</option>
             <option value={25}>25 / page</option>
@@ -312,13 +308,15 @@ export default function ExpenseList() {
           />
         </div>
 
-        {range === 'custom' && (
-          <div className="col-12 col-md-auto">
-            <button className="btn btn-outline-primary w-100" onClick={handleRangeApply} disabled={loading}>
-              Apply Range
-            </button>
-          </div>
-        )}
+        <div className="col-12 col-md-auto">
+          <button
+            className="btn btn-outline-primary w-100"
+            onClick={handleRangeApply}
+            disabled={loading}
+          >
+            Apply Range
+          </button>
+        </div>
       </div>
 
       {error && <div className="alert alert-danger">{error}</div>}
@@ -331,13 +329,15 @@ export default function ExpenseList() {
             <th>Description</th>
             <th>Notes</th>
             <th>Created At</th>
-            <th>Actions</th>
+            <th style={{ width: 1 }}>Actions</th>
           </tr>
         </thead>
         <tbody>
           {expenses.length === 0 ? (
             <tr>
-              <td colSpan={6} className="text-center text-muted py-4">No expenses found.</td>
+              <td colSpan={6} className="text-center text-muted py-4">
+                No expenses found.
+              </td>
             </tr>
           ) : (
             expenses.map(e => (
