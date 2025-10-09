@@ -14,7 +14,6 @@ type Expense = {
 
 type QuickRange = 'all' | 'week' | 'month' | 'quarter' | 'half-year' | 'custom';
 
-/** Parse filters from the current query string */
 function parseFiltersFromQS(qs: string) {
   const p = new URLSearchParams(qs);
   const search = p.get('search') || '';
@@ -27,7 +26,6 @@ function parseFiltersFromQS(qs: string) {
   return { search: searchUnified, startISO, endISO, page, limit };
 }
 
-/** Compute ISO start/end for quick ranges */
 function computeRange(r: QuickRange): { start?: string; end?: string } {
   const toISO = (d: Date) => d.toISOString();
   const now = new Date();
@@ -65,13 +63,12 @@ export default function ExpenseList() {
   const location = useLocation();
 
   const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [search, setSearch] = useState('');
+  // only keep a controlled input field for the search bar
   const [searchInput, setSearchInput] = useState('');
 
   const [range, setRange] = useState<QuickRange>('all');
@@ -85,7 +82,6 @@ export default function ExpenseList() {
   const euro = (n: number) => `€${Number(n || 0).toFixed(2)}`;
   const fmt = (iso: string) => new Date(iso).toLocaleString();
 
-  /** Single fetcher that only uses explicit args (no hidden state) */
   const fetchExpenses = async (opts: {
     pageToLoad: number;
     limitToUse: number;
@@ -123,15 +119,10 @@ export default function ExpenseList() {
     }
   };
 
-  /**
-   * URL-driven effect: read query params, reflect into state,
-   * and fetch immediately with those values.
-   */
+  // URL-driven effect
   useEffect(() => {
-    const { search: s, startISO, endISO, page: qpPage, limit: qpLimit } = parseFiltersFromQS(location.search);
+    const { search: s, startISO, endISO, page, limit: qpLimit } = parseFiltersFromQS(location.search);
 
-    // reflect into controls
-    setSearch(s);
     setSearchInput(s);
 
     if (startISO || endISO) {
@@ -144,13 +135,11 @@ export default function ExpenseList() {
       setEndDate('');
     }
 
-    setPage(qpPage);
     setLimit(qpLimit);
 
-    // fetch exactly what URL says
     setHasMore(true);
     fetchExpenses({
-      pageToLoad: qpPage,
+      pageToLoad: page,
       limitToUse: qpLimit,
       searchQ: s,
       startISO: startISO || undefined,
@@ -159,7 +148,6 @@ export default function ExpenseList() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.search]);
 
-  /** Delete handler */
   const handleDelete = async (id: number) => {
     if (!token) {
       alert('You must be logged in to delete an expense.');
@@ -176,7 +164,7 @@ export default function ExpenseList() {
     }
   };
 
-  /** Update URL to trigger fetch via effect */
+  // Update URL (triggers fetch via effect)
   const handleSearchApply = () => {
     const val = searchInput.trim();
     const params = new URLSearchParams(location.search);
@@ -200,12 +188,9 @@ export default function ExpenseList() {
       params.delete('start_date');
       params.delete('end_date');
     } else {
-      // quick ranges -> compute + write ISO
       const { start, end } = computeRange(range);
-      if (start) params.set('start_date', start);
-      else params.delete('start_date');
-      if (end) params.set('end_date', end);
-      else params.delete('end_date');
+      if (start) params.set('start_date', start); else params.delete('start_date');
+      if (end) params.set('end_date', end); else params.delete('end_date');
     }
 
     params.set('page', '1');
@@ -226,7 +211,6 @@ export default function ExpenseList() {
     navigate(`/expenses?${params.toString()}`);
   };
 
-  // Totals for what’s currently displayed
   const totalExpenses = useMemo(
     () => expenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0),
     [expenses]
@@ -381,7 +365,6 @@ export default function ExpenseList() {
         </tbody>
       </table>
 
-      {/* Totals row */}
       <div className="mt-3 alert alert-info">
         <strong>Total Expenses:</strong> {euro(totalExpenses)}
       </div>
