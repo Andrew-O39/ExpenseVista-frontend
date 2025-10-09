@@ -1,7 +1,6 @@
-// src/components/FinanceAssistant.tsx
 import { useEffect, useRef, useState } from "react";
-import AssistantActions from "./AssistantActions";
 import { aiAssistant } from "../services/api";
+import AssistantActions from "./AssistantActions";
 
 type ChatMsg = {
   role: "user" | "assistant" | "system";
@@ -10,14 +9,14 @@ type ChatMsg = {
 };
 
 export default function FinanceAssistant() {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true); // set true if you want it open for testing
   const [busy, setBusy] = useState(false);
   const [input, setInput] = useState("");
   const [msgs, setMsgs] = useState<ChatMsg[]>([
     {
       role: "system",
       text:
-        "Hi! I can answer questions like:\n" +
+        "Hi! Ask me things like:\n" +
         "• How much did I spend on groceries last month?\n" +
         "• What’s my top category this quarter?\n" +
         "• Am I on track with my budgets?",
@@ -26,7 +25,6 @@ export default function FinanceAssistant() {
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // auto-scroll on new messages or when opening
   useEffect(() => {
     scrollRef.current?.scrollTo({
       top: scrollRef.current.scrollHeight,
@@ -53,21 +51,20 @@ export default function FinanceAssistant() {
       }
 
       const resp = await aiAssistant(token, content);
+      // Expect: { reply: string, actions?: [...] }
       setMsgs((m) => [
         ...m,
         {
           role: "assistant",
           text: resp?.reply || "I couldn’t find an answer.",
-          actions: resp?.actions || [],
+          actions: Array.isArray(resp?.actions) ? resp.actions : [],
         },
       ]);
-    } catch (_) {
+    } catch (err) {
+      console.error("assistant error", err);
       setMsgs((m) => [
         ...m,
-        {
-          role: "assistant",
-          text: "Sorry—something went wrong. Please try again.",
-        },
+        { role: "assistant", text: "Sorry—something went wrong. Please try again." },
       ]);
     } finally {
       setBusy(false);
@@ -81,12 +78,13 @@ export default function FinanceAssistant() {
     }
   }
 
-  // minimal inline styles (keeps it self-contained)
+  // Always on top & clickable
   const wrap: React.CSSProperties = {
     position: "fixed",
     right: 16,
     bottom: 16,
-    zIndex: 2000,
+    zIndex: 3000,
+    pointerEvents: "auto",
   };
   const panel: React.CSSProperties = {
     width: 340,
@@ -137,7 +135,6 @@ export default function FinanceAssistant() {
           type="button"
           className="btn btn-primary rounded-pill shadow"
           onClick={() => setOpen(true)}
-          aria-label="Open Finance Assistant"
         >
           💬 Finance Assistant
         </button>
@@ -159,10 +156,11 @@ export default function FinanceAssistant() {
             <div className="d-flex flex-column">
               {msgs.map((m, i) => (
                 <div key={i} style={bubble(m.role)}>
-                  {m.text}
-                  {m.role === "assistant" && m.actions?.length ? (
+                  <div>{m.text}</div>
+                  {/* Action buttons (if any) */}
+                  {m.actions && m.actions.length > 0 && (
                     <AssistantActions actions={m.actions} />
-                  ) : null}
+                  )}
                 </div>
               ))}
               {busy && <div style={bubble("assistant")}>Thinking…</div>}
@@ -173,7 +171,7 @@ export default function FinanceAssistant() {
             <input
               type="text"
               className="form-control"
-              placeholder='e.g. "How much did I spend on groceries last month?"'
+              placeholder='e.g. "See my groceries this month"'
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={onKeyDown}
