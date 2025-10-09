@@ -809,10 +809,7 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+  <FinanceAssistant />
     </div>
-    <div className="row g-3">
-  <div className="col-lg-6">{/* existing cards/charts */}</div>
-  <div className="col-lg-6"><FinanceAssistant /></div>
-</div>
   );
 }
