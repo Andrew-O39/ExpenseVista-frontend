@@ -19,7 +19,7 @@ export default function AssistantActions({ actions = [] as Action[] }) {
         // optional paging defaults
         p.set("page", "1");
         p.set("limit", "10");
-        navigate(`/expenses?${p.toString()}`);
+        navigate(`/expenses?search=${encodeURIComponent(search)}&start_date=${start}&end_date=${end}&page=1&limit=10`);
         break;
       }
 
