@@ -1,3 +1,4 @@
+// src/services/api.ts
 import axios from "axios";
 
 // Pick from Vite env at build time; fallback to localhost for dev
@@ -8,96 +9,121 @@ export const api = axios.create({
   baseURL: API_BASE_URL,
 });
 
+// Small helper to attach Authorization only when a token is provided
+const auth = (token?: string) =>
+  token ? { Authorization: `Bearer ${token}` } : {};
+
+// Centralized FastAPI error extractor
 function extractFastAPIError(err: any): string {
-  // Axios error shape
   const data = err?.response?.data;
 
-  // detail can be a string
-  if (typeof data?.detail === 'string') return data.detail;
+  if (typeof data?.detail === "string") return data.detail;
 
-  // detail can be an array of {loc, msg, type}
   if (Array.isArray(data?.detail)) {
     const msgs = data.detail
       .map((d: any) => d?.msg || d?.detail || d?.type)
       .filter(Boolean);
-    if (msgs.length) return msgs.join('; ');
+    if (msgs.length) return msgs.join("; ");
   }
 
-  // Sometimes the message is nested elsewhere
   if (data?.message) return data.message;
   if (err?.message) return err.message;
 
-  return 'Something went wrong.';
+  return "Something went wrong.";
 }
 
-
-// ------------------ AUTH ------------------
+/* ------------------ AUTH ------------------ */
 
 export async function login(username: string, password: string) {
   try {
-    const response = await axios.post(
-      `${API_BASE_URL}/login`,
+    const { data } = await api.post(
+      "/login",
       new URLSearchParams({ username, password }),
       { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
     );
-    return response.data; // { access_token, token_type }
+    return data; // { access_token, token_type }
   } catch (error: any) {
     console.error("Login failed:", error.response?.data || error.message);
     throw error;
   }
 }
 
-export async function registerUser(data: { username: string; email: string; password: string }) {
+export async function registerUser(payload: {
+  username: string;
+  email: string;
+  password: string;
+}) {
   try {
-    const response = await axios.post(`${API_BASE_URL}/register`, data, {
+    const { data } = await api.post("/register", payload, {
       headers: { "Content-Type": "application/json" },
     });
-    return response.data;
+    return data;
   } catch (error: any) {
     console.error("Registration failed:", error.response?.data || error.message);
     throw error;
   }
 }
 
-// ------------------ CURRENT USER ------------------
+/* ------------------ CURRENT USER ------------------ */
 
 export async function getCurrentUser(token: string) {
   try {
-    const response = await axios.get(`${API_BASE_URL}/me`, {
-      headers: { Authorization: `Bearer ${token}` },
+    const { data } = await api.get("/me", {
+      headers: auth(token),
     });
-    return response.data;
+    return data;
   } catch (error: any) {
-    console.error("Failed to fetch current user:", error.response?.data || error.message);
+    console.error(
+      "Failed to fetch current user:",
+      error.response?.data || error.message
+    );
     throw error;
   }
 }
 
-// ------------------ SUMMARY ------------------
+/* ------------------ SUMMARY ------------------ */
 
-export async function getSummary(token: string, period: 'weekly' | 'monthly' | 'yearly', category?: string) {
+export async function getSummary(
+  token: string,
+  period: "weekly" | "monthly" | "yearly",
+  category?: string
+) {
   try {
-    const response = await axios.get(`${API_BASE_URL}/summary`, {
-      headers: { Authorization: `Bearer ${token}` },
+    const { data } = await api.get("/summary", {
+      headers: auth(token),
       params: { period, ...(category ? { category } : {}) },
     });
-    return response.data;
+    return data;
   } catch (error: any) {
-    console.error("Failed to fetch summary:", error.response?.data || error.message);
+    console.error(
+      "Failed to fetch summary:",
+      error.response?.data || error.message
+    );
     throw error;
   }
 }
 
-// ------------------ EXPENSES ------------------
+/* ------------------ EXPENSES ------------------ */
 
-export async function createExpense(token: string, expenseData: { amount: number; category: string; description?: string; notes?: string }) {
+export async function createExpense(
+  token: string,
+  expenseData: {
+    amount: number;
+    category: string;
+    description?: string;
+    notes?: string;
+  }
+) {
   try {
-    const response = await axios.post(`${API_BASE_URL}/expenses`, expenseData, {
-      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    const { data } = await api.post("/expenses", expenseData, {
+      headers: { ...auth(token), "Content-Type": "application/json" },
     });
-    return response.data;
+    return data;
   } catch (error: any) {
-    console.error("Failed to create expense:", error.response?.data || error.message);
+    console.error(
+      "Failed to create expense:",
+      error.response?.data || error.message
+    );
     throw error;
   }
 }
@@ -106,8 +132,8 @@ export async function getExpenses(
   token: string,
   opts: {
     search?: string;
-    startDate?: string; // ISO e.g. '2025-08-01T00:00:00Z'
-    endDate?: string;   // ISO
+    startDate?: string; // ISO
+    endDate?: string; // ISO
     page?: number;
     limit?: number;
   } = {}
@@ -119,59 +145,78 @@ export async function getExpenses(
   if (startDate) params.start_date = startDate;
   if (endDate) params.end_date = endDate;
 
-  const resp = await axios.get(`${API_BASE_URL}/expenses`, {
-    headers: { Authorization: `Bearer ${token}` },
+  const { data } = await api.get("/expenses", {
+    headers: auth(token),
     params,
   });
-  return resp.data;
+  return data;
 }
 
 export async function getExpenseById(token: string, id: number) {
   try {
-    const response = await axios.get(`${API_BASE_URL}/expenses/${id}`, {
-      headers: { Authorization: `Bearer ${token}` },
+    const { data } = await api.get(`/expenses/${id}`, {
+      headers: auth(token),
     });
-    return response.data;
+    return data;
   } catch (error: any) {
-    console.error("Failed to fetch expense:", error.response?.data || error.message);
+    console.error(
+      "Failed to fetch expense:",
+      error.response?.data || error.message
+    );
     throw error;
   }
 }
 
-export async function updateExpense(token: string, id: number, data: { amount?: number; category?: string; description?: string; notes?: string }) {
+export async function updateExpense(
+  token: string,
+  id: number,
+  payload: { amount?: number; category?: string; description?: string; notes?: string }
+) {
   try {
-    const response = await axios.put(`${API_BASE_URL}/expenses/${id}`, data, {
-      headers: { Authorization: `Bearer ${token}` },
+    const { data } = await api.put(`/expenses/${id}`, payload, {
+      headers: auth(token),
     });
-    return response.data;
+    return data;
   } catch (error: any) {
-    console.error("Failed to update expense:", error.response?.data || error.message);
+    console.error(
+      "Failed to update expense:",
+      error.response?.data || error.message
+    );
     throw error;
   }
 }
 
 export async function deleteExpense(token: string, id: number) {
   try {
-    const response = await axios.delete(`${API_BASE_URL}/expenses/${id}`, {
-      headers: { Authorization: `Bearer ${token}` },
+    const { data } = await api.delete(`/expenses/${id}`, {
+      headers: auth(token),
     });
-    return response.data;
+    return data;
   } catch (error: any) {
-    console.error("Failed to delete expense:", error.response?.data || error.message);
+    console.error(
+      "Failed to delete expense:",
+      error.response?.data || error.message
+    );
     throw error;
   }
 }
 
-// ------------------ BUDGETS ------------------
+/* ------------------ BUDGETS ------------------ */
 
-export async function createBudget(token: string, budgetData: { category: string; limit_amount: number; period: string; notes?: string }) {
+export async function createBudget(
+  token: string,
+  budgetData: { category: string; limit_amount: number; period: string; notes?: string }
+) {
   try {
-    const response = await axios.post(`${API_BASE_URL}/budgets`, budgetData, {
-      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    const { data } = await api.post("/budgets", budgetData, {
+      headers: { ...auth(token), "Content-Type": "application/json" },
     });
-    return response.data;
+    return data;
   } catch (error: any) {
-    console.error("Failed to create budget:", error.response?.data || error.message);
+    console.error(
+      "Failed to create budget:",
+      error.response?.data || error.message
+    );
     throw error;
   }
 }
@@ -179,7 +224,7 @@ export async function createBudget(token: string, budgetData: { category: string
 export async function getBudgets(
   token: string,
   opts: {
-    period?: 'weekly' | 'monthly' | 'quarterly' | 'half-yearly' | 'yearly';
+    period?: "weekly" | "monthly" | "quarterly" | "half-yearly" | "yearly";
     category?: string;
     search?: string;
     startDate?: string;
@@ -188,7 +233,8 @@ export async function getBudgets(
     limit?: number;
   } = {}
 ) {
-  const { period, category, search, startDate, endDate, page = 1, limit = 10 } = opts;
+  const { period, category, search, startDate, endDate, page = 1, limit = 10 } =
+    opts;
   const skip = (page - 1) * limit;
   const params: any = { skip, limit };
   if (period) params.period = period;
@@ -197,62 +243,64 @@ export async function getBudgets(
   if (startDate) params.start_date = startDate;
   if (endDate) params.end_date = endDate;
 
-  const resp = await axios.get(`${API_BASE_URL}/budgets`, {
-    headers: { Authorization: `Bearer ${token}` },
+  const { data } = await api.get("/budgets", {
+    headers: auth(token),
     params,
   });
-  return resp.data;
+  return data;
 }
 
 export async function getBudgetById(token: string, id: number) {
   try {
-    const response = await axios.get(`${API_BASE_URL}/budgets/${id}`, {
-      headers: { Authorization: `Bearer ${token}` },
+    const { data } = await api.get(`/budgets/${id}`, {
+      headers: auth(token),
     });
-    return response.data;
+    return data;
   } catch (error: any) {
-    console.error("Failed to fetch budget:", error.response?.data || error.message);
+    console.error(
+      "Failed to fetch budget:",
+      error.response?.data || error.message
+    );
     throw error;
   }
 }
 
 export async function updateBudget(
-    token: string,
-    id: number,
-    data: {
-        category?: string;
-        limit_amount?: number;
-        period?: string;
-        notes?: string
-        })
-        {
+  token: string,
+  id: number,
+  payload: { category?: string; limit_amount?: number; period?: string; notes?: string }
+) {
   try {
-    const response = await axios.put(`${API_BASE_URL}/budgets/${id}`, data, {
-      headers: { Authorization: `Bearer ${token}` },
+    const { data } = await api.put(`/budgets/${id}`, payload, {
+      headers: auth(token),
     });
-    return response.data;
+    return data;
   } catch (error: any) {
-    console.error("Failed to update budget:", error.response?.data || error.message);
+    console.error(
+      "Failed to update budget:",
+      error.response?.data || error.message
+    );
     throw error;
   }
 }
 
 export async function deleteBudget(token: string, id: number) {
   try {
-    const response = await axios.delete(`${API_BASE_URL}/budgets/${id}`, {
-      headers: { Authorization: `Bearer ${token}` },
+    const { data } = await api.delete(`/budgets/${id}`, {
+      headers: auth(token),
     });
-    return response.data;
+    return data;
   } catch (error: any) {
-    console.error("Failed to delete budget:", error.response?.data || error.message);
+    console.error(
+      "Failed to delete budget:",
+      error.response?.data || error.message
+    );
     throw error;
   }
 }
 
+/* ------------------ INCOMES ------------------ */
 
-// --- INCOMES ---
-
-// List incomes (supports search + pagination; add more filters if you expose them)
 export async function getIncomes(
   token: string,
   opts: {
@@ -266,45 +314,43 @@ export async function getIncomes(
   const { search, startDate, endDate, page = 1, limit = 10 } = opts;
   const skip = (page - 1) * limit;
   const params: any = { skip, limit };
-  if (search) params.search = search;              // if you added search server-side
+  if (search) params.search = search;
   if (startDate) params.start_date = startDate;
   if (endDate) params.end_date = endDate;
 
-  const resp = await axios.get(`${API_BASE_URL}/incomes`, {
-    headers: { Authorization: `Bearer ${token}` },
+  const { data } = await api.get("/incomes", {
+    headers: auth(token),
     params,
   });
-  return resp.data;
+  return data;
 }
 
 export async function getIncomeById(token: string, id: number) {
   try {
-    const response = await axios.get(`${API_BASE_URL}/incomes/${id}`, {
-      headers: { Authorization: `Bearer ${token}` },
+    const { data } = await api.get(`/incomes/${id}`, {
+      headers: auth(token),
     });
-    return response.data;
+    return data;
   } catch (error: any) {
-    console.error("Failed to fetch income:", error.response?.data || error.message);
+    console.error(
+      "Failed to fetch income:",
+      error.response?.data || error.message
+    );
     throw error;
   }
 }
 
 export async function createIncome(
   token: string,
-  payload: {
-    amount: number;
-    category: string;
-    source?: string;
-    notes?: string;
-  }
+  payload: { amount: number; category: string; source?: string; notes?: string }
 ) {
   try {
-    const resp = await axios.post(`${API_BASE_URL}/incomes`, payload, {
-      headers: { Authorization: `Bearer ${token}` },
+    const { data } = await api.post("/incomes", payload, {
+      headers: auth(token),
     });
-    return resp.data;
+    return data;
   } catch (err: any) {
-    const msg = extractFastAPIError(err); // helper from before
+    const msg = extractFastAPIError(err);
     console.error("Failed to create income:", msg);
     throw new Error(msg);
   }
@@ -313,32 +359,39 @@ export async function createIncome(
 export async function updateIncome(
   token: string,
   id: number,
-  data: { amount?: number; source?: string; category?: string; notes?: string; received_at?: string }
+  payload: { amount?: number; source?: string; category?: string; notes?: string; received_at?: string }
 ) {
   try {
-    const response = await axios.put(`${API_BASE_URL}/incomes/${id}`, data, {
-      headers: { Authorization: `Bearer ${token}` },
+    const { data } = await api.put(`/incomes/${id}`, payload, {
+      headers: auth(token),
     });
-    return response.data;
+    return data;
   } catch (error: any) {
-    console.error("Failed to update income:", error.response?.data || error.message);
+    console.error(
+      "Failed to update income:",
+      error.response?.data || error.message
+    );
     throw error;
   }
 }
 
 export async function deleteIncome(token: string, id: number) {
   try {
-    const response = await axios.delete(`${API_BASE_URL}/incomes/${id}`, {
-      headers: { Authorization: `Bearer ${token}` },
+    const { data } = await api.delete(`/incomes/${id}`, {
+      headers: auth(token),
     });
-    return response.data;
+    return data;
   } catch (error: any) {
-    console.error("Failed to delete income:", error.response?.data || error.message);
+    console.error(
+      "Failed to delete income:",
+      error.response?.data || error.message
+    );
     throw error;
   }
 }
 
-// --- OVERVIEW (income vs expenses, net balance) ---
+/* ------------------ OVERVIEW (income vs expenses, net balance) ------------------ */
+
 export async function getOverview(
   token: string,
   params: {
@@ -348,78 +401,89 @@ export async function getOverview(
   } = {}
 ) {
   try {
-    const response = await axios.get(`${API_BASE_URL}/summary/overview`, {
-      headers: { Authorization: `Bearer ${token}` },
+    const { data } = await api.get("/summary/overview", {
+      headers: auth(token),
       params,
     });
-    return response.data; // { total_income, total_expenses, net_balance, maybe: series }
+    return data;
   } catch (error: any) {
-    console.error("Failed to fetch overview:", error.response?.data || error.message);
+    console.error(
+      "Failed to fetch overview:",
+      error.response?.data || error.message
+    );
     throw error;
   }
 }
 
+/* ------------------ PASSWORD RESET (Forgot & Reset) ------------------ */
 
-// ------------------ PASSWORD RESET (Forgot & Reset) ------------------
-
-/**
- * Request a password reset link.
- * Backend always returns 200 to avoid email enumeration.
- */
 export async function forgotPassword(email: string) {
   try {
-    const { data } = await axios.post(`${API_BASE_URL}/forgot-password`, { email }, {
-      headers: { "Content-Type": "application/json" },
-    });
-    return data; // { msg: "If this email is registered, you will receive a reset link shortly." }
+    const { data } = await api.post(
+      "/forgot-password",
+      { email },
+      { headers: { "Content-Type": "application/json" } }
+    );
+    return data; // { msg: ... }
   } catch (err: any) {
     throw new Error(extractFastAPIError(err));
   }
 }
 
-/**
- * Reset the password using the token sent via email.
- */
 export async function resetPassword(token: string, new_password: string) {
   try {
-    const { data } = await axios.post(`${API_BASE_URL}/reset-password`, { token, new_password }, {
-      headers: { "Content-Type": "application/json" },
-    });
-    return data; // { msg: "Password has been reset successfully." }
+    const { data } = await api.post(
+      "/reset-password",
+      { token, new_password },
+      { headers: { "Content-Type": "application/json" } }
+    );
+    return data; // { msg: ... }
   } catch (err: any) {
     throw new Error(extractFastAPIError(err));
   }
 }
 
-// ------------------ AI ------------------
+/* ------------------ AI ------------------ */
 
 export async function aiSuggestCategory(
   token: string,
   payload: { description: string; amount?: number }
 ) {
   try {
-    const resp = await api.post(
-      `/ai/suggest-category`,
-      payload,
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-    return resp.data as {
+    const { data } = await api.post("/ai/suggest-category", payload, {
+      headers: auth(token),
+    });
+    return data as {
       suggested_category: string | null;
       confidence: number;
       rationale?: string | null;
     };
   } catch (err: any) {
-    const msg = extractFastAPIError(err);
-    console.error("AI suggest-category failed:", msg);
-    throw new Error(msg);
+    throw new Error(extractFastAPIError(err));
   }
 }
 
-export async function aiCategoryFeedback(token: string, text: string, category: string) {
-  const resp = await axios.post(
-    `${API_BASE_URL}/ai/category-feedback`,
+export async function aiCategoryFeedback(
+  token: string,
+  text: string,
+  category: string
+) {
+  const { data } = await api.post(
+    "/ai/category-feedback",
     { text, category },
-    { headers: { Authorization: `Bearer ${token}` } }
+    { headers: auth(token) }
   );
-  return resp.data; // { msg }
+  return data; // { msg }
+}
+
+export async function aiAssistant(token: string, message: string) {
+  const { data } = await api.post(
+    "/ai/assistant",
+    { message },
+    { headers: auth(token) }
+  );
+  return data as {
+    reply: string;
+    actions?: Array<{ type: string; label?: string; params?: any }>;
+  };
 }

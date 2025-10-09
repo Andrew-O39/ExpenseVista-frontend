@@ -40,6 +40,8 @@ export default function CreateExpense() {
       return;
     }
 
+    const normalizedCategory = normalizeCategory(category);
+
     try {
       await createExpense(token, {
         amount: Number(amount),
@@ -47,6 +49,15 @@ export default function CreateExpense() {
         category: normalizeCategory(category),
         notes: notes.trim() || undefined,
       });
+
+        // Fire-and-forget feedback to teach the model your mapping
+      // Only send if we have a meaningful description
+      if (description.trim()) {
+        aiCategoryFeedback(token, description, normalizedCategory).catch(() => {});
+      } else if (!description.trim() && suggestInfo.cat) {
+        // If no description but suggestion existed, you can still teach by keying on the category text
+        aiCategoryFeedback(token, suggestInfo.cat, normalizedCategory).catch(() => {});
+      }
 
       setSuccess('Expense created successfully!');
       setDescription('');
@@ -95,6 +106,18 @@ export default function CreateExpense() {
       alert('Suggestion unavailable.');
     } finally {
       setSuggesting(false);
+    }
+  };
+
+  const useSuggestion = async () => {
+    if (!suggestInfo.cat) return;
+    setCategory(suggestInfo.cat);
+
+    // Optionally record feedback immediately when user accepts suggestion
+    const token = localStorage.getItem('access_token');
+    if (token) {
+      const key = description.trim() || suggestInfo.cat;
+      aiCategoryFeedback(token, key, normalizeCategory(suggestInfo.cat)).catch(() => {});
     }
   };
 
@@ -160,6 +183,7 @@ export default function CreateExpense() {
           </div>
           <div className="form-text">Tip: enter a description first, then click “Suggest”.</div>
 
+          {/* Suggestion preview */}
           <AnimatePresence>
             {suggestInfo.cat && (
               <motion.div
@@ -169,6 +193,7 @@ export default function CreateExpense() {
                 exit={{ opacity: 0, y: -6 }}
                 transition={{ duration: 0.25 }}
                 className="alert alert-light border mt-2 py-2 px-3 small d-flex justify-content-between align-items-center"
+                style={{ borderColor: '#dee2e6' }}
               >
                 <div>
                   💡 Suggested: <strong>{suggestInfo.cat}</strong>
@@ -182,7 +207,7 @@ export default function CreateExpense() {
                   className="btn btn-sm btn-outline-primary ms-2"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={() => setCategory(suggestInfo.cat!)}
+                  onClick={useSuggestion}
                 >
                   Use suggestion
                 </motion.button>

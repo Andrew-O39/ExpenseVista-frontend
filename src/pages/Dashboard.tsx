@@ -12,6 +12,7 @@ import { getSummary, getBudgets, getCurrentUser, getOverview } from '../services
 import { isTokenValid } from '../utils/auth';
 
 import BudgetVsExpensesChart from '../components/BudgetVsExpensesChart';
+import FinanceAssistant from "../components/FinanceAssistant";
 
 /* =========================
    Types
@@ -809,5 +810,9 @@ export default function Dashboard() {
         </div>
       )}
     </div>
+    <div className="row g-3">
+  <div className="col-lg-6">{/* existing cards/charts */}</div>
+  <div className="col-lg-6"><FinanceAssistant /></div>
+</div>
   );
 }
