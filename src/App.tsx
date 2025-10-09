@@ -17,6 +17,7 @@ import CreateIncome from './pages/CreateIncome';
 import IncomeList from './pages/IncomeList';
 import EditIncome from './pages/EditIncome';
 import SessionWatcher from './components/SessionWatcher';
+import FinanceAssistant from './components/FinanceAssistant';
 
 function Page({ title, children }: { title: string; children: React.ReactNode }) {
   useEffect(() => {
@@ -68,6 +69,8 @@ export default function App() {
         <Route path="/edit-budget/:id"  element={<Page title="Edit Budget"><BudgetEdit /></Page>} />
         <Route path="/edit-income/:id"  element={<Page title="Edit Income"><EditIncome /></Page>} />
       </Routes>
+      {/* Floating assistant shows on every page */}
+      <FinanceAssistant />
     </>
   );
 }
