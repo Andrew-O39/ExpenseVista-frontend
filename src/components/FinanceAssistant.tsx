@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { aiAssistant } from "../services/api";
 
 type ChatMsg = {
@@ -6,6 +7,56 @@ type ChatMsg = {
   text: string;
   actions?: Array<{ type: string; label?: string; params?: any }>;
 };
+
+// Build /expenses?start_date=...&end_date=...&category=...&search=...
+function buildExpensesUrl(params: Record<string, any> = {}) {
+  const usp = new URLSearchParams();
+  if (params.category) usp.set("category", params.category);
+  if (params.search)   usp.set("search", params.search);
+  if (params.start)    usp.set("start_date", params.start); // ISO
+  if (params.end)      usp.set("end_date", params.end);     // ISO
+  if (params.limit)    usp.set("limit", String(params.limit));
+  if (params.page)     usp.set("page", String(params.page));
+  const qs = usp.toString();
+  return qs ? `/expenses?${qs}` : `/expenses`;
+}
+
+function AssistantActions({ actions }: { actions?: ChatMsg["actions"] }) {
+  const navigate = useNavigate();
+  if (!actions || actions.length === 0) return null;
+
+  const handle = (a: NonNullable<ChatMsg["actions"]>[number]) => {
+    switch (a.type) {
+      case "view_expenses":
+      case "link": {
+        navigate(buildExpensesUrl(a.params || {}));
+        break;
+      }
+      case "show_breakdown": {
+        navigate("/dashboard?focus=breakdown");
+        break;
+      }
+      default:
+        console.warn("Unknown assistant action:", a);
+    }
+  };
+
+  return (
+    <div className="d-flex flex-wrap gap-2 mt-2">
+      {actions.map((a, i) => (
+        <button
+          key={i}
+          type="button"
+          className="btn btn-sm btn-outline-secondary"
+          onClick={() => handle(a)}
+          title={a.type}
+        >
+          {a.label || a.type}
+        </button>
+      ))}
+    </div>
+  );
+}
 
 export default function FinanceAssistant() {
   const [open, setOpen] = useState(false);
@@ -23,7 +74,6 @@ export default function FinanceAssistant() {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // auto-scroll to bottom on new messages
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [msgs, open]);
 
@@ -31,7 +81,6 @@ export default function FinanceAssistant() {
     const content = input.trim();
     if (!content) return;
 
-    // push user message
     setMsgs((m) => [...m, { role: "user", text: content }]);
     setInput("");
     setBusy(true);
@@ -55,7 +104,7 @@ export default function FinanceAssistant() {
           actions: resp?.actions || [],
         },
       ]);
-    } catch (err: any) {
+    } catch {
       setMsgs((m) => [
         ...m,
         { role: "assistant", text: "Sorry—something went wrong. Please try again." },
@@ -152,19 +201,7 @@ export default function FinanceAssistant() {
               {msgs.map((m, i) => (
                 <div key={i} style={bubble(m.role)}>
                   {m.text}
-                  {Array.isArray(m.actions) && m.actions.length > 0 && (
-                    <div className="mt-2">
-                      {m.actions.map((a, idx) => (
-                        <span
-                          key={idx}
-                          className="badge bg-light text-dark border me-1"
-                          title={a.type}
-                        >
-                          {a.label || a.type}
-                        </span>
-                      ))}
-                    </div>
-                  )}
+                  <AssistantActions actions={m.actions} />
                 </div>
               ))}
               {busy && <div style={bubble("assistant")}>Thinking…</div>}

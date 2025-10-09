@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { getExpenses, deleteExpense } from '../services/api';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { isTokenValid } from '../utils/auth';
 
 type Expense = {
@@ -16,8 +16,11 @@ type QuickRange = 'all' | 'week' | 'month' | 'quarter' | 'half-year' | 'custom';
 
 export default function ExpenseList() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -66,7 +69,59 @@ export default function ExpenseList() {
     return {};
   };
 
-  const fetchExpenses = async (pageToLoad = 1) => {
+  // Initialize state from URL (category/search/dates/page/limit)
+  useEffect(() => {
+    const qpCategory = searchParams.get('category') || '';
+    const qpSearch   = searchParams.get('search') || '';
+    const qpStartISO = searchParams.get('start_date') || '';
+    const qpEndISO   = searchParams.get('end_date') || '';
+    const qpPage     = Number(searchParams.get('page') || '1');
+    const qpLimit    = Number(searchParams.get('limit') || '10');
+
+    // If category is present, we treat it as a search term for now
+    const initialSearch = qpSearch || qpCategory || '';
+    setSearch(initialSearch);
+    setSearchInput(initialSearch);
+
+    // If date range provided in URL, switch to custom and prefill
+    if (qpStartISO || qpEndISO) {
+      setRange('custom');
+      if (qpStartISO) setStartDate(qpStartISO.slice(0, 10));
+      if (qpEndISO)   setEndDate(qpEndISO.slice(0, 10));
+    }
+
+    if (!Number.isNaN(qpPage) && qpPage > 0) setPage(qpPage);
+    if (!Number.isNaN(qpLimit) && qpLimit > 0) setLimit(qpLimit);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const updateUrl = (overrides: Record<string, string | number | undefined>) => {
+    const params = new URLSearchParams(searchParams.toString());
+    const apply = (k: string, v?: string | number) => {
+      if (v === undefined || v === '' || v === null) params.delete(k);
+      else params.set(k, String(v));
+    };
+
+    apply('search', search);
+    apply('page', page);
+    apply('limit', limit);
+
+    if (range === 'custom') {
+      if (startDate) apply('start_date', `${startDate}T00:00:00Z`);
+      else params.delete('start_date');
+      if (endDate) apply('end_date', `${endDate}T23:59:59Z`);
+      else params.delete('end_date');
+    } else {
+      params.delete('start_date');
+      params.delete('end_date');
+    }
+
+    // overrides win
+    Object.entries(overrides).forEach(([k, v]) => apply(k, v as any));
+    setSearchParams(params);
+  };
+
+  const fetchExpenses = async (pageToLoad = 1, limitToUse = limit) => {
     if (!token || !isTokenValid()) {
       navigate('/login', { replace: true });
       return;
@@ -77,8 +132,8 @@ export default function ExpenseList() {
       let endISO: string | undefined;
 
       if (range === 'custom') {
-        if (startDate) startISO = new Date(`${startDate}T00:00:00`).toISOString();
-        if (endDate)   endISO   = new Date(`${endDate}T23:59:59`).toISOString();
+        if (startDate) startISO = new Date(`${startDate}T00:00:00Z`).toISOString();
+        if (endDate)   endISO   = new Date(`${endDate}T23:59:59Z`).toISOString();
       } else if (range !== 'all') {
         const r = computeRange(range);
         startISO = r.start;
@@ -90,10 +145,10 @@ export default function ExpenseList() {
         startDate: startISO,
         endDate: endISO,
         page: pageToLoad,
-        limit: 10,
+        limit: limitToUse,
       });
 
-      if (data.length < 10) setHasMore(false);
+      if (data.length < limitToUse) setHasMore(false);
 
       setExpenses(prev =>
         pageToLoad === 1
@@ -108,12 +163,14 @@ export default function ExpenseList() {
     }
   };
 
+  // Load when filters change (search/range/page/limit)
   useEffect(() => {
-    setPage(1);
     setHasMore(true);
-    fetchExpenses(1);
+    fetchExpenses(page, limit);
+    // Keep URL in sync (optional but handy)
+    updateUrl({});
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [navigate, search, range]);
+  }, [navigate, search, range, page, limit]);
 
   const handleDelete = async (id: number) => {
     if (!token) {
@@ -133,24 +190,23 @@ export default function ExpenseList() {
 
   const handleSearchApply = () => {
     setPage(1);
-    setHasMore(true);
     setSearch(searchInput.trim());
+    updateUrl({ page: 1 });
   };
 
   const handleRangeApply = () => {
-  if (range === 'custom' && startDate && endDate && startDate > endDate) {
-    alert('Start date must be before end date.');
-    return;
-  }
-  setPage(1);
-  setHasMore(true);
-  fetchExpenses(1);
-};
+    if (range === 'custom' && startDate && endDate && startDate > endDate) {
+      alert('Start date must be before end date.');
+      return;
+    }
+    setPage(1);
+    // fetch will run via effect; also sync URL now:
+    updateUrl({ page: 1 });
+  };
 
   const loadMore = () => {
     const next = page + 1;
     setPage(next);
-    fetchExpenses(next);
   };
 
   const fmt = (iso: string) => new Date(iso).toLocaleString();
@@ -170,9 +226,25 @@ export default function ExpenseList() {
             {expenses.length} items · {euro(totalExpenses)}
           </span>
         </h2>
-        <button className="btn btn-secondary btn-sm" onClick={() => navigate('/dashboard')}>
-          Back to Dashboard
-        </button>
+        <div className="d-flex align-items-center gap-2">
+          <select
+            className="form-select form-select-sm"
+            value={limit}
+            onChange={e => {
+              const v = Number(e.target.value) || 10;
+              setLimit(v);
+              setPage(1);
+            }}
+            style={{ width: 100 }}
+          >
+            <option value={10}>10 / page</option>
+            <option value={25}>25 / page</option>
+            <option value={50}>50 / page</option>
+          </select>
+          <button className="btn btn-secondary btn-sm" onClick={() => navigate('/dashboard')}>
+            Back to Dashboard
+          </button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -272,7 +344,7 @@ export default function ExpenseList() {
                       <li>
                         <button
                           className="dropdown-item"
-                          onClick={() => navigate(`/edit-expense/${e.id}`)} // fixed backticks
+                          onClick={() => navigate(`/edit-expense/${e.id}`)}
                         >
                           Edit
                         </button>
@@ -301,11 +373,11 @@ export default function ExpenseList() {
 
       {hasMore && (
         <button
-            className="btn btn-primary mt-3"
-            disabled={loading || !hasMore}
-            onClick={loadMore}
+          className="btn btn-primary mt-3"
+          disabled={loading || !hasMore}
+          onClick={loadMore}
         >
-            {loading ? 'Loading...' : 'Load More'}
+          {loading ? 'Loading...' : 'Load More'}
         </button>
       )}
     </div>
