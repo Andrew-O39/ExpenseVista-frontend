@@ -1,46 +1,44 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { createExpense, aiSuggestCategory } from '../services/api';
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { createExpense, aiSuggestCategory, aiCategoryFeedback } from "../services/api";
 import { motion, AnimatePresence } from "framer-motion";
 
 function normalizeCategory(cat: string) {
-  return cat.toLowerCase().trim().replace(/\s+/g, ' ').normalize();
+  return cat.toLowerCase().trim().replace(/\s+/g, " ").normalize();
 }
 
 export default function CreateExpense() {
   const navigate = useNavigate();
 
-  const [description, setDescription] = useState('');
-  const [amount, setAmount] = useState('');
-  const [category, setCategory] = useState('');
-  const [notes, setNotes] = useState('');
+  const [description, setDescription] = useState("");
+  const [amount, setAmount] = useState("");
+  const [category, setCategory] = useState("");
+  const [notes, setNotes] = useState("");
 
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [suggesting, setSuggesting] = useState(false);
   const [suggestInfo, setSuggestInfo] = useState<{ cat?: string; conf?: number; why?: string }>({});
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
+    setError("");
+    setSuccess("");
 
-    const token = localStorage.getItem('access_token');
+    const token = localStorage.getItem("access_token");
     if (!token) {
-      setError('You must be logged in to create an expense.');
+      setError("You must be logged in to create an expense.");
       return;
     }
 
     if (!amount || Number(amount) <= 0) {
-      setError('Amount must be greater than zero.');
+      setError("Amount must be greater than zero.");
       return;
     }
     if (!category.trim()) {
-      setError('Category is required.');
+      setError("Category is required.");
       return;
     }
-
-    const normalizedCategory = normalizeCategory(category);
 
     try {
       await createExpense(token, {
@@ -50,74 +48,71 @@ export default function CreateExpense() {
         notes: notes.trim() || undefined,
       });
 
-        // Fire-and-forget feedback to teach the model your mapping
-      // Only send if we have a meaningful description
-      if (description.trim()) {
-        aiCategoryFeedback(token, description, normalizedCategory).catch(() => {});
-      } else if (!description.trim() && suggestInfo.cat) {
-        // If no description but suggestion existed, you can still teach by keying on the category text
-        aiCategoryFeedback(token, suggestInfo.cat, normalizedCategory).catch(() => {});
+      // Optional: send feedback if we had a suggestion (accepted or overridden)
+      try {
+        if (suggestInfo.cat) {
+          const chosen = normalizeCategory(category);
+          const textForMapping = (description || category || "transaction").toLowerCase();
+          await aiCategoryFeedback(token, textForMapping, chosen);
+        }
+      } catch {
+        // swallow – feedback shouldn’t block UX
       }
 
-      setSuccess('Expense created successfully!');
-      setDescription('');
-      setAmount('');
-      setCategory('');
-      setNotes('');
+      setSuccess("Expense created successfully!");
+      setDescription("");
+      setAmount("");
+      setCategory("");
+      setNotes("");
       setSuggestInfo({});
 
-      // Navigate after short delay
-      setTimeout(() => navigate('/expenses'), 800);
+      setTimeout(() => navigate("/expenses"), 800);
     } catch (err: any) {
-      setError(err?.response?.data?.detail || err.message || 'Failed to create expense.');
+      setError(err?.response?.data?.detail || err.message || "Failed to create expense.");
     }
   };
 
   const handleSuggest = async () => {
     setSuggestInfo({});
-    const token = localStorage.getItem('access_token');
+    const token = localStorage.getItem("access_token");
     if (!token) {
-      alert('Please sign in first.');
+      alert("Please sign in first.");
       return;
     }
     if (!description.trim() && !category.trim()) {
-      alert('Add a description (or a rough category) first.');
+      alert("Add a description (or a rough category) first.");
       return;
     }
 
     try {
       setSuggesting(true);
       const resp = await aiSuggestCategory(token, {
-        description: description || category || 'transaction',
+        description: description || category || "transaction",
         amount: amount ? Number(amount) : undefined,
       });
 
       if (resp.suggested_category) {
+        setCategory(resp.suggested_category);
         setSuggestInfo({
           cat: resp.suggested_category,
           conf: resp.confidence ?? 0,
           why: resp.rationale ?? undefined,
         });
+        // Optional: immediate “accept” feedback when we auto-fill the suggestion
+        try {
+          const textForMapping = (description || category || "transaction").toLowerCase();
+          await aiCategoryFeedback(token, textForMapping, resp.suggested_category);
+        } catch {
+          // ignore feedback errors
+        }
       } else {
-        alert('No suggestion available.');
+        alert("No suggestion available.");
       }
     } catch (e) {
       console.error(e);
-      alert('Suggestion unavailable.');
+      alert("Suggestion unavailable.");
     } finally {
       setSuggesting(false);
-    }
-  };
-
-  const useSuggestion = async () => {
-    if (!suggestInfo.cat) return;
-    setCategory(suggestInfo.cat);
-
-    // Optionally record feedback immediately when user accepts suggestion
-    const token = localStorage.getItem('access_token');
-    if (token) {
-      const key = description.trim() || suggestInfo.cat;
-      aiCategoryFeedback(token, key, normalizeCategory(suggestInfo.cat)).catch(() => {});
     }
   };
 
@@ -126,13 +121,14 @@ export default function CreateExpense() {
       <form
         onSubmit={handleSubmit}
         className="p-4 border rounded bg-white shadow"
-        style={{ maxWidth: '480px', width: '100%' }}
+        style={{ maxWidth: "480px", width: "100%" }}
       >
         <h3 className="mb-4 text-center">Create Expense</h3>
 
-        {/* Description */}
         <div className="mb-3">
-          <label htmlFor="description" className="form-label">Description (optional)</label>
+          <label htmlFor="description" className="form-label">
+            Description (optional)
+          </label>
           <input
             id="description"
             type="text"
@@ -143,9 +139,10 @@ export default function CreateExpense() {
           />
         </div>
 
-        {/* Amount */}
         <div className="mb-3">
-          <label htmlFor="amount" className="form-label">Amount (€)</label>
+          <label htmlFor="amount" className="form-label">
+            Amount (€)
+          </label>
           <input
             id="amount"
             type="number"
@@ -158,9 +155,10 @@ export default function CreateExpense() {
           />
         </div>
 
-        {/* Category + AI Suggestion */}
         <div className="mb-2">
-          <label htmlFor="category" className="form-label">Category</label>
+          <label htmlFor="category" className="form-label">
+            Category
+          </label>
           <div className="input-group">
             <input
               id="category"
@@ -178,12 +176,11 @@ export default function CreateExpense() {
               disabled={suggesting}
               title="Suggest a category from description and history"
             >
-              {suggesting ? 'Suggesting…' : 'Suggest'}
+              {suggesting ? "Suggesting…" : "Suggest"}
             </button>
           </div>
           <div className="form-text">Tip: enter a description first, then click “Suggest”.</div>
 
-          {/* Suggestion preview */}
           <AnimatePresence>
             {suggestInfo.cat && (
               <motion.div
@@ -193,21 +190,34 @@ export default function CreateExpense() {
                 exit={{ opacity: 0, y: -6 }}
                 transition={{ duration: 0.25 }}
                 className="alert alert-light border mt-2 py-2 px-3 small d-flex justify-content-between align-items-center"
-                style={{ borderColor: '#dee2e6' }}
+                style={{ borderColor: "#dee2e6" }}
               >
                 <div>
                   💡 Suggested: <strong>{suggestInfo.cat}</strong>
-                  {typeof suggestInfo.conf === 'number' && (
+                  {typeof suggestInfo.conf === "number" && (
                     <> ({Math.round(suggestInfo.conf * 100)}% confidence)</>
                   )}
                   {suggestInfo.why ? <> – {suggestInfo.why}</> : null}
                 </div>
+
                 <motion.button
                   type="button"
                   className="btn btn-sm btn-outline-primary ms-2"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={useSuggestion}
+                  onClick={async () => {
+                    setCategory(suggestInfo.cat!);
+                    // Optional: explicit acceptance feedback when user clicks
+                    try {
+                      const token = localStorage.getItem("access_token");
+                      if (token && suggestInfo.cat) {
+                        const textForMapping = (description || category || "transaction").toLowerCase();
+                        await aiCategoryFeedback(token, textForMapping, suggestInfo.cat);
+                      }
+                    } catch {
+                      /* ignore */
+                    }
+                  }}
                 >
                   Use suggestion
                 </motion.button>
@@ -216,9 +226,10 @@ export default function CreateExpense() {
           </AnimatePresence>
         </div>
 
-        {/* Notes */}
         <div className="mb-3">
-          <label htmlFor="notes" className="form-label">Notes (optional)</label>
+          <label htmlFor="notes" className="form-label">
+            Notes (optional)
+          </label>
           <textarea
             id="notes"
             value={notes}
@@ -228,11 +239,9 @@ export default function CreateExpense() {
           />
         </div>
 
-        {/* Alerts */}
         {error && <div className="alert alert-danger">{error}</div>}
         {success && <div className="alert alert-success">{success}</div>}
 
-        {/* Submit */}
         <button type="submit" className="btn btn-primary w-100">
           Create Expense
         </button>
