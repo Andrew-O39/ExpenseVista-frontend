@@ -12,7 +12,6 @@ import { getSummary, getBudgets, getCurrentUser, getOverview } from '../services
 import { isTokenValid } from '../utils/auth';
 
 import BudgetVsExpensesChart from '../components/BudgetVsExpensesChart';
-import FinanceAssistant from "../components/FinanceAssistant";
 
 /* =========================
    Types
