@@ -29,6 +29,27 @@ export default function AssistantActions({ actions = [] as AssistantAction[] }) 
         navigate(`/expenses?${p.toString()}`);
         break;
       }
+      case "open_budgets": {
+        const p = new URLSearchParams();
+        if (a.params?.category) p.set("category", String(a.params.category));
+        if (a.params?.start_date) p.set("start_date", String(a.params.start_date));
+        if (a.params?.end_date) p.set("end_date", String(a.params.end_date));
+        p.set("page", "1");
+        p.set("limit", "10");
+        navigate(`/budgets?${p.toString()}`);
+        break;
+      }
+
+      case "open_incomes": {
+        const p = new URLSearchParams();
+        if (a.params?.search) p.set("search", String(a.params.search));
+        if (a.params?.start_date) p.set("start_date", String(a.params.start_date));
+        if (a.params?.end_date) p.set("end_date", String(a.params.end_date));
+        p.set("page", "1");
+        p.set("limit", "10");
+        navigate(`/incomes?${p.toString()}`);
+        break;
+      }
 
       case "navigate": {
         // Generic navigation if backend returns a route

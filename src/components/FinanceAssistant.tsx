@@ -9,21 +9,31 @@ type ChatMsg = {
 };
 
 export default function FinanceAssistant() {
-  const [open, setOpen] = useState(true); // set true if you want it open for testing
+  const [open, setOpen] = useState(true); // set to false in production if you prefer
   const [busy, setBusy] = useState(false);
   const [input, setInput] = useState("");
   const [msgs, setMsgs] = useState<ChatMsg[]>([
     {
       role: "system",
       text:
-        "Hi! Ask me things like:\n" +
-        "• How much did I spend on groceries last month?\n" +
-        "• What’s my top category this quarter?\n" +
-        "• Am I on track with my budgets?",
+        "Hi! I can help with expenses, budgets, and income. Try:\n" +
+        "• “How much did I spend on groceries last month?”\n" +
+        "• “What’s my top category this quarter?”\n" +
+        "• “What’s my income vs expenses this month?”\n" +
+        "• “Am I over budget on groceries this month?”",
     },
   ]);
 
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Quick prompts that cover expenses, budgets, and income
+  const quickPrompts = [
+    { label: "This week spend", text: "How much did I spend this week?" },
+    { label: "Groceries last month", text: "How much did I spend on groceries last month?" },
+    { label: "Over budget?", text: "Am I over budget on groceries this month?" },
+    { label: "Income vs expenses", text: "What is my income vs expenses this month?" },
+    { label: "Top category Q", text: "What’s my top category this quarter?" },
+  ];
 
   useEffect(() => {
     scrollRef.current?.scrollTo({
@@ -32,11 +42,10 @@ export default function FinanceAssistant() {
     });
   }, [msgs, open]);
 
-  async function sendMessage() {
-    const content = input.trim();
-    if (!content || busy) return;
+  async function sendMessageWith(content: string) {
+    if (!content.trim() || busy) return;
 
-    setMsgs((m) => [...m, { role: "user", text: content }]);
+    setMsgs((m) => [...m, { role: "user", text: content.trim() }]);
     setInput("");
     setBusy(true);
 
@@ -50,8 +59,7 @@ export default function FinanceAssistant() {
         return;
       }
 
-      const resp = await aiAssistant(token, content);
-      // Expect: { reply: string, actions?: [...] }
+      const resp = await aiAssistant(token, content.trim());
       setMsgs((m) => [
         ...m,
         {
@@ -71,14 +79,18 @@ export default function FinanceAssistant() {
     }
   }
 
+  function sendMessage() {
+    void sendMessageWith(input);
+  }
+
   function onKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      void sendMessage();
+      sendMessage();
     }
   }
 
-  // Always on top & clickable
+  // Floating styles
   const wrap: React.CSSProperties = {
     position: "fixed",
     right: 16,
@@ -87,8 +99,8 @@ export default function FinanceAssistant() {
     pointerEvents: "auto",
   };
   const panel: React.CSSProperties = {
-    width: 340,
-    maxHeight: 520,
+    width: 360,
+    maxHeight: 560,
     boxShadow: "0 6px 24px rgba(0,0,0,0.15)",
     borderRadius: 12,
     overflow: "hidden",
@@ -101,6 +113,14 @@ export default function FinanceAssistant() {
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
+  };
+  const quickBar: React.CSSProperties = {
+    background: "#f8f9fa",
+    borderBottom: "1px solid #e9ecef",
+    padding: "8px 10px",
+    display: "flex",
+    flexWrap: "wrap",
+    gap: 8,
   };
   const body: React.CSSProperties = {
     background: "#fff",
@@ -152,12 +172,27 @@ export default function FinanceAssistant() {
             </button>
           </div>
 
+          {/* Quick prompts for Expenses, Budgets, and Income */}
+          <div style={quickBar}>
+            {quickPrompts.map((q, i) => (
+              <button
+                key={i}
+                type="button"
+                className="btn btn-sm btn-outline-secondary"
+                onClick={() => void sendMessageWith(q.text)}
+                disabled={busy}
+                title={q.text}
+              >
+                {q.label}
+              </button>
+            ))}
+          </div>
+
           <div style={body} ref={scrollRef}>
             <div className="d-flex flex-column">
               {msgs.map((m, i) => (
                 <div key={i} style={bubble(m.role)}>
                   <div>{m.text}</div>
-                  {/* Action buttons (if any) */}
                   {m.actions && m.actions.length > 0 && (
                     <AssistantActions actions={m.actions} />
                   )}
@@ -171,7 +206,7 @@ export default function FinanceAssistant() {
             <input
               type="text"
               className="form-control"
-              placeholder='e.g. "See my groceries this month"'
+              placeholder='e.g. "Am I over budget on dining this month?"'
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={onKeyDown}
@@ -180,7 +215,7 @@ export default function FinanceAssistant() {
             <button
               type="button"
               className="btn btn-primary"
-              onClick={() => void sendMessage()}
+              onClick={sendMessage}
               disabled={busy || !input.trim()}
             >
               Send
