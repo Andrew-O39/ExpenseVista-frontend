@@ -1,44 +1,50 @@
-import { useEffect, useMemo, useState } from 'react';
-import { getIncomes, deleteIncome } from '../services/api';
-import { useNavigate } from 'react-router-dom';
-import { isTokenValid } from '../utils/auth';
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
+import { getIncomes, deleteIncome } from "../services/api";
+import { isTokenValid } from "../utils/auth";
 
 type Income = {
   id: number;
   amount: number;
-  category: string;
-  source?: string;
-  notes?: string;
-  received_at?: string;
-  created_at: string;
+  source: string;
+  category?: string | null;
+  notes?: string | null;
+  received_at: string; // we display received_at
 };
 
-type QuickRange = 'all' | 'week' | 'month' | 'quarter' | 'half-year' | 'custom';
+type QuickRange = "all" | "week" | "month" | "quarter" | "half-year" | "custom";
 
 export default function IncomeList() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
+
   const [incomes, setIncomes] = useState<Income[]>([]);
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [search, setSearch] = useState('');
-  const [searchInput, setSearchInput] = useState('');
+  const [search, setSearch] = useState("");
+  const [searchInput, setSearchInput] = useState("");
 
-  const [range, setRange] = useState<QuickRange>('all');
-  const [startDate, setStartDate] = useState(''); // yyyy-mm-dd
-  const [endDate, setEndDate] = useState('');     // yyyy-mm-dd
+  const [range, setRange] = useState<QuickRange>("all");
+  const [startDate, setStartDate] = useState(""); // yyyy-mm-dd
+  const [endDate, setEndDate] = useState(""); // yyyy-mm-dd
 
-  const token = localStorage.getItem('access_token'); // string | null
+  const token =
+    (typeof window !== "undefined"
+      ? localStorage.getItem("access_token")
+      : null) as string | null;
 
-  // helper
   const euro = (n: number) => `€${Number(n || 0).toFixed(2)}`;
-
   const toISO = (d: Date) => d.toISOString();
+
+  // Used only for manual quick-range filtering; assistant passes explicit start/end via URL
   const computeRange = (r: QuickRange): { start?: string; end?: string } => {
     const now = new Date();
-    if (r === 'week') {
+    if (r === "week") {
       const start = new Date(now);
       start.setDate(now.getDate() - 6);
       start.setHours(0, 0, 0, 0);
@@ -46,118 +52,185 @@ export default function IncomeList() {
       end.setHours(23, 59, 59, 999);
       return { start: toISO(start), end: toISO(end) };
     }
-    if (r === 'month') {
+    if (r === "month") {
       const start = new Date(now.getFullYear(), now.getMonth(), 1);
       const end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
       return { start: toISO(start), end: toISO(end) };
     }
-    if (r === 'quarter') {
+    if (r === "quarter") {
       const q = Math.floor(now.getMonth() / 3);
       const start = new Date(now.getFullYear(), q * 3, 1);
       const end = new Date(now.getFullYear(), q * 3 + 3, 0, 23, 59, 59, 999);
       return { start: toISO(start), end: toISO(end) };
     }
-    if (r === 'half-year') {
+    if (r === "half-year") {
       const firstHalf = now.getMonth() < 6;
       const start = new Date(now.getFullYear(), firstHalf ? 0 : 6, 1);
       const end = new Date(now.getFullYear(), firstHalf ? 6 : 12, 0, 23, 59, 59, 999);
       return { start: toISO(start), end: toISO(end) };
     }
-    return {}; // 'all' or 'custom' handled elsewhere
+    return {};
   };
 
-  const fetchIncomes = async (pageToLoad = 1) => {
+  /** Sync URL helper (used from user actions; assistant sets URL directly) */
+  const updateUrl = (overrides: Record<string, string | number | undefined>) => {
+    const params = new URLSearchParams(searchParams.toString());
+    const apply = (k: string, v?: string | number | null) => {
+      if (v === undefined || v === "" || v === null) params.delete(k);
+      else params.set(k, String(v));
+    };
+
+    apply("search", search);
+    apply("page", page);
+    apply("limit", limit);
+
+    if (range === "custom") {
+      apply("start_date", startDate ? `${startDate}T00:00:00.000Z` : undefined);
+      apply("end_date", endDate ? `${endDate}T23:59:59.999Z` : undefined);
+    } else {
+      params.delete("start_date");
+      params.delete("end_date");
+    }
+
+    Object.entries(overrides).forEach(([k, v]) => apply(k, v as any));
+    setSearchParams(params);
+  };
+
+  /** Fetcher */
+  const fetchIncomes = async (pageToLoad = 1, limitToUse = limit) => {
     if (!token || !isTokenValid()) {
-      navigate('/login', { replace: true });
+      navigate("/login", { replace: true });
       return;
     }
     setLoading(true);
+    setError(null);
     try {
       let startISO: string | undefined;
       let endISO: string | undefined;
 
-      if (range === 'custom') {
-        if (startDate) startISO = new Date(`${startDate}T00:00:00`).toISOString();
-        if (endDate) endISO = new Date(`${endDate}T23:59:59`).toISOString();
-      } else if (range !== 'all') {
+      if (range === "custom") {
+        if (startDate) startISO = new Date(`${startDate}T00:00:00Z`).toISOString();
+        if (endDate) endISO = new Date(`${endDate}T23:59:59Z`).toISOString();
+      } else if (range !== "all") {
         const r = computeRange(range);
         startISO = r.start;
         endISO = r.end;
       }
 
-      const data: Income[] = await getIncomes(token as string, {
+      const data: Income[] = await getIncomes(token, {
         search,
         startDate: startISO,
         endDate: endISO,
         page: pageToLoad,
-        limit: 10,
+        limit: limitToUse,
       });
 
-      if (data.length < 10) setHasMore(false);
+      if (data.length < limitToUse) setHasMore(false);
 
-      setIncomes(prev =>
-        pageToLoad === 1
-          ? data
-          : [...prev, ...data.filter(d => !prev.some(p => p.id === d.id))]
+      setIncomes((prev) =>
+        pageToLoad === 1 ? data : [...prev, ...data.filter((d) => !prev.some((p) => p.id === d.id))]
       );
     } catch (err) {
-      console.error('Failed to load incomes:', err);
-      setError('Failed to load incomes');
+      console.error("Failed to load incomes:", err);
+      setError("Failed to load incomes");
     } finally {
       setLoading(false);
     }
   };
 
+  /**
+   * Respond to URL changes (arriving from Assistant or manual edits).
+   * Runs on mount and whenever location.search changes.
+   */
   useEffect(() => {
-    setPage(1);
+    const qs = new URLSearchParams(location.search);
+    const qpSearch = qs.get("search") || "";
+    const qpStartISO = qs.get("start_date") || "";
+    const qpEndISO = qs.get("end_date") || "";
+    const qpPage = Number(qs.get("page") || "1");
+    const qpLimit = Number(qs.get("limit") || "10");
+
+    setSearch(qpSearch);
+    setSearchInput(qpSearch);
+
+    if (qpStartISO || qpEndISO) {
+      setRange("custom");
+      setStartDate(qpStartISO ? qpStartISO.slice(0, 10) : "");
+      setEndDate(qpEndISO ? qpEndISO.slice(0, 10) : "");
+    } else {
+      setRange((prev) => (prev === "custom" ? "all" : prev));
+      setStartDate("");
+      setEndDate("");
+    }
+
+    setPage(!Number.isNaN(qpPage) && qpPage > 0 ? qpPage : 1);
+    setLimit(!Number.isNaN(qpLimit) && qpLimit > 0 ? qpLimit : 10);
+
     setHasMore(true);
-    fetchIncomes(1);
+    queueMicrotask(() =>
+      fetchIncomes(
+        !Number.isNaN(qpPage) && qpPage > 0 ? qpPage : 1,
+        !Number.isNaN(qpLimit) && qpLimit > 0 ? qpLimit : 10
+      )
+    );
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [navigate, search, range]);
+  }, [location.search]);
+
+  /** Regular in-page changes (not from URL) */
+  useEffect(() => {
+    setHasMore(true);
+    fetchIncomes(page, limit);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [navigate, search, range, page, limit]);
 
   const handleDelete = async (id: number) => {
     if (!token) {
-      alert('You must be logged in to delete income.');
+      alert("You must be logged in to delete an income.");
       return;
     }
-    if (!window.confirm('Delete this income?')) return;
+    if (!window.confirm("Are you sure you want to delete this income?")) return;
     try {
-      await deleteIncome(token as string, id);
-      setIncomes(prev => prev.filter(i => i.id !== id));
-      alert('Income deleted.');
+      await deleteIncome(token, id);
+      setIncomes((prev) => prev.filter((e) => e.id !== id));
+      alert("Income deleted successfully.");
     } catch (err: any) {
-      console.error('Failed to delete income:', err.response?.data || err.message);
-      alert('Failed to delete income.');
+      console.error("Failed to delete income:", err.response?.data || err.message);
+      alert("Failed to delete income. Please try again.");
     }
   };
 
   const handleSearchApply = () => {
     setPage(1);
-    setHasMore(true);
-    setSearch(searchInput.trim());
+    const val = searchInput.trim();
+    setSearch(val);
+    updateUrl({ page: 1, search: val || undefined });
   };
 
   const handleRangeApply = () => {
-    if (range === 'custom' && startDate && endDate && startDate > endDate) {
-      alert('Start date must be before end date.');
+    if (range === "custom" && startDate && endDate && startDate > endDate) {
+      alert("Start date must be before end date.");
       return;
     }
     setPage(1);
-    setHasMore(true);
-    fetchIncomes(1);
+    updateUrl({ page: 1 });
   };
 
   const loadMore = () => {
     const next = page + 1;
     setPage(next);
-    fetchIncomes(next);
+    updateUrl({ page: next });
   };
 
-  const fmt = (iso?: string) => (iso ? new Date(iso).toLocaleString() : '-');
+  const onLimitChange = (v: number) => {
+    setLimit(v);
+    setPage(1);
+    updateUrl({ page: 1, limit: v });
+  };
 
-  // Totals for what’s currently displayed
-  const totalIncome = useMemo(
-    () => incomes.reduce((sum, i) => sum + (Number(i.amount) || 0), 0),
+  const fmt = (iso: string) => new Date(iso).toLocaleString();
+
+  const totalIncomes = useMemo(
+    () => incomes.reduce((sum, e) => sum + (Number(e.amount) || 0), 0),
     [incomes]
   );
 
@@ -165,14 +238,26 @@ export default function IncomeList() {
     <div className="container p-4">
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h2 className="mb-0">
-          Your Incomes{' '}
+          Your Incomes{" "}
           <span className="badge bg-light text-dark ms-2">
-            {incomes.length} items · {euro(totalIncome)}
+            {incomes.length} items · {euro(totalIncomes)}
           </span>
         </h2>
-        <button className="btn btn-secondary btn-sm" onClick={() => navigate('/dashboard')}>
-          Back to Dashboard
-        </button>
+        <div className="d-flex align-items-center gap-2">
+          <select
+            className="form-select form-select-sm"
+            value={limit}
+            onChange={(e) => onLimitChange(Number(e.target.value) || 10)}
+            style={{ width: 120 }}
+          >
+            <option value={10}>10 / page</option>
+            <option value={25}>25 / page</option>
+            <option value={50}>50 / page</option>
+          </select>
+          <button className="btn btn-secondary btn-sm" onClick={() => navigate("/dashboard")}>
+            Back to Dashboard
+          </button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -181,9 +266,9 @@ export default function IncomeList() {
           <div className="input-group">
             <input
               className="form-control"
-              placeholder="Search by category, source, notes..."
+              placeholder="Search by source, category, notes..."
               value={searchInput}
-              onChange={e => setSearchInput(e.target.value)}
+              onChange={(e) => setSearchInput(e.target.value)}
             />
             <button className="btn btn-primary" onClick={handleSearchApply} disabled={loading}>
               Search
@@ -195,7 +280,7 @@ export default function IncomeList() {
           <select
             className="form-select"
             value={range}
-            onChange={e => setRange(e.target.value as QuickRange)}
+            onChange={(e) => setRange(e.target.value as QuickRange)}
           >
             <option value="all">All time</option>
             <option value="week">This week</option>
@@ -210,21 +295,22 @@ export default function IncomeList() {
           <input
             type="date"
             className="form-control"
-            disabled={range !== 'custom'}
+            disabled={range !== "custom"}
             value={startDate}
-            onChange={e => setStartDate(e.target.value)}
+            onChange={(e) => setStartDate(e.target.value)}
           />
         </div>
         <div className="col-md-2">
           <input
             type="date"
             className="form-control"
-            disabled={range !== 'custom'}
+            disabled={range !== "custom"}
             value={endDate}
-            onChange={e => setEndDate(e.target.value)}
+            onChange={(e) => setEndDate(e.target.value)}
           />
         </div>
-        {range === 'custom' && (
+
+        {range === "custom" && (
           <div className="col-12 col-md-auto">
             <button
               className="btn btn-outline-primary w-100"
@@ -247,24 +333,24 @@ export default function IncomeList() {
             <th>Amount (€)</th>
             <th>Notes</th>
             <th>Received At</th>
-            <th>Created At</th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody>
           {incomes.length === 0 ? (
             <tr>
-              <td colSpan={7} className="text-center text-muted py-4">No incomes found.</td>
+              <td colSpan={6} className="text-center text-muted py-4">
+                No incomes found.
+              </td>
             </tr>
           ) : (
-            incomes.map(i => (
-              <tr key={i.id}>
-                <td>{i.source || '-'}</td>
-                <td>{i.category}</td>
-                <td>€{i.amount.toFixed(2)}</td>
-                <td>{i.notes || '-'}</td>
-                <td>{fmt(i.received_at)}</td>
-                <td>{fmt(i.created_at)}</td>
+            incomes.map((e) => (
+              <tr key={e.id}>
+                <td>{e.source}</td>
+                <td>{e.category || "-"}</td>
+                <td>€{(e.amount || 0).toFixed(2)}</td>
+                <td>{e.notes || "-"}</td>
+                <td>{fmt(e.received_at)}</td>
                 <td>
                   <div className="dropdown">
                     <button
@@ -277,7 +363,7 @@ export default function IncomeList() {
                       <li>
                         <button
                           className="dropdown-item"
-                          onClick={() => navigate(`/edit-income/${i.id}`)}
+                          onClick={() => navigate(`/edit-income/${e.id}`)}
                         >
                           Edit
                         </button>
@@ -285,7 +371,7 @@ export default function IncomeList() {
                       <li>
                         <button
                           className="dropdown-item text-danger"
-                          onClick={() => handleDelete(i.id)}
+                          onClick={() => handleDelete(e.id)}
                         >
                           Delete
                         </button>
@@ -299,9 +385,9 @@ export default function IncomeList() {
         </tbody>
       </table>
 
-      {/* Totals row */}
+      {/* Totals */}
       <div className="mt-3 alert alert-info">
-        <strong>Total Income:</strong> {euro(totalIncome)}
+        <strong>Total Incomes:</strong> {euro(totalIncomes)}
       </div>
 
       {hasMore && (
@@ -310,7 +396,7 @@ export default function IncomeList() {
           disabled={loading || !hasMore}
           onClick={loadMore}
         >
-          {loading ? 'Loading...' : 'Load More'}
+          {loading ? "Loading..." : "Load More"}
         </button>
       )}
     </div>

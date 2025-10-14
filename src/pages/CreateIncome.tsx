@@ -102,13 +102,13 @@ export default function CreateIncome() {
         </div>
 
         <div className="mb-3">
-          <label className="form-label">Category</label>
+          <label className="form-label">Category (Required)</label>
           <input className="form-control" value={category} onChange={e => setCategory(e.target.value)} required />
           <div className="form-text">e.g. salary, freelance, interest</div>
         </div>
 
         <div className="mb-3">
-          <label className="form-label">Source (optional)</label>
+          <label className="form-label">Source (Required)</label>
           <input className="form-control" value={source} onChange={e => setSource(e.target.value)} />
           <div className="form-text">e.g. company name, client, bank</div>
         </div>
