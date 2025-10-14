@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { getIncomes, deleteIncome } from "../services/api";
 import { isTokenValid } from "../utils/auth";
@@ -9,7 +9,7 @@ type Income = {
   source: string;
   category?: string | null;
   notes?: string | null;
-  received_at: string; // we display received_at
+  received_at: string; // display this
 };
 
 type QuickRange = "all" | "week" | "month" | "quarter" | "half-year" | "custom";
@@ -33,6 +33,9 @@ export default function IncomeList() {
   const [startDate, setStartDate] = useState(""); // yyyy-mm-dd
   const [endDate, setEndDate] = useState(""); // yyyy-mm-dd
 
+  // prevents double fetch (URL-driven fetch first, then skip the state-driven effect once)
+  const bootFromUrl = useRef(false);
+
   const token =
     (typeof window !== "undefined"
       ? localStorage.getItem("access_token")
@@ -54,7 +57,15 @@ export default function IncomeList() {
     }
     if (r === "month") {
       const start = new Date(now.getFullYear(), now.getMonth(), 1);
-      const end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+      const end = new Date(
+        now.getFullYear(),
+        now.getMonth() + 1,
+        0,
+        23,
+        59,
+        59,
+        999
+      );
       return { start: toISO(start), end: toISO(end) };
     }
     if (r === "quarter") {
@@ -96,8 +107,14 @@ export default function IncomeList() {
     setSearchParams(params);
   };
 
-  /** Fetcher */
-  const fetchIncomes = async (pageToLoad = 1, limitToUse = limit) => {
+  /**
+   * Fetch incomes (can accept URL overrides to avoid depending on state).
+   */
+  const fetchIncomes = async (
+    pageToLoad = 1,
+    limitToUse = limit,
+    overrides?: { startISO?: string; endISO?: string; search?: string }
+  ) => {
     if (!token || !isTokenValid()) {
       navigate("/login", { replace: true });
       return;
@@ -105,20 +122,24 @@ export default function IncomeList() {
     setLoading(true);
     setError(null);
     try {
-      let startISO: string | undefined;
-      let endISO: string | undefined;
+      let startISO: string | undefined = overrides?.startISO;
+      let endISO: string | undefined = overrides?.endISO;
+      const searchTerm = overrides?.search ?? search;
 
-      if (range === "custom") {
-        if (startDate) startISO = new Date(`${startDate}T00:00:00Z`).toISOString();
-        if (endDate) endISO = new Date(`${endDate}T23:59:59Z`).toISOString();
-      } else if (range !== "all") {
-        const r = computeRange(range);
-        startISO = r.start;
-        endISO = r.end;
+      if (!overrides) {
+        // Use local filters
+        if (range === "custom") {
+          if (startDate) startISO = new Date(`${startDate}T00:00:00Z`).toISOString();
+          if (endDate) endISO = new Date(`${endDate}T23:59:59Z`).toISOString();
+        } else if (range !== "all") {
+          const r = computeRange(range);
+          startISO = r.start;
+          endISO = r.end;
+        }
       }
 
       const data: Income[] = await getIncomes(token, {
-        search,
+        search: searchTerm,
         startDate: startISO,
         endDate: endISO,
         page: pageToLoad,
@@ -128,7 +149,9 @@ export default function IncomeList() {
       if (data.length < limitToUse) setHasMore(false);
 
       setIncomes((prev) =>
-        pageToLoad === 1 ? data : [...prev, ...data.filter((d) => !prev.some((p) => p.id === d.id))]
+        pageToLoad === 1
+          ? data
+          : [...prev, ...data.filter((d) => !prev.some((p) => p.id === d.id))]
       );
     } catch (err) {
       console.error("Failed to load incomes:", err);
@@ -139,8 +162,8 @@ export default function IncomeList() {
   };
 
   /**
-   * Respond to URL changes (arriving from Assistant or manual edits).
-   * Runs on mount and whenever location.search changes.
+   * 1) Respond to URL changes (arriving from Assistant or manual edits).
+   *    Immediately fetch with those URL params (no "Apply Range" needed).
    */
   useEffect(() => {
     const qs = new URLSearchParams(location.search);
@@ -150,6 +173,7 @@ export default function IncomeList() {
     const qpPage = Number(qs.get("page") || "1");
     const qpLimit = Number(qs.get("limit") || "10");
 
+    // reflect URL → UI state (but we won't rely on it for this initial fetch)
     setSearch(qpSearch);
     setSearchInput(qpSearch);
 
@@ -163,21 +187,34 @@ export default function IncomeList() {
       setEndDate("");
     }
 
-    setPage(!Number.isNaN(qpPage) && qpPage > 0 ? qpPage : 1);
-    setLimit(!Number.isNaN(qpLimit) && qpLimit > 0 ? qpLimit : 10);
+    const p = !Number.isNaN(qpPage) && qpPage > 0 ? qpPage : 1;
+    const l = !Number.isNaN(qpLimit) && qpLimit > 0 ? qpLimit : 10;
+    setPage(p);
+    setLimit(l);
 
     setHasMore(true);
-    queueMicrotask(() =>
-      fetchIncomes(
-        !Number.isNaN(qpPage) && qpPage > 0 ? qpPage : 1,
-        !Number.isNaN(qpLimit) && qpLimit > 0 ? qpLimit : 10
-      )
-    );
+
+    // Mark that we’re fetching based on URL and skip the next state-driven effect once
+    bootFromUrl.current = true;
+
+    // Fetch *directly* with URL values (overrides), so no need to click "Apply Range"
+    fetchIncomes(p, l, {
+      startISO: qpStartISO || undefined,
+      endISO: qpEndISO || undefined,
+      search: qpSearch || undefined,
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.search]);
 
-  /** Regular in-page changes (not from URL) */
+  /**
+   * 2) Regular in-page changes (search/range/page/limit).
+   *    Skip once right after a URL-driven fetch to avoid double fetch.
+   */
   useEffect(() => {
+    if (bootFromUrl.current) {
+      bootFromUrl.current = false;
+      return;
+    }
     setHasMore(true);
     fetchIncomes(page, limit);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -254,7 +291,10 @@ export default function IncomeList() {
             <option value={25}>25 / page</option>
             <option value={50}>50 / page</option>
           </select>
-          <button className="btn btn-secondary btn-sm" onClick={() => navigate("/dashboard")}>
+          <button
+            className="btn btn-secondary btn-sm"
+            onClick={() => navigate("/dashboard")}
+          >
             Back to Dashboard
           </button>
         </div>
