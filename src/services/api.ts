@@ -465,12 +465,12 @@ export async function aiSuggestCategory(
 
 export async function aiCategoryFeedback(
   token: string,
-  text: string,
+  description: string,
   category: string
 ) {
   const { data } = await api.post(
     "/ai/category-feedback",
-    { text, category },
+    { description, category },
     { headers: auth(token) }
   );
   return data; // { msg }
