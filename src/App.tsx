@@ -22,6 +22,7 @@ import EditIncome from './pages/EditIncome';
 import SessionWatcher from './components/SessionWatcher';
 import FinanceAssistant from './components/FinanceAssistant';
 import ResendVerification from './components/ResendVerification';
+import OnboardingChecklist from "./components/OnboardingChecklist";
 
 function Page({ title, children }: { title: string; children: React.ReactNode }) {
   useEffect(() => {

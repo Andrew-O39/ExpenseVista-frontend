@@ -146,6 +146,10 @@ export default function Welcome() {
 
       {/* Auth helpers */}
       {!isLoggedIn && (
+          <OnboardingChecklist
+    initialUser={{ is_verified: user!.is_verified, username: user!.username, email: user!.email }}
+  />
+  )}
         <div className="mt-4">
           <span className="text-muted me-2">New here?</span>
           <Link to="/register">Create an account</Link>
