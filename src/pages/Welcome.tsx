@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import {
-  getCurrentUser,
-  resendVerificationEmail,
-} from "@/services/api";
-import { isTokenValid } from "@/utils/auth";
+import { Link } from "react-router-dom";
+import { getCurrentUser, resendVerificationEmail } from "../services/api";
+import { isTokenValid } from "../utils/auth";
+// If you have this component, keep the import; otherwise remove it.
+// import OnboardingChecklist from "@/components/OnboardingChecklist";
 
 type CurrentUser = {
   id: number;
@@ -14,7 +13,6 @@ type CurrentUser = {
 };
 
 export default function Welcome() {
-  const navigate = useNavigate();
   const [user, setUser] = useState<CurrentUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [resendLoading, setResendLoading] = useState(false);
@@ -32,7 +30,6 @@ export default function Welcome() {
         const me = await getCurrentUser(token);
         setUser(me);
       } catch {
-        // token might be invalid/expired
         localStorage.removeItem("access_token");
         localStorage.removeItem("token_expiry");
       } finally {
@@ -46,7 +43,6 @@ export default function Welcome() {
     setResendMsg(null);
     setResendErr(null);
     try {
-      // Authenticated flow uses /resend-verification/me under the hood via our api helper
       const res = await resendVerificationEmail();
       setResendMsg(res?.msg || "Verification email sent.");
     } catch (e: any) {
@@ -69,7 +65,9 @@ export default function Welcome() {
   return (
     <div className="container py-5">
       <div className="mb-4">
-        <h1 className="h3 mb-2">Welcome{isLoggedIn ? `, ${user!.username}` : ""}! 👋</h1>
+        <h1 className="h3 mb-2">
+          Welcome{isLoggedIn ? `, ${user!.username}` : ""}! 👋
+        </h1>
         <p className="text-muted">
           Track expenses, manage budgets, and keep an eye on your income all in one place.
         </p>
@@ -144,20 +142,28 @@ export default function Welcome() {
         </div>
       </div>
 
-      {/* Auth helpers */}
-{!isLoggedIn && (
-  <OnboardingChecklist
-    initialUser={{
-      is_verified: user!.is_verified,
-      username: user!.username,
-      email: user!.email,
-    }}
-  />
-)}
+      {/* Onboarding checklist: only when logged in */}
+      {/*
+      {isLoggedIn && (
+        <OnboardingChecklist
+          initialUser={{
+            is_verified: !!user?.is_verified,
+            username: user?.username ?? "",
+            email: user?.email ?? "",
+          }}
+        />
+      )}
+      */}
 
-<div className="mt-4">
-  <span className="text-muted me-2">New here?</span>
-  <Link to="/register">Create an account</Link>
-  <span className="text-muted ms-3 me-2">Forgot password?</span>
-  <Link to="/forgot-password">Reset it</Link>
-</div>
+      {/* Auth helpers */}
+      {!isLoggedIn && (
+        <div className="mt-4">
+          <span className="text-muted me-2">New here?</span>
+          <Link to="/register">Create an account</Link>
+          <span className="text-muted ms-3 me-2">Forgot password?</span>
+          <Link to="/forgot-password">Reset it</Link>
+        </div>
+      )}
+    </div>
+  );
+}

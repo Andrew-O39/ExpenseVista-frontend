@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { getBudgets, getExpenses, getIncomes, getCurrentUser } from "./services/api";
-import { isTokenValid } from "./utils/auth";
+import { getBudgets, getExpenses, getIncomes, getCurrentUser } from "../services/api";
+import { isTokenValid } from "../utils/auth";
 
 type Props = {
   /** If you already loaded the user on the page, pass it to avoid re-fetch */
