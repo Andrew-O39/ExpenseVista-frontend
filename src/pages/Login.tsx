@@ -179,6 +179,11 @@ export default function Login() {
           <Link to="/forgot-password">Forgot your password?</Link>
         </div>
 
+
+        <div className="mt-2 text-center">
+            <Link to="/resend-verification">Resend verification email</Link>
+        </div>
+
         {error && <p className="text-danger small mb-3">{error}</p>}
 
         <button type="submit" className="btn btn-primary w-100">
