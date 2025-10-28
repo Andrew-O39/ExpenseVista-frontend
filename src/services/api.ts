@@ -492,11 +492,7 @@ export async function aiAssistant(token: string, message: string) {
 
 export async function verifyEmail(token: string) {
   try {
-    const { data } = await api.post(
-      "/verify-email",
-      { token },
-      { headers: { "Content-Type": "application/json" } }
-    );
+    const { data } = await api.get("/verify-email", { params: { token } });
     return data; // { msg }
   } catch (err: any) {
     throw new Error(extractFastAPIError(err));
