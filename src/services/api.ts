@@ -508,18 +508,37 @@ export async function verifyEmail(token: string) {
  * - If logged in, no body is required; the backend uses the bearer token.
  * - If logged out, pass an email; backend will send if the account exists (always returns 200).
  */
+// src/services/api.ts
+
 export async function resendVerificationEmail(email?: string) {
   try {
-    const token = localStorage.getItem("access_token") || undefined;
-    const body = email ? { email } : {};
-    const { data } = await api.post("/resend-verification", body, {
-      headers: {
-        "Content-Type": "application/json",
-        ...auth(token), // only attach Authorization if we actually have a token
-      },
-    });
+    const token = localStorage.getItem("access_token");
+
+    // If no token, you must provide an email body
+    const isAuthed = Boolean(token);
+    const body = isAuthed ? {} : { email };
+
+    if (!isAuthed && !email) {
+      throw new Error("Please enter your email address.");
+    }
+
+    const { data } = await api.post(
+      "/resend-verification",
+      body,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          ...(isAuthed ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      }
+    );
     return data; // { msg }
   } catch (err: any) {
-    throw new Error(extractFastAPIError(err));
+    // same extractor you already have
+    const message =
+      err?.response?.data?.detail ||
+      err?.message ||
+      "Resend failed";
+    throw new Error(message);
   }
 }
