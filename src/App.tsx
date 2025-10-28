@@ -21,6 +21,7 @@ import EditIncome from "./pages/EditIncome";
 
 import SessionWatcher from "./components/SessionWatcher";
 import FinanceAssistant from "./components/FinanceAssistant";
+import ResendVerification from "./components/ResendVerification";
 
 import { isTokenValid } from "./utils/auth";
 
@@ -69,6 +70,7 @@ export default function App() {
         <Route path="/forgot-password" element={<Page title="Forgot Password"><ForgotPassword /></Page>} />
         <Route path="/verify-email" element={<Page title="Verify Email"><VerifyEmail /></Page>} />
         <Route path="/reset-password" element={<Page title="Reset Password"><ResetPassword /></Page>} />
+        <Route path="/resend-verification" element={<Page title="Resend Verification"><ResendVerification /></Page> />
 
         {/* App */}
         <Route path="/dashboard" element={<Page title="Dashboard"><Dashboard /></Page>} />
