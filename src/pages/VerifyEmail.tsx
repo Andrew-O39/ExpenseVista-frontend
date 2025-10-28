@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
-import { verifyEmail } from "@/services/api";
+import { verifyEmail } from "../services/api";
 
 type Status = "idle" | "loading" | "success" | "error";
 

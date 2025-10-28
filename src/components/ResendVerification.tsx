@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { resendVerificationEmail } from "@/services/api";
+import { resendVerificationEmail } from "../services/api";
 
 export default function ResendVerification({ email }: { email?: string }) {
   const [loading, setLoading] = useState(false);
