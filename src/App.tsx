@@ -7,6 +7,8 @@ import Register from './pages/Register';
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import VerifyEmail from "./pages/VerifyEmail";
+import Welcome from "./pages/Welcome";
+
 
 import CreateExpense from './pages/CreateExpense';
 import CreateBudget from './pages/CreateBudget';
@@ -56,6 +58,7 @@ export default function App() {
         <Route path="/verify-email" element={<Page title="Verify Email"><VerifyEmail /></Page>}/>
         <Route path="/reset-password"  element={<Page title="Reset Password"><ResetPassword /></Page>} />
         <Route path="/resend-verification" element={<Page title="Resend Verification"><ResendVerification /></Page>} />
+        <Route path="/" element={<Page title="Welcome"><Welcome /></Page>} />
 
         {/* App */}
         <Route path="/dashboard" element={<Page title="Dashboard"><Dashboard /></Page>} />
