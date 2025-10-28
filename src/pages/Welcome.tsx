@@ -145,18 +145,19 @@ export default function Welcome() {
       </div>
 
       {/* Auth helpers */}
-      {!isLoggedIn && (
-          <OnboardingChecklist
-    initialUser={{ is_verified: user!.is_verified, username: user!.username, email: user!.email }}
+{!isLoggedIn && (
+  <OnboardingChecklist
+    initialUser={{
+      is_verified: user!.is_verified,
+      username: user!.username,
+      email: user!.email,
+    }}
   />
-  )}
-        <div className="mt-4">
-          <span className="text-muted me-2">New here?</span>
-          <Link to="/register">Create an account</Link>
-          <span className="text-muted ms-3 me-2">Forgot password?</span>
-          <Link to="/forgot-password">Reset it</Link>
-        </div>
-      )}
-    </div>
-  );
-}
+)}
+
+<div className="mt-4">
+  <span className="text-muted me-2">New here?</span>
+  <Link to="/register">Create an account</Link>
+  <span className="text-muted ms-3 me-2">Forgot password?</span>
+  <Link to="/forgot-password">Reset it</Link>
+</div>
