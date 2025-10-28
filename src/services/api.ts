@@ -58,9 +58,9 @@ export async function registerUser(payload: {
       headers: { "Content-Type": "application/json" },
     });
     return data;
-  } catch (error: any) {
-    console.error("Registration failed:", error.response?.data || error.message);
-    throw error;
+  } catch (err: any) {
+    // <-- show the real server message (422, 400, etc.)
+    throw new Error(extractFastAPIError(err));
   }
 }
 
