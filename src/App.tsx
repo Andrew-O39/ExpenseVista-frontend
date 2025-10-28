@@ -1,37 +1,37 @@
-import { useEffect } from 'react';
-import { Routes, Route, Link } from 'react-router-dom';
+import { useEffect } from "react";
+import { Routes, Route, Link } from "react-router-dom";
 
-import Dashboard from './pages/Dashboard';
-import Login from './pages/Login';
-import Register from './pages/Register';
+import Dashboard from "./pages/Dashboard";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import VerifyEmail from "./pages/VerifyEmail";
-import Welcome from "./pages/Welcome";
+import WelcomePage from "./pages/Welcome"; // <-- rename the import
 
-
-import CreateExpense from './pages/CreateExpense';
-import CreateBudget from './pages/CreateBudget';
-import ExpenseList from './pages/ExpenseList';
-import BudgetList from './pages/BudgetList';
-import ExpenseEdit from './pages/ExpenseEdit';
-import BudgetEdit from './pages/BudgetEdit';
-import CreateIncome from './pages/CreateIncome';
-import IncomeList from './pages/IncomeList';
-import EditIncome from './pages/EditIncome';
-import SessionWatcher from './components/SessionWatcher';
-import FinanceAssistant from './components/FinanceAssistant';
-import ResendVerification from './components/ResendVerification';
-import OnboardingChecklist from "./components/OnboardingChecklist";
+import CreateExpense from "./pages/CreateExpense";
+import CreateBudget from "./pages/CreateBudget";
+import ExpenseList from "./pages/ExpenseList";
+import BudgetList from "./pages/BudgetList";
+import ExpenseEdit from "./pages/ExpenseEdit";
+import BudgetEdit from "./pages/BudgetEdit";
+import CreateIncome from "./pages/CreateIncome";
+import IncomeList from "./pages/IncomeList";
+import EditIncome from "./pages/EditIncome";
+import SessionWatcher from "./components/SessionWatcher";
+import FinanceAssistant from "./components/FinanceAssistant";
+import ResendVerification from "./components/ResendVerification";
+// import OnboardingChecklist from "./components/OnboardingChecklist"; // <-- remove if unused
 
 function Page({ title, children }: { title: string; children: React.ReactNode }) {
   useEffect(() => {
-    document.title = title ? `${title} – ExpenseVista` : 'ExpenseVista';
+    document.title = title ? `${title} – ExpenseVista` : "ExpenseVista";
   }, [title]);
   return <>{children}</>;
 }
 
-function Welcome() {
+// OPTIONAL: keep this local hero OR delete it if your ./pages/Welcome already covers it
+function WelcomeHero() {
   return (
     <div className="min-vh-100 d-flex flex-column align-items-center justify-content-center bg-primary text-white text-center p-4">
       <h1 className="display-3 fw-bold mb-3">Welcome to ExpenseVista</h1>
@@ -47,37 +47,38 @@ function Welcome() {
 export default function App() {
   return (
     <>
-      {/* Session refresh/countdown handler shown globally */}
       <SessionWatcher />
 
       <Routes>
         {/* Public */}
-        <Route path="/" element={<Page title="Welcome"><Welcome /></Page>} />
+        {/* Use either WelcomePage (from ./pages/Welcome) OR WelcomeHero (local) */}
+        <Route path="/" element={<Page title="Welcome"><WelcomePage /></Page>} />
+        {/* Or: <Route path="/" element={<Page title="Welcome"><WelcomeHero /></Page>} /> */}
+
         <Route path="/login" element={<Page title="Login"><Login /></Page>} />
         <Route path="/register" element={<Page title="Register"><Register /></Page>} />
         <Route path="/forgot-password" element={<Page title="Forgot Password"><ForgotPassword /></Page>} />
-        <Route path="/verify-email" element={<Page title="Verify Email"><VerifyEmail /></Page>}/>
-        <Route path="/reset-password"  element={<Page title="Reset Password"><ResetPassword /></Page>} />
+        <Route path="/verify-email" element={<Page title="Verify Email"><VerifyEmail /></Page>} />
+        <Route path="/reset-password" element={<Page title="Reset Password"><ResetPassword /></Page>} />
         <Route path="/resend-verification" element={<Page title="Resend Verification"><ResendVerification /></Page>} />
-        <Route path="/" element={<Page title="Welcome"><Welcome /></Page>} />
 
         {/* App */}
         <Route path="/dashboard" element={<Page title="Dashboard"><Dashboard /></Page>} />
 
         {/* CRUD pages */}
         <Route path="/create-expense" element={<Page title="Create Expense"><CreateExpense /></Page>} />
-        <Route path="/create-budget"  element={<Page title="Create Budget"><CreateBudget /></Page>} />
-        <Route path="/create-income"  element={<Page title="Create Income"><CreateIncome /></Page>} />
+        <Route path="/create-budget" element={<Page title="Create Budget"><CreateBudget /></Page>} />
+        <Route path="/create-income" element={<Page title="Create Income"><CreateIncome /></Page>} />
 
         <Route path="/expenses" element={<Page title="Expenses"><ExpenseList /></Page>} />
-        <Route path="/budgets"  element={<Page title="Budgets"><BudgetList /></Page>} />
-        <Route path="/incomes"  element={<Page title="Incomes"><IncomeList /></Page>} />
+        <Route path="/budgets" element={<Page title="Budgets"><BudgetList /></Page>} />
+        <Route path="/incomes" element={<Page title="Incomes"><IncomeList /></Page>} />
 
         <Route path="/edit-expense/:id" element={<Page title="Edit Expense"><ExpenseEdit /></Page>} />
-        <Route path="/edit-budget/:id"  element={<Page title="Edit Budget"><BudgetEdit /></Page>} />
-        <Route path="/edit-income/:id"  element={<Page title="Edit Income"><EditIncome /></Page>} />
+        <Route path="/edit-budget/:id" element={<Page title="Edit Budget"><BudgetEdit /></Page>} />
+        <Route path="/edit-income/:id" element={<Page title="Edit Income"><EditIncome /></Page>} />
       </Routes>
-      {/* Floating assistant shows on every page */}
+
       <FinanceAssistant />
     </>
   );
