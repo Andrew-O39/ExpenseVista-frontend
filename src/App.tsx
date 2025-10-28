@@ -7,7 +7,7 @@ import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import VerifyEmail from "./pages/VerifyEmail";
-import WelcomePage from "./pages/Welcome"; // <-- rename the import
+import WelcomePage from "./pages/Welcome"; // <-- your real onboarding/verification page
 
 import CreateExpense from "./pages/CreateExpense";
 import CreateBudget from "./pages/CreateBudget";
@@ -18,11 +18,13 @@ import BudgetEdit from "./pages/BudgetEdit";
 import CreateIncome from "./pages/CreateIncome";
 import IncomeList from "./pages/IncomeList";
 import EditIncome from "./pages/EditIncome";
+
 import SessionWatcher from "./components/SessionWatcher";
 import FinanceAssistant from "./components/FinanceAssistant";
-import ResendVerification from "./components/ResendVerification";
-// import OnboardingChecklist from "./components/OnboardingChecklist"; // <-- remove if unused
 
+import { isTokenValid } from "./utils/auth";
+
+/* ---------- Page wrapper sets <title> ---------- */
 function Page({ title, children }: { title: string; children: React.ReactNode }) {
   useEffect(() => {
     document.title = title ? `${title} – ExpenseVista` : "ExpenseVista";
@@ -30,7 +32,7 @@ function Page({ title, children }: { title: string; children: React.ReactNode })
   return <>{children}</>;
 }
 
-// OPTIONAL: keep this local hero OR delete it if your ./pages/Welcome already covers it
+/* ---------- Public splash (no auth / no API calls) ---------- */
 function WelcomeHero() {
   return (
     <div className="min-vh-100 d-flex flex-column align-items-center justify-content-center bg-primary text-white text-center p-4">
@@ -44,28 +46,34 @@ function WelcomeHero() {
   );
 }
 
+/* ---------- Home router element: choose Hero or full Welcome page ---------- */
+function Home() {
+  const token = localStorage.getItem("access_token");
+  const loggedIn = !!token && isTokenValid();
+  // If logged-in, show the *real* Welcome page (with onboarding + verify banner)
+  // Otherwise, show the public splash Hero with Login/Register links.
+  return loggedIn ? <WelcomePage /> : <WelcomeHero />;
+}
+
 export default function App() {
   return (
     <>
+      {/* Session refresh/countdown handler shown globally */}
       <SessionWatcher />
 
       <Routes>
         {/* Public */}
-        {/* Use either WelcomePage (from ./pages/Welcome) OR WelcomeHero (local) */}
-        <Route path="/" element={<Page title="Welcome"><WelcomePage /></Page>} />
-        {/* Or: <Route path="/" element={<Page title="Welcome"><WelcomeHero /></Page>} /> */}
-
+        <Route path="/" element={<Page title="Welcome"><Home /></Page>} />
         <Route path="/login" element={<Page title="Login"><Login /></Page>} />
         <Route path="/register" element={<Page title="Register"><Register /></Page>} />
         <Route path="/forgot-password" element={<Page title="Forgot Password"><ForgotPassword /></Page>} />
         <Route path="/verify-email" element={<Page title="Verify Email"><VerifyEmail /></Page>} />
         <Route path="/reset-password" element={<Page title="Reset Password"><ResetPassword /></Page>} />
-        <Route path="/resend-verification" element={<Page title="Resend Verification"><ResendVerification /></Page>} />
 
         {/* App */}
         <Route path="/dashboard" element={<Page title="Dashboard"><Dashboard /></Page>} />
 
-        {/* CRUD pages */}
+        {/* CRUD pages (adjust paths if your app uses /expenses/new etc.) */}
         <Route path="/create-expense" element={<Page title="Create Expense"><CreateExpense /></Page>} />
         <Route path="/create-budget" element={<Page title="Create Budget"><CreateBudget /></Page>} />
         <Route path="/create-income" element={<Page title="Create Income"><CreateIncome /></Page>} />
@@ -79,6 +87,7 @@ export default function App() {
         <Route path="/edit-income/:id" element={<Page title="Edit Income"><EditIncome /></Page>} />
       </Routes>
 
+      {/* Floating assistant shows on every page */}
       <FinanceAssistant />
     </>
   );
