@@ -1,21 +1,29 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
-import { login } from "../services/api";
+import { login, resendVerificationEmail } from "../services/api";
 import { isTokenValid } from "../utils/auth";
 
 export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Read query params (e.g. ?redirect=/dashboard&msg=session_expired)
+  // Read query params (e.g. ?redirect=/dashboard&msg=session_expired&verified=1)
   const params = new URLSearchParams(location.search);
   const redirect = params.get("redirect") || "/dashboard";
   const msg = params.get("msg");
+  const verifiedFlag = params.get("verified"); // "1" if they just verified via email link
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+
   const [error, setError] = useState("");
+  const [info, setInfo] = useState(""); // general info messages
+  const [resendLoading, setResendLoading] = useState(false);
+
+  useEffect(() => {
+    document.title = "Login – ExpenseVista";
+  }, []);
 
   // If already signed in with a valid token, bounce to the redirect target
   useEffect(() => {
@@ -26,9 +34,17 @@ export default function Login() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate, redirect]);
 
+  // Show success banner if they just verified their email
+  useEffect(() => {
+    if (verifiedFlag === "1") {
+      setInfo("Your email has been verified. You can now sign in.");
+    }
+  }, [verifiedFlag]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setInfo("");
 
     try {
       const data = await login(username, password);
@@ -40,10 +56,66 @@ export default function Login() {
 
       // Go back to where the user came from (or /dashboard)
       navigate(redirect, { replace: true });
-    } catch (err) {
-      console.error(err);
-      setError("Invalid username or password");
+    } catch (err: any) {
+      // Try to surface the backend's exact message if available
+      const msg =
+        err?.response?.data?.detail ||
+        err?.message ||
+        "Invalid username or password";
+
+      setError(String(msg));
     }
+  };
+
+  const handleResendVerification = async () => {
+    setResendLoading(true);
+    setError("");
+    setInfo("");
+    try {
+      const resp = await resendVerificationEmail();
+      setInfo(resp?.msg || "Verification email sent. Check your inbox.");
+    } catch (e: any) {
+      const msg =
+        e?.response?.data?.detail ||
+        e?.message ||
+        "Could not resend verification email.";
+      setError(String(msg));
+    } finally {
+      setResendLoading(false);
+    }
+  };
+
+  // A small helper that renders a “Resend verification link” action when appropriate
+  const maybeResendHint = () => {
+    const lowered = (error || "").toLowerCase();
+    const looksUnverified =
+      lowered.includes("not verified") ||
+      lowered.includes("verify your email") ||
+      lowered.includes("email verification");
+
+    if (!looksUnverified) return null;
+
+    return (
+      <div className="alert alert-warning mt-3">
+        <div className="d-flex justify-content-between align-items-center">
+          <div>
+            <strong>Email not verified.</strong> Some features are limited until
+            you verify your address.
+          </div>
+          <button
+            type="button"
+            className="btn btn-outline-primary btn-sm"
+            onClick={handleResendVerification}
+            disabled={resendLoading}
+          >
+            {resendLoading ? "Sending…" : "Resend verification link"}
+          </button>
+        </div>
+        <div className="small text-muted mt-2">
+          Tip: Check spam/junk if you don’t see the email.
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -54,6 +126,13 @@ export default function Login() {
       {msg === "session_expired" && (
         <div className="alert alert-warning w-100" style={{ maxWidth: 360 }}>
           Your session expired. Please sign in again to continue.
+        </div>
+      )}
+
+      {/* Info banner (e.g., verified success or resend success) */}
+      {info && (
+        <div className="alert alert-success w-100" style={{ maxWidth: 360 }}>
+          {info}
         </div>
       )}
 
@@ -95,8 +174,9 @@ export default function Login() {
             {showPassword ? "Hide" : "Show"}
           </button>
         </div>
+
         <div className="mt-3 text-center">
-            <Link to="/forgot-password">Forgot your password?</Link>
+          <Link to="/forgot-password">Forgot your password?</Link>
         </div>
 
         {error && <p className="text-danger small mb-3">{error}</p>}
@@ -104,6 +184,9 @@ export default function Login() {
         <button type="submit" className="btn btn-primary w-100">
           Login
         </button>
+
+        {/* If error implies unverified, show a resend option */}
+        {maybeResendHint()}
       </form>
     </div>
   );

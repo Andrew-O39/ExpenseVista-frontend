@@ -487,3 +487,37 @@ export async function aiAssistant(token: string, message: string) {
     actions?: Array<{ type: string; label?: string; params?: any }>;
   };
 }
+
+/* ------------------ EMAIL VERIFICATION ------------------ */
+
+export async function verifyEmail(token: string) {
+  try {
+    const { data } = await api.post(
+      "/verify-email",
+      { token },
+      { headers: { "Content-Type": "application/json" } }
+    );
+    return data; // { msg }
+  } catch (err: any) {
+    throw new Error(extractFastAPIError?.(err) || err?.message || "Verification failed");
+  }
+}
+
+export async function resendVerificationEmail() {
+  try {
+    const token = localStorage.getItem("access_token");
+    const { data } = await api.post(
+      "/resend-verification",
+      {},
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token ? `Bearer ${token}` : "",
+        },
+      }
+    );
+    return data; // { msg }
+  } catch (err: any) {
+    throw new Error(extractFastAPIError?.(err) || err?.message || "Resend failed");
+  }
+}
