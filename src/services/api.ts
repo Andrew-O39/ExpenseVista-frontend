@@ -9,12 +9,12 @@ export const api = axios.create({
   baseURL: API_BASE_URL,
 });
 
-// Small helper to attach Authorization only when a token is provided
+// Helper to attach Authorization only when a token exists
 const auth = (token?: string) =>
   token ? { Authorization: `Bearer ${token}` } : {};
 
-// Centralized FastAPI error extractor
-function extractFastAPIError(err: any): string {
+// Centralized FastAPI error extractor (exported for reuse)
+export function extractFastAPIError(err: any): string {
   const data = err?.response?.data;
 
   if (typeof data?.detail === "string") return data.detail;
@@ -499,25 +499,27 @@ export async function verifyEmail(token: string) {
     );
     return data; // { msg }
   } catch (err: any) {
-    throw new Error(extractFastAPIError?.(err) || err?.message || "Verification failed");
+    throw new Error(extractFastAPIError(err));
   }
 }
 
-export async function resendVerificationEmail() {
+/**
+ * Resend a verification email.
+ * - If logged in, no body is required; the backend uses the bearer token.
+ * - If logged out, pass an email; backend will send if the account exists (always returns 200).
+ */
+export async function resendVerificationEmail(email?: string) {
   try {
-    const token = localStorage.getItem("access_token");
-    const { data } = await api.post(
-      "/resend-verification",
-      {},
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: token ? `Bearer ${token}` : "",
-        },
-      }
-    );
+    const token = localStorage.getItem("access_token") || undefined;
+    const body = email ? { email } : {};
+    const { data } = await api.post("/resend-verification", body, {
+      headers: {
+        "Content-Type": "application/json",
+        ...auth(token), // only attach Authorization if we actually have a token
+      },
+    });
     return data; // { msg }
   } catch (err: any) {
-    throw new Error(extractFastAPIError?.(err) || err?.message || "Resend failed");
+    throw new Error(extractFastAPIError(err));
   }
 }
