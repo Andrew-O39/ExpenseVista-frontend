@@ -85,7 +85,7 @@ export default function OnboardingChecklist({ initialUser, storageKey = DEFAULT_
         label: "Create your first budget",
         done: hasBudget,
         cta: (
-          <Link to="/budgets/new" className="small ms-2">
+          <Link to="/create-budget" className="small ms-2">
             Create budget
           </Link>
         ),
@@ -95,7 +95,7 @@ export default function OnboardingChecklist({ initialUser, storageKey = DEFAULT_
         label: "Log your first expense",
         done: hasExpense,
         cta: (
-          <Link to="/expenses/new" className="small ms-2">
+          <Link to="/create-expense" className="small ms-2">
             Add expense
           </Link>
         ),
@@ -105,7 +105,7 @@ export default function OnboardingChecklist({ initialUser, storageKey = DEFAULT_
         label: "Add your first income",
         done: hasIncome,
         cta: (
-          <Link to="/incomes/new" className="small ms-2">
+          <Link to="/create-income" className="small ms-2">
             Add income
           </Link>
         ),
