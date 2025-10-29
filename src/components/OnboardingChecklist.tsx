@@ -1,6 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { getBudgets, getExpenses, getIncomes, getCurrentUser } from "../services/api";
+import {
+  getBudgets,
+  getExpenses,
+  getIncomes,
+  getCurrentUser,
+  resendVerificationEmail,
+} from "../services/api";
 import { isTokenValid } from "../utils/auth";
 
 type Props = {
@@ -19,19 +25,34 @@ type Item = {
 
 const DEFAULT_STORAGE_KEY = "onboarding_checklist_dismissed";
 
-export default function OnboardingChecklist({ initialUser, storageKey = DEFAULT_STORAGE_KEY }: Props) {
+export default function OnboardingChecklist({
+  initialUser,
+  storageKey = DEFAULT_STORAGE_KEY,
+}: Props) {
   const [loading, setLoading] = useState(true);
-  const [dismissed, setDismissed] = useState<boolean>(() => localStorage.getItem(storageKey) === "1");
+  const [dismissed, setDismissed] = useState<boolean>(
+    () => localStorage.getItem(storageKey) === "1"
+  );
 
-  const [isVerified, setIsVerified] = useState<boolean>(!!initialUser?.is_verified);
+  const [isVerified, setIsVerified] = useState<boolean>(
+    !!initialUser?.is_verified
+  );
   const [hasBudget, setHasBudget] = useState<boolean>(false);
   const [hasExpense, setHasExpense] = useState<boolean>(false);
   const [hasIncome, setHasIncome] = useState<boolean>(false);
 
+  const token = localStorage.getItem("access_token");
+  const loggedIn = !!token && isTokenValid();
+
+  // 🔒 Only render for authenticated users
+  if (!loggedIn) return null;
+
   useEffect(() => {
-    if (dismissed) return; // don't fetch if user dismissed
-    const token = localStorage.getItem("access_token");
-    if (!token || !isTokenValid()) {
+    if (dismissed) {
+      setLoading(false);
+      return;
+    }
+    if (!token) {
       setLoading(false);
       return;
     }
@@ -39,13 +60,13 @@ export default function OnboardingChecklist({ initialUser, storageKey = DEFAULT_
     let mounted = true;
     (async () => {
       try {
-        // only fetch user if not provided
+        // Only fetch user if not provided
         if (!initialUser) {
           const me = await getCurrentUser(token);
           if (mounted) setIsVerified(!!me?.is_verified);
         }
 
-        // get first-page lists; we only care if > 0 items exist
+        // We just need to know if there's any data at all
         const [budgets, expenses, incomes] = await Promise.all([
           getBudgets(token, { limit: 1 }),
           getExpenses(token, { limit: 1 }),
@@ -53,9 +74,22 @@ export default function OnboardingChecklist({ initialUser, storageKey = DEFAULT_
         ]);
 
         if (!mounted) return;
-        setHasBudget(Array.isArray(budgets?.items) ? budgets.items.length > 0 : (budgets?.total ?? 0) > 0);
-        setHasExpense(Array.isArray(expenses?.items) ? expenses.items.length > 0 : (expenses?.total ?? 0) > 0);
-        setHasIncome(Array.isArray(incomes?.items) ? incomes.items.length > 0 : (incomes?.total ?? 0) > 0);
+
+        setHasBudget(
+          Array.isArray(budgets?.items)
+            ? budgets.items.length > 0
+            : (budgets?.total ?? 0) > 0
+        );
+        setHasExpense(
+          Array.isArray(expenses?.items)
+            ? expenses.items.length > 0
+            : (expenses?.total ?? 0) > 0
+        );
+        setHasIncome(
+          Array.isArray(incomes?.items)
+            ? incomes.items.length > 0
+            : (incomes?.total ?? 0) > 0
+        );
       } catch {
         // swallow; show partial
       } finally {
@@ -66,7 +100,25 @@ export default function OnboardingChecklist({ initialUser, storageKey = DEFAULT_
     return () => {
       mounted = false;
     };
-  }, [dismissed, initialUser]);
+  }, [dismissed, initialUser, token]);
+
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resendMsg, setResendMsg] = useState<string | null>(null);
+  const [resendErr, setResendErr] = useState<string | null>(null);
+
+  const handleResend = async () => {
+    setResendLoading(true);
+    setResendMsg(null);
+    setResendErr(null);
+    try {
+      const res = await resendVerificationEmail(); // authenticated flow
+      setResendMsg(res?.msg || "Verification email sent.");
+    } catch (e: any) {
+      setResendErr(e?.message || "Failed to resend verification email.");
+    } finally {
+      setResendLoading(false);
+    }
+  };
 
   const items: Item[] = useMemo(() => {
     return [
@@ -74,10 +126,16 @@ export default function OnboardingChecklist({ initialUser, storageKey = DEFAULT_
         id: "verify_email",
         label: "Verify your email",
         done: isVerified,
+        // 🔁 Resend button instead of linking to /verify-email
         cta: (
-          <Link to="/verify-email" className="small ms-2">
-            Verify
-          </Link>
+          <button
+            type="button"
+            className="btn btn-sm btn-outline-secondary"
+            onClick={handleResend}
+            disabled={resendLoading}
+          >
+            {resendLoading ? "Sending…" : "Resend verification"}
+          </button>
         ),
       },
       {
@@ -85,8 +143,8 @@ export default function OnboardingChecklist({ initialUser, storageKey = DEFAULT_
         label: "Create your first budget",
         done: hasBudget,
         cta: (
-          <Link to="/create-budget" className="small ms-2">
-            Create budget
+          <Link to="/create-budget" className="btn btn-primary">
+            Create Budget
           </Link>
         ),
       },
@@ -95,8 +153,8 @@ export default function OnboardingChecklist({ initialUser, storageKey = DEFAULT_
         label: "Log your first expense",
         done: hasExpense,
         cta: (
-          <Link to="/create-expense" className="small ms-2">
-            Add expense
+          <Link to="/create-expense" className="btn btn-primary">
+            Add Expense
           </Link>
         ),
       },
@@ -105,21 +163,21 @@ export default function OnboardingChecklist({ initialUser, storageKey = DEFAULT_
         label: "Add your first income",
         done: hasIncome,
         cta: (
-          <Link to="/create-income" className="small ms-2">
+          <Link to="/create-income" className="btn btn-outline-primary btn-sm">
             Add income
           </Link>
         ),
       },
     ];
-  }, [isVerified, hasBudget, hasExpense, hasIncome]);
+  }, [isVerified, hasBudget, hasExpense, hasIncome, resendLoading]);
 
-  const completed = items.filter(i => i.done).length;
+  const completed = items.filter((i) => i.done).length;
   const total = items.length;
   const progress = Math.round((completed / total) * 100);
 
   if (dismissed || loading) return null;
 
-  // if everything is complete, auto-dismiss
+  // Auto-dismiss when everything’s done
   if (completed === total) {
     localStorage.setItem(storageKey, "1");
     return null;
@@ -145,21 +203,47 @@ export default function OnboardingChecklist({ initialUser, storageKey = DEFAULT_
 
         {/* Progress */}
         <div className="mb-3">
-          <div className="progress" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100} style={{ height: 8 }}>
+          <div
+            className="progress"
+            role="progressbar"
+            aria-valuenow={progress}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            style={{ height: 8 }}
+          >
             <div className="progress-bar" style={{ width: `${progress}%` }} />
           </div>
-          <div className="small text-muted mt-1">{completed} of {total} completed</div>
+          <div className="small text-muted mt-1">
+            {completed} of {total} completed
+          </div>
         </div>
 
         {/* Items */}
         <ul className="list-group list-group-flush">
-          {items.map(item => (
-            <li key={item.id} className="list-group-item d-flex align-items-center justify-content-between">
+          {items.map((item) => (
+            <li
+              key={item.id}
+              className="list-group-item d-flex align-items-center justify-content-between"
+            >
               <div>
-                <span className={`me-2 badge ${item.done ? "bg-success" : "bg-secondary"}`}>
+                <span
+                  className={`me-2 badge ${
+                    item.done ? "bg-success" : "bg-secondary"
+                  }`}
+                >
                   {item.done ? "Done" : "Todo"}
                 </span>
                 {item.label}
+                {item.id === "verify_email" && !isVerified && (
+                  <>
+                    {resendMsg && (
+                      <span className="ms-2 text-success">{resendMsg}</span>
+                    )}
+                    {resendErr && (
+                      <span className="ms-2 text-danger">{resendErr}</span>
+                    )}
+                  </>
+                )}
               </div>
               {!item.done && item.cta}
             </li>
