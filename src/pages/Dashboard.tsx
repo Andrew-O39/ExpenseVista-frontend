@@ -434,6 +434,19 @@ export default function Dashboard() {
       {/* Navbar and actions */}
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h1>Welcome to your Dashboard, {username}!</h1>
+        // Inside Dashboard.tsx render section
+<header className="d-flex justify-content-between align-items-center mb-4">
+  <h1 className="h4 mb-0">Dashboard</h1>
+  <button
+    onClick={() => {
+      localStorage.removeItem("has_seen_welcome");
+      navigate("/welcome");
+    }}
+    className="btn btn-sm btn-outline-secondary"
+  >
+    Reopen Welcome
+  </button>
+</header>
         <div className="dropdown">
           <button className="btn btn-secondary dropdown-toggle" type="button" id="dashboardActionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
             Actions

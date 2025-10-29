@@ -54,6 +54,23 @@ export default function Login() {
       const expiryTime = Date.now() + 30 * 60 * 1000;
       localStorage.setItem("token_expiry", String(expiryTime));
 
+      // First-login welcome logic
+      const hasSeenWelcome = localStorage.getItem("has_seen_welcome");
+
+      // If caller provided a redirect (e.g., ?redirect=/expenses/new), honor it
+      const hasExplicitRedirect =
+      !!(new URLSearchParams(location.search).get("redirect"));
+
+      if (!hasSeenWelcome && !hasExplicitRedirect) {
+        localStorage.setItem("has_seen_welcome", "1");
+        navigate("/welcome", { replace: true });
+        return;
+      }
+
+      // Otherwise continue as before
+      navigate(redirect, { replace: true });
+
+
       // Go back to where the user came from (or /dashboard)
       navigate(redirect, { replace: true });
     } catch (err: any) {
