@@ -64,7 +64,9 @@ export default function App() {
 
       <Routes>
         {/* Public */}
+        <Route path="*" element={<Navigate to="/" replace />} />
         <Route path="/" element={<Page title="Welcome"><Home /></Page>} />
+        <Route path="/welcome" element={<Page title="Welcome"><WelcomePage /></Page>} />
         <Route path="/login" element={<Page title="Login"><Login /></Page>} />
         <Route path="/register" element={<Page title="Register"><Register /></Page>} />
         <Route path="/forgot-password" element={<Page title="Forgot Password"><ForgotPassword /></Page>} />

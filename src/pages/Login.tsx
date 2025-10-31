@@ -7,25 +7,24 @@ export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Read query params (e.g. ?redirect=/dashboard&msg=session_expired&verified=1)
+  // Parse query params (?redirect=/dashboard&msg=session_expired&verified=1)
   const params = new URLSearchParams(location.search);
   const redirect = params.get("redirect") || "/dashboard";
   const msg = params.get("msg");
-  const verifiedFlag = params.get("verified"); // "1" if they just verified via email link
+  const verifiedFlag = params.get("verified"); // "1" if just verified via email link
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-
   const [error, setError] = useState("");
-  const [info, setInfo] = useState(""); // general info messages
+  const [info, setInfo] = useState(""); // Info banner
   const [resendLoading, setResendLoading] = useState(false);
 
   useEffect(() => {
     document.title = "Login – ExpenseVista";
   }, []);
 
-  // If already signed in with a valid token, bounce to the redirect target
+  // If already signed in with a valid token, redirect immediately
   useEffect(() => {
     const token = localStorage.getItem("access_token");
     if (token && isTokenValid()) {
@@ -34,7 +33,7 @@ export default function Login() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate, redirect]);
 
-  // Show success banner if they just verified their email
+  // If user just verified their email, show success message
   useEffect(() => {
     if (verifiedFlag === "1") {
       setInfo("Your email has been verified. You can now sign in.");
@@ -49,37 +48,24 @@ export default function Login() {
     try {
       const data = await login(username, password);
 
-      // Save token + 30-minute expiry (matches backend)
-      localStorage.setItem("access_token", data.access_token);
-      const expiryTime = Date.now() + 30 * 60 * 1000;
-      localStorage.setItem("token_expiry", String(expiryTime));
+        // Save token + expiry (30 min)
+        localStorage.setItem("access_token", data.access_token);
+        const expiryTime = Date.now() + 30 * 60 * 1000;
+        localStorage.setItem("token_expiry", String(expiryTime));
 
-      // First-login welcome logic
-      const hasSeenWelcome = localStorage.getItem("has_seen_welcome");
+        const hasExplicitRedirect = Boolean(new URLSearchParams(location.search).get("redirect"));
 
-      // If caller provided a redirect (e.g., ?redirect=/expenses/new), honor it
-      const hasExplicitRedirect =
-      !!(new URLSearchParams(location.search).get("redirect"));
-
-      if (!hasSeenWelcome && !hasExplicitRedirect) {
-        localStorage.setItem("has_seen_welcome", "1");
+        if (!hasExplicitRedirect && data?.show_welcome) {
         navigate("/welcome", { replace: true });
         return;
-      }
+        }
 
-      // Otherwise continue as before
-      navigate(redirect, { replace: true });
-
-
-      // Go back to where the user came from (or /dashboard)
-      navigate(redirect, { replace: true });
-    } catch (err: any) {
-      // Try to surface the backend's exact message if available
+        navigate(redirect, { replace: true });
+        } catch (err: any) {
       const msg =
         err?.response?.data?.detail ||
         err?.message ||
         "Invalid username or password";
-
       setError(String(msg));
     }
   };
@@ -102,7 +88,6 @@ export default function Login() {
     }
   };
 
-  // A small helper that renders a “Resend verification link” action when appropriate
   const maybeResendHint = () => {
     const lowered = (error || "").toLowerCase();
     const looksUnverified =
@@ -196,9 +181,8 @@ export default function Login() {
           <Link to="/forgot-password">Forgot your password?</Link>
         </div>
 
-
         <div className="mt-2 text-center">
-            <Link to="/resend-verification">Resend verification email</Link>
+          <Link to="/resend-verification">Resend verification email</Link>
         </div>
 
         {error && <p className="text-danger small mb-3">{error}</p>}
@@ -207,7 +191,6 @@ export default function Login() {
           Login
         </button>
 
-        {/* If error implies unverified, show a resend option */}
         {maybeResendHint()}
       </form>
     </div>

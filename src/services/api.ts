@@ -34,14 +34,18 @@ export function extractFastAPIError(err: any): string {
 
 /* ------------------ AUTH ------------------ */
 
-export async function login(username: string, password: string) {
-  try {
-    const { data } = await api.post(
-      "/login",
-      new URLSearchParams({ username, password }),
-      { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
-    );
-    return data; // { access_token, token_type }
+export async function login(username: string, password: string): Promise<{
+  access_token: string;
+  token_type: string;
+  show_welcome?: boolean;
+}> {
+  const { data } = await api.post(
+    "/login",
+    new URLSearchParams({ username, password }),
+    { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
+  );
+  return data;
+}
   } catch (error: any) {
     console.error("Login failed:", error.response?.data || error.message);
     throw error;
