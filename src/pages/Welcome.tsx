@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getCurrentUser } from "../services/api";
 import { isTokenValid } from "../utils/auth";
+import OnboardingChecklist from "../components/OnboardingChecklist";
 
 type CurrentUser = {
   id: number;
@@ -25,6 +26,7 @@ export default function Welcome() {
         const me = await getCurrentUser(token);
         setUser(me);
       } catch {
+        // token might be invalid/expired
         localStorage.removeItem("access_token");
         localStorage.removeItem("token_expiry");
       } finally {
@@ -47,14 +49,14 @@ export default function Welcome() {
     <div className="container py-5">
       <div className="mb-4">
         <h1 className="h3 mb-2">
-          Welcome{isLoggedIn ? `, ${user!.username}` : ""}! 👋
+          Welcome{isLoggedIn && user?.username ? `, ${user.username}` : ""}! 👋
         </h1>
         <p className="text-muted">
           Track expenses, manage budgets, and keep an eye on your income all in one place.
         </p>
       </div>
 
-      {/* CTA cards (no duplicate “resend verification” UI) */}
+      {/* CTA cards */}
       <div className="row g-3">
         <div className="col-12 col-md-4">
           <div className="card shadow-sm h-100">
@@ -64,9 +66,19 @@ export default function Welcome() {
                 Log a new expense to keep your spending up to date.
               </p>
               {isLoggedIn ? (
-                <Link to="/create-expense" className="btn btn-primary">Add Expense</Link>
+                <Link
+                  to="/create-expense?return=/welcome&onboarding=1"
+                  className="btn btn-primary"
+                >
+                  Add Expense
+                </Link>
               ) : (
-                <Link to="/login?redirect=/create-expense" className="btn btn-primary">Login to continue</Link>
+                <Link
+                  to="/login?redirect=/create-expense"
+                  className="btn btn-primary"
+                >
+                  Login to continue
+                </Link>
               )}
             </div>
           </div>
@@ -80,9 +92,19 @@ export default function Welcome() {
                 Set limits by category (monthly, weekly, yearly, etc.).
               </p>
               {isLoggedIn ? (
-                <Link to="/create-budget" className="btn btn-primary">Create Budget</Link>
+                <Link
+                  to="/create-budget?return=/welcome&onboarding=1"
+                  className="btn btn-primary"
+                >
+                  Create Budget
+                </Link>
               ) : (
-                <Link to="/login?redirect=/create-budget" className="btn btn-primary">Login to continue</Link>
+                <Link
+                  to="/login?redirect=/create-budget"
+                  className="btn btn-primary"
+                >
+                  Login to continue
+                </Link>
               )}
             </div>
           </div>
@@ -91,21 +113,48 @@ export default function Welcome() {
         <div className="col-12 col-md-4">
           <div className="card shadow-sm h-100">
             <div className="card-body">
-              <h5 className="card-title">Record Income</h5>
+              <h5 className="card-title">Add Income</h5>
               <p className="card-text text-muted">
-                Track salary, freelance, interest and more.
+                Record an income entry (salary, freelance, etc.).
               </p>
               {isLoggedIn ? (
-                <Link to="/create-income" className="btn btn-primary">Add Income</Link>
+                <Link
+                  to="/create-income?return=/welcome&onboarding=1"
+                  className="btn btn-primary"
+                >
+                  Add Income
+                </Link>
               ) : (
-                <Link to="/login?redirect=/create-income" className="btn btn-primary">Login to continue</Link>
+                <Link
+                  to="/login?redirect=/create-income"
+                  className="btn btn-primary"
+                >
+                  Login to continue
+                </Link>
               )}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Optional secondary link for brand-new visitors */}
+      {/* Helpful tips panel (formerly OnboardingChecklist) */}
+      <OnboardingChecklist />
+
+      {/* Continue button */}
+      <div className="mt-4">
+        <button
+          className="btn btn-outline-primary"
+          onClick={() => {
+            // Keep your existing flag behavior if you use it elsewhere
+            localStorage.setItem("has_seen_welcome", "1");
+            window.location.href = "/dashboard";
+          }}
+        >
+          Continue to Dashboard
+        </button>
+      </div>
+
+      {/* Auth helpers */}
       {!isLoggedIn && (
         <div className="mt-4">
           <span className="text-muted me-2">New here?</span>
