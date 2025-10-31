@@ -51,9 +51,14 @@ function WelcomeHero() {
 function Home() {
   const token = localStorage.getItem("access_token");
   const loggedIn = !!token && isTokenValid();
-  // If logged-in, show the *real* Welcome page (with onboarding + verify banner)
-  // Otherwise, show the public splash Hero with Login/Register links.
-  return loggedIn ? <WelcomePage /> : <WelcomeHero />;
+  const hasSeenWelcome = localStorage.getItem("has_seen_welcome") === "1";
+
+  if (!loggedIn) return <WelcomeHero />;
+
+  // Logged-in users:
+  // - If first time (flag not set), show the real Welcome page once.
+  // - Otherwise, go straight to dashboard.
+  return hasSeenWelcome ? <Navigate to="/dashboard" replace /> : <WelcomePage />;
 }
 
 export default function App() {
