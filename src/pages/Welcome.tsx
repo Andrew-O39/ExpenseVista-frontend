@@ -143,7 +143,6 @@ export default function Welcome() {
       </div>
 
       {/* Onboarding checklist (optional) */}
-      {/*
       {isLoggedIn && (
         <OnboardingChecklist
           initialUser={{
@@ -153,7 +152,6 @@ export default function Welcome() {
           }}
         />
       )}
-      */}
 
       {/* Auth helpers */}
       {!isLoggedIn && (
