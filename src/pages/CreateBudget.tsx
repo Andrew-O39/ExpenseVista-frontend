@@ -1,34 +1,52 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { createBudget } from '../services/api';
+import { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { createBudget } from "../services/api";
+
+type Period =
+  | "weekly"
+  | "monthly"
+  | "quarterly"
+  | "half-yearly"
+  | "yearly";
 
 function normalizeCategory(cat: string): string {
-  return cat.toLowerCase().trim().replace(/\s+/g, ' ').normalize();
+  return cat.toLowerCase().trim().replace(/\s+/g, " ").normalize();
 }
 
 export default function CreateBudget() {
   const navigate = useNavigate();
-  const [category, setCategory] = useState('');
-  const [limitAmount, setLimitAmount] = useState('');
-  const [period, setPeriod] = useState<'weekly' | 'monthly' | 'quarterly' | 'half-yearly' | 'yearly'>('monthly');
-  const [notes, setNotes] = useState('');
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const location = useLocation();
+
+  const [category, setCategory] = useState("");
+  const [limitAmount, setLimitAmount] = useState("");
+  const [period, setPeriod] = useState<Period>("monthly");
+  const [notes, setNotes] = useState("");
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // only allow safe internal return paths and when onboarding=1
+  const getReturnPath = () => {
+    const qs = new URLSearchParams(location.search);
+    const back = qs.get("return") || "";
+    const onboarding = qs.get("onboarding") === "1";
+    const internal = back.startsWith("/"); // prevent open redirects
+    return onboarding && internal ? back : "";
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
+    setError("");
+    setSuccess("");
 
-    const token = localStorage.getItem('access_token');
+    const token = localStorage.getItem("access_token");
     if (!token) {
-      setError('You must be logged in to create a budget.');
+      setError("You must be logged in to create a budget.");
       return;
     }
 
     if (!category.trim() || !limitAmount || Number(limitAmount) <= 0) {
-      setError('Please enter a valid category and positive amount.');
+      setError("Please enter a valid category and a positive amount.");
       return;
     }
 
@@ -40,11 +58,13 @@ export default function CreateBudget() {
         period,
         notes: notes.trim() || undefined,
       });
-      setSuccess('Budget created successfully!');
-      // Optionally redirect back to dashboard after short delay
-      setTimeout(() => navigate('/budgets'), 1000);
+
+      setSuccess("Budget created successfully!");
+
+      const back = getReturnPath();
+      setTimeout(() => navigate(back || "/budgets", { replace: true }), 500);
     } catch (err: any) {
-      setError(err.message || 'Failed to create budget.');
+      setError(err?.message || "Failed to create budget.");
     } finally {
       setLoading(false);
     }
@@ -55,42 +75,49 @@ export default function CreateBudget() {
       <form
         onSubmit={handleSubmit}
         className="p-4 border rounded bg-white shadow"
-        style={{ maxWidth: '400px', width: '100%' }}
+        style={{ maxWidth: "400px", width: "100%" }}
       >
         <h3 className="mb-4 text-center">Create Budget</h3>
 
         <div className="mb-3">
-          <label htmlFor="category" className="form-label">Category</label>
+          <label htmlFor="category" className="form-label">
+            Category
+          </label>
           <input
             id="category"
             type="text"
             value={category}
             onChange={(e) => setCategory(e.target.value)}
             className="form-control"
+            placeholder="e.g., groceries, transport"
             required
           />
         </div>
 
         <div className="mb-3">
-          <label htmlFor="limitAmount" className="form-label">Limit Amount (€)</label>
+          <label htmlFor="limitAmount" className="form-label">
+            Limit Amount (€)
+          </label>
           <input
             id="limitAmount"
             type="number"
+            min="0.01"
+            step="0.01"
             value={limitAmount}
             onChange={(e) => setLimitAmount(e.target.value)}
             className="form-control"
-            min="0.01"
-            step="0.01"
             required
           />
         </div>
 
         <div className="mb-3">
-          <label htmlFor="period" className="form-label">Period</label>
+          <label htmlFor="period" className="form-label">
+            Period
+          </label>
           <select
             id="period"
             value={period}
-            onChange={(e) => setPeriod(e.target.value as 'weekly' | 'monthly' | 'yearly')}
+            onChange={(e) => setPeriod(e.target.value as Period)}
             className="form-select"
             required
           >
@@ -103,13 +130,16 @@ export default function CreateBudget() {
         </div>
 
         <div className="mb-3">
-          <label htmlFor="notes" className="form-label">Notes (optional)</label>
+          <label htmlFor="notes" className="form-label">
+            Notes (optional)
+          </label>
           <textarea
             id="notes"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             className="form-control"
             rows={3}
+            placeholder="Any extra details…"
           />
         </div>
 
@@ -117,7 +147,7 @@ export default function CreateBudget() {
         {success && <div className="alert alert-success">{success}</div>}
 
         <button type="submit" className="btn btn-primary w-100" disabled={loading}>
-          {loading ? 'Creating...' : 'Create Budget'}
+          {loading ? "Creating..." : "Create Budget"}
         </button>
       </form>
     </div>

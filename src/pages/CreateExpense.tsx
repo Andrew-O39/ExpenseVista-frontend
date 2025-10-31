@@ -1,5 +1,6 @@
+// src/pages/CreateExpense.tsx
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { createExpense, aiSuggestCategory, aiCategoryFeedback } from "../services/api";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -8,6 +9,7 @@ function normalizeCategory(cat: string) {
 }
 
 export default function CreateExpense() {
+  const location = useLocation();
   const navigate = useNavigate();
 
   const [description, setDescription] = useState("");
@@ -19,6 +21,14 @@ export default function CreateExpense() {
   const [success, setSuccess] = useState("");
   const [suggesting, setSuggesting] = useState(false);
   const [suggestInfo, setSuggestInfo] = useState<{ cat?: string; conf?: number; why?: string }>({});
+
+  const getReturnPath = () => {
+    const qs = new URLSearchParams(location.search);
+    const back = qs.get("return") || "";
+    const onboarding = qs.get("onboarding") === "1";
+    const internal = back.startsWith("/"); // prevent open redirects
+    return onboarding && internal ? back : "";
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,7 +66,7 @@ export default function CreateExpense() {
           await aiCategoryFeedback(token, textForMapping, chosen);
         }
       } catch {
-        // swallow – feedback shouldn’t block UX
+        /* feedback shouldn't block UX */
       }
 
       setSuccess("Expense created successfully!");
@@ -66,7 +76,9 @@ export default function CreateExpense() {
       setNotes("");
       setSuggestInfo({});
 
-      setTimeout(() => navigate("/expenses"), 800);
+      // Smart post-submit redirect
+      const back = getReturnPath();
+      setTimeout(() => navigate(back || "/expenses", { replace: true }), 500);
     } catch (err: any) {
       setError(err?.response?.data?.detail || err.message || "Failed to create expense.");
     }
@@ -103,7 +115,7 @@ export default function CreateExpense() {
           const textForMapping = (description || category || "transaction").toLowerCase();
           await aiCategoryFeedback(token, textForMapping, resp.suggested_category);
         } catch {
-          // ignore feedback errors
+          /* ignore feedback errors */
         }
       } else {
         alert("No suggestion available.");
@@ -207,7 +219,7 @@ export default function CreateExpense() {
                   whileTap={{ scale: 0.95 }}
                   onClick={async () => {
                     setCategory(suggestInfo.cat!);
-                    // Optional: explicit acceptance feedback when user clicks
+                    // Optional: explicit acceptance feedback
                     try {
                       const token = localStorage.getItem("access_token");
                       if (token && suggestInfo.cat) {

@@ -101,7 +101,9 @@ export default function Welcome() {
                 Log a new expense to keep your spending up to date.
               </p>
               {isLoggedIn ? (
-                <Link to="/create-expense" className="btn btn-primary">Add Expense</Link>
+                <Link to="/create-expense?return=/welcome&onboarding=1" className="btn btn-primary">
+                   Add Expense
+                </Link>
               ) : (
                 <Link to="/login?redirect=/create-expense" className="btn btn-primary">Login to continue</Link>
               )}
@@ -117,7 +119,9 @@ export default function Welcome() {
                 Set limits by category (monthly, weekly, yearly, etc.).
               </p>
               {isLoggedIn ? (
-                <Link to="/create-budget" className="btn btn-primary">Create Budget</Link>
+                <Link to="/create-budget?return=/welcome&onboarding=1" className="btn btn-primary">
+                   Create Budget
+                </Link>
               ) : (
                 <Link to="/login?redirect=/create-budget" className="btn btn-primary">Login to continue</Link>
               )}
@@ -133,7 +137,9 @@ export default function Welcome() {
                 Record an income entry (salary, freelance, etc.).
               </p>
               {isLoggedIn ? (
-                <Link to="/create-income" className="btn btn-primary">Add Income</Link>
+                <Link to="/create-income?return=/welcome&onboarding=1" className="btn btn-outline-primary btn-sm">
+                   Add income
+                </Link>
               ) : (
                 <Link to="/login?redirect=/create-income" className="btn btn-primary">Login to continue</Link>
               )}
@@ -141,6 +147,16 @@ export default function Welcome() {
           </div>
         </div>
       </div>
+
+    <button
+      className="btn btn-primary"
+      onClick={() => {
+        localStorage.setItem("has_seen_welcome", "1");
+        window.location.href = "/dashboard";
+      }}
+    >
+      Continue to Dashboard
+    </button>
 
       {/* Onboarding checklist (optional) */}
       {isLoggedIn && (
