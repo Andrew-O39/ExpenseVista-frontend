@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { login, resendVerificationEmail, getCurrentUser } from "../services/api";
 import { isTokenValid } from "../utils/auth";
+import { WELCOME_KEY } from "../constants/onboarding";
+
 
 export default function Login() {
   const navigate = useNavigate();
@@ -61,12 +63,12 @@ export default function Login() {
     const me = await getCurrentUser(data.access_token);
     const welcomeKey = `has_seen_welcome:${me.id}`;
 
-    // If no explicit redirect and user hasn't seen welcome yet -> go to /welcome
-    if (!hasExplicitRedirect && !localStorage.getItem(welcomeKey)) {
-      localStorage.setItem(welcomeKey, "1");
-      navigate("/welcome", { replace: true });
-      return;
-    }
+ // If no explicit redirect and user hasn't seen welcome yet -> go to /welcome
+if (!hasExplicitRedirect && !localStorage.getItem(WELCOME_KEY)) {
+  localStorage.setItem(WELCOME_KEY, "1");
+  navigate("/welcome", { replace: true });
+  return;
+}
 
     // Otherwise honor redirect (or default to /dashboard)
     navigate(redirect, { replace: true });

@@ -1,0 +1,1 @@
+export const WELCOME_KEY = "has_seen_welcome_v1";

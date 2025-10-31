@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { Routes, Route, Link, Navigate } from "react-router-dom";
+import { WELCOME_KEY } from "../constants/onboarding";
 
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
@@ -51,13 +52,9 @@ function WelcomeHero() {
 function Home() {
   const token = localStorage.getItem("access_token");
   const loggedIn = !!token && isTokenValid();
-  const hasSeenWelcome = localStorage.getItem("has_seen_welcome") === "1";
+  const hasSeenWelcome = !!localStorage.getItem(WELCOME_KEY);
 
   if (!loggedIn) return <WelcomeHero />;
-
-  // Logged-in users:
-  // - If first time (flag not set), show the real Welcome page once.
-  // - Otherwise, go straight to dashboard.
   return hasSeenWelcome ? <Navigate to="/dashboard" replace /> : <WelcomePage />;
 }
 

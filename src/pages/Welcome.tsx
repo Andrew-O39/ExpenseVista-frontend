@@ -125,16 +125,6 @@ export default function Welcome() {
           </div>
         </div>
 
-        <button
-          className="btn btn-primary"
-          onClick={() => {
-            localStorage.setItem("has_seen_welcome", "1");
-            window.location.href = "/dashboard";
-         }}
-       >
-         Continue to Dashboard
-      </button>
-
         <div className="col-12 col-md-4">
           <div className="card shadow-sm h-100">
             <div className="card-body">
