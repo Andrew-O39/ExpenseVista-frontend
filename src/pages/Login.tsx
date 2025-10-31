@@ -60,15 +60,14 @@ export default function Login() {
       new URLSearchParams(location.search).has("redirect");
 
     // Fetch the user so we can scope the “seen welcome” flag per-user
-    const me = await getCurrentUser(data.access_token);
-    const welcomeKey = `has_seen_welcome:${me.id}`;
+    await getCurrentUser(data.access_token);
 
- // If no explicit redirect and user hasn't seen welcome yet -> go to /welcome
-if (!hasExplicitRedirect && !localStorage.getItem(WELCOME_KEY)) {
-  localStorage.setItem(WELCOME_KEY, "1");
-  navigate("/welcome", { replace: true });
-  return;
-}
+    // If no explicit redirect and user hasn't seen welcome yet -> go to /welcome
+    if (!hasExplicitRedirect && !localStorage.getItem(WELCOME_KEY)) {
+     localStorage.setItem(WELCOME_KEY, "1");
+     navigate("/welcome", { replace: true });
+     return;
+   }
 
     // Otherwise honor redirect (or default to /dashboard)
     navigate(redirect, { replace: true });
