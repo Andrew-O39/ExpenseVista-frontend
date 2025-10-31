@@ -2,8 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getCurrentUser, resendVerificationEmail } from "../services/api";
 import { isTokenValid } from "../utils/auth";
-// If you have this component, keep the import; otherwise remove it.
-// import OnboardingChecklist from "@/components/OnboardingChecklist";
+import OnboardingChecklist from "../components/OnboardingChecklist";
 
 type CurrentUser = {
   id: number;
@@ -30,6 +29,7 @@ export default function Welcome() {
         const me = await getCurrentUser(token);
         setUser(me);
       } catch {
+        // token might be invalid/expired
         localStorage.removeItem("access_token");
         localStorage.removeItem("token_expiry");
       } finally {
@@ -66,7 +66,7 @@ export default function Welcome() {
     <div className="container py-5">
       <div className="mb-4">
         <h1 className="h3 mb-2">
-          Welcome{isLoggedIn ? `, ${user!.username}` : ""}! 👋
+          Welcome{isLoggedIn && user?.username ? `, ${user.username}` : ""}! 👋
         </h1>
         <p className="text-muted">
           Track expenses, manage budgets, and keep an eye on your income all in one place.
@@ -74,7 +74,7 @@ export default function Welcome() {
       </div>
 
       {/* Email verification banner */}
-      {isLoggedIn && !user!.is_verified && (
+      {isLoggedIn && user && !user.is_verified && (
         <div className="alert alert-warning d-flex align-items-center" role="alert">
           <div>
             <strong>Verify your email</strong> to unlock your account. Didn’t get it?
@@ -101,9 +101,9 @@ export default function Welcome() {
                 Log a new expense to keep your spending up to date.
               </p>
               {isLoggedIn ? (
-                <Link to="/expenses/new" className="btn btn-primary">Add Expense</Link>
+                <Link to="/create-expense" className="btn btn-primary">Add Expense</Link>
               ) : (
-                <Link to="/login?redirect=/expenses/new" className="btn btn-primary">Login to continue</Link>
+                <Link to="/login?redirect=/create-expense" className="btn btn-primary">Login to continue</Link>
               )}
             </div>
           </div>
@@ -117,9 +117,9 @@ export default function Welcome() {
                 Set limits by category (monthly, weekly, yearly, etc.).
               </p>
               {isLoggedIn ? (
-                <Link to="/budgets/new" className="btn btn-primary">Create Budget</Link>
+                <Link to="/create-budget" className="btn btn-primary">Create Budget</Link>
               ) : (
-                <Link to="/login?redirect=/budgets/new" className="btn btn-primary">Login to continue</Link>
+                <Link to="/login?redirect=/create-budget" className="btn btn-primary">Login to continue</Link>
               )}
             </div>
           </div>
@@ -128,21 +128,21 @@ export default function Welcome() {
         <div className="col-12 col-md-4">
           <div className="card shadow-sm h-100">
             <div className="card-body">
-              <h5 className="card-title">View Dashboard</h5>
+              <h5 className="card-title">Add Income</h5>
               <p className="card-text text-muted">
-                See your income vs. expenses, top categories, and trends.
+                Record an income entry (salary, freelance, etc.).
               </p>
               {isLoggedIn ? (
-                <Link to="/dashboard" className="btn btn-primary">Open Dashboard</Link>
+                <Link to="/create-income" className="btn btn-primary">Add Income</Link>
               ) : (
-                <Link to="/login?redirect=/dashboard" className="btn btn-primary">Login to continue</Link>
+                <Link to="/login?redirect=/create-income" className="btn btn-primary">Login to continue</Link>
               )}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Onboarding checklist: only when logged in */}
+      {/* Onboarding checklist (optional) */}
       {/*
       {isLoggedIn && (
         <OnboardingChecklist
