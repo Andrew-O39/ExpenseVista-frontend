@@ -199,12 +199,35 @@ export default function Dashboard() {
   /* =========================
      Session timer
   ========================= */
-  const handleLogout = () => {
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('token_expiry');
-    navigate('/login', { replace: true });
-  };
+  const handleLogout = async () => {
+  try {
+    // If you have user in state:
+    // localStorage.removeItem(`has_seen_welcome:${user.id}`);
+    // localStorage.removeItem(`onboarding_checklist_dismissed:${user.id}`);
 
+    // If you DON'T have user in state, fetch it quickly using the token:
+    const token = localStorage.getItem("access_token");
+    if (token) {
+      try {
+        const me = await getCurrentUser(token);
+        if (me?.id) {
+          localStorage.removeItem(`has_seen_welcome:${me.id}`);
+          localStorage.removeItem(`onboarding_checklist_dismissed:${me.id}`);
+        }
+      } catch {
+        // ignore—token might be expired; continue clearing generic keys
+      }
+    }
+  } finally {
+    // Always clear auth + generic fallbacks
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("token_expiry");
+    localStorage.removeItem("has_seen_welcome"); // legacy global key (if it was ever set)
+    localStorage.removeItem("onboarding_checklist_dismissed"); // legacy global key
+
+    navigate("/login", { replace: true });
+  }
+};
 
   /* =========================
      Data fetch for TOP section

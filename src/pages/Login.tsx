@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
-import { login, resendVerificationEmail } from "../services/api";
+import { login, resendVerificationEmail, getCurrentUser } from "../services/api";
 import { isTokenValid } from "../utils/auth";
 
 export default function Login() {
@@ -41,35 +41,43 @@ export default function Login() {
   }, [verifiedFlag]);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    setInfo("");
+  e.preventDefault();
+  setError("");
+  setInfo("");
 
-    try {
-      const data = await login(username, password);
+  try {
+    const data = await login(username, password);
 
-        // Save token + expiry (30 min)
-        localStorage.setItem("access_token", data.access_token);
-        const expiryTime = Date.now() + 30 * 60 * 1000;
-        localStorage.setItem("token_expiry", String(expiryTime));
+    // Save token + 30-minute expiry (matches backend)
+    localStorage.setItem("access_token", data.access_token);
+    const expiryTime = Date.now() + 30 * 60 * 1000;
+    localStorage.setItem("token_expiry", String(expiryTime));
 
-        const hasExplicitRedirect = Boolean(new URLSearchParams(location.search).get("redirect"));
+    // Decide if there was an explicit redirect param in the URL
+    const hasExplicitRedirect =
+      new URLSearchParams(location.search).has("redirect");
 
-        if (!hasExplicitRedirect && data?.show_welcome) {
-        navigate("/welcome", { replace: true });
-        return;
-        }
+    // Fetch the user so we can scope the “seen welcome” flag per-user
+    const me = await getCurrentUser(data.access_token);
+    const welcomeKey = `has_seen_welcome:${me.id}`;
 
-        navigate(redirect, { replace: true });
-        } catch (err: any) {
-      const msg =
-        err?.response?.data?.detail ||
-        err?.message ||
-        "Invalid username or password";
-      setError(String(msg));
+    // If no explicit redirect and user hasn't seen welcome yet -> go to /welcome
+    if (!hasExplicitRedirect && !localStorage.getItem(welcomeKey)) {
+      localStorage.setItem(welcomeKey, "1");
+      navigate("/welcome", { replace: true });
+      return;
     }
-  };
 
+    // Otherwise honor redirect (or default to /dashboard)
+    navigate(redirect, { replace: true });
+  } catch (err: any) {
+    const msg =
+      err?.response?.data?.detail ||
+      err?.message ||
+      "Invalid username or password";
+    setError(String(msg));
+  }
+};
   const handleResendVerification = async () => {
     setResendLoading(true);
     setError("");
