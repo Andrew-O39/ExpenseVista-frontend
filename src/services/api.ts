@@ -1,7 +1,7 @@
 // src/services/api.ts
 import axios from "axios";
 
-// Pick from Vite env at build time; fallback to localhost for dev
+/** Base URL picked from Vite env at build time; falls back to localhost for dev */
 export const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
 
@@ -9,11 +9,11 @@ export const api = axios.create({
   baseURL: API_BASE_URL,
 });
 
-// Helper to attach Authorization only when a token exists
+/** Helper to attach Authorization only when a token exists */
 const auth = (token?: string) =>
   token ? { Authorization: `Bearer ${token}` } : {};
 
-// Centralized FastAPI error extractor (exported for reuse)
+/** Centralized FastAPI error extractor (exported for reuse) */
 export function extractFastAPIError(err: any): string {
   const data = err?.response?.data;
 
@@ -34,20 +34,16 @@ export function extractFastAPIError(err: any): string {
 
 /* ------------------ AUTH ------------------ */
 
-export async function login(username: string, password: string): Promise<{
-  access_token: string;
-  token_type: string;
-  show_welcome?: boolean;
-}> {
-  const { data } = await api.post(
-    "/login",
-    new URLSearchParams({ username, password }),
-    { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
-  );
-  return data;
-}
+export async function login(username: string, password: string) {
+  try {
+    const { data } = await api.post(
+      "/login",
+      new URLSearchParams({ username, password }),
+      { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
+    );
+    return data; // { access_token, token_type }
   } catch (error: any) {
-    console.error("Login failed:", error.response?.data || error.message);
+    // surface server error so the caller can decide what to show
     throw error;
   }
 }
@@ -63,7 +59,6 @@ export async function registerUser(payload: {
     });
     return data;
   } catch (err: any) {
-    // <-- show the real server message (422, 400, etc.)
     throw new Error(extractFastAPIError(err));
   }
 }
@@ -77,10 +72,6 @@ export async function getCurrentUser(token: string) {
     });
     return data;
   } catch (error: any) {
-    console.error(
-      "Failed to fetch current user:",
-      error.response?.data || error.message
-    );
     throw error;
   }
 }
@@ -99,10 +90,6 @@ export async function getSummary(
     });
     return data;
   } catch (error: any) {
-    console.error(
-      "Failed to fetch summary:",
-      error.response?.data || error.message
-    );
     throw error;
   }
 }
@@ -124,10 +111,6 @@ export async function createExpense(
     });
     return data;
   } catch (error: any) {
-    console.error(
-      "Failed to create expense:",
-      error.response?.data || error.message
-    );
     throw error;
   }
 }
@@ -163,10 +146,6 @@ export async function getExpenseById(token: string, id: number) {
     });
     return data;
   } catch (error: any) {
-    console.error(
-      "Failed to fetch expense:",
-      error.response?.data || error.message
-    );
     throw error;
   }
 }
@@ -182,10 +161,6 @@ export async function updateExpense(
     });
     return data;
   } catch (error: any) {
-    console.error(
-      "Failed to update expense:",
-      error.response?.data || error.message
-    );
     throw error;
   }
 }
@@ -197,10 +172,6 @@ export async function deleteExpense(token: string, id: number) {
     });
     return data;
   } catch (error: any) {
-    console.error(
-      "Failed to delete expense:",
-      error.response?.data || error.message
-    );
     throw error;
   }
 }
@@ -217,10 +188,6 @@ export async function createBudget(
     });
     return data;
   } catch (error: any) {
-    console.error(
-      "Failed to create budget:",
-      error.response?.data || error.message
-    );
     throw error;
   }
 }
@@ -261,10 +228,6 @@ export async function getBudgetById(token: string, id: number) {
     });
     return data;
   } catch (error: any) {
-    console.error(
-      "Failed to fetch budget:",
-      error.response?.data || error.message
-    );
     throw error;
   }
 }
@@ -280,10 +243,6 @@ export async function updateBudget(
     });
     return data;
   } catch (error: any) {
-    console.error(
-      "Failed to update budget:",
-      error.response?.data || error.message
-    );
     throw error;
   }
 }
@@ -295,10 +254,6 @@ export async function deleteBudget(token: string, id: number) {
     });
     return data;
   } catch (error: any) {
-    console.error(
-      "Failed to delete budget:",
-      error.response?.data || error.message
-    );
     throw error;
   }
 }
@@ -336,10 +291,6 @@ export async function getIncomeById(token: string, id: number) {
     });
     return data;
   } catch (error: any) {
-    console.error(
-      "Failed to fetch income:",
-      error.response?.data || error.message
-    );
     throw error;
   }
 }
@@ -355,7 +306,6 @@ export async function createIncome(
     return data;
   } catch (err: any) {
     const msg = extractFastAPIError(err);
-    console.error("Failed to create income:", msg);
     throw new Error(msg);
   }
 }
@@ -371,10 +321,6 @@ export async function updateIncome(
     });
     return data;
   } catch (error: any) {
-    console.error(
-      "Failed to update income:",
-      error.response?.data || error.message
-    );
     throw error;
   }
 }
@@ -386,10 +332,6 @@ export async function deleteIncome(token: string, id: number) {
     });
     return data;
   } catch (error: any) {
-    console.error(
-      "Failed to delete income:",
-      error.response?.data || error.message
-    );
     throw error;
   }
 }
@@ -411,10 +353,6 @@ export async function getOverview(
     });
     return data;
   } catch (error: any) {
-    console.error(
-      "Failed to fetch overview:",
-      error.response?.data || error.message
-    );
     throw error;
   }
 }
@@ -508,13 +446,9 @@ export async function verifyEmail(token: string) {
  * - If logged in, no body is required; the backend uses the bearer token.
  * - If logged out, pass an email; backend will send if the account exists (always returns 200).
  */
-// src/services/api.ts
-
 export async function resendVerificationEmail(email?: string) {
   try {
     const token = localStorage.getItem("access_token");
-
-    // If no token, you must provide an email body
     const isAuthed = Boolean(token);
     const body = isAuthed ? {} : { email };
 
@@ -522,23 +456,14 @@ export async function resendVerificationEmail(email?: string) {
       throw new Error("Please enter your email address.");
     }
 
-    const { data } = await api.post(
-      "/resend-verification",
-      body,
-      {
-        headers: {
-          "Content-Type": "application/json",
-          ...(isAuthed ? { Authorization: `Bearer ${token}` } : {}),
-        },
-      }
-    );
+    const { data } = await api.post("/resend-verification", body, {
+      headers: {
+        "Content-Type": "application/json",
+        ...(isAuthed ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
     return data; // { msg }
   } catch (err: any) {
-    // same extractor you already have
-    const message =
-      err?.response?.data?.detail ||
-      err?.message ||
-      "Resend failed";
-    throw new Error(message);
+    throw new Error(extractFastAPIError(err));
   }
 }
