@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { getCurrentUser, resendVerificationEmail } from "../services/api";
+import { getCurrentUser } from "../services/api";
 import { isTokenValid } from "../utils/auth";
-import OnboardingChecklist from "../components/OnboardingChecklist";
 
 type CurrentUser = {
   id: number;
@@ -14,9 +13,6 @@ type CurrentUser = {
 export default function Welcome() {
   const [user, setUser] = useState<CurrentUser | null>(null);
   const [loading, setLoading] = useState(true);
-  const [resendLoading, setResendLoading] = useState(false);
-  const [resendMsg, setResendMsg] = useState<string | null>(null);
-  const [resendErr, setResendErr] = useState<string | null>(null);
 
   useEffect(() => {
     const token = localStorage.getItem("access_token");
@@ -29,7 +25,6 @@ export default function Welcome() {
         const me = await getCurrentUser(token);
         setUser(me);
       } catch {
-        // token might be invalid/expired
         localStorage.removeItem("access_token");
         localStorage.removeItem("token_expiry");
       } finally {
@@ -37,20 +32,6 @@ export default function Welcome() {
       }
     })();
   }, []);
-
-  const handleResend = async () => {
-    setResendLoading(true);
-    setResendMsg(null);
-    setResendErr(null);
-    try {
-      const res = await resendVerificationEmail();
-      setResendMsg(res?.msg || "Verification email sent.");
-    } catch (e: any) {
-      setResendErr(e?.message || "Failed to resend verification email.");
-    } finally {
-      setResendLoading(false);
-    }
-  };
 
   if (loading) {
     return (
@@ -66,32 +47,14 @@ export default function Welcome() {
     <div className="container py-5">
       <div className="mb-4">
         <h1 className="h3 mb-2">
-          Welcome{isLoggedIn && user?.username ? `, ${user.username}` : ""}! 👋
+          Welcome{isLoggedIn ? `, ${user!.username}` : ""}! 👋
         </h1>
         <p className="text-muted">
           Track expenses, manage budgets, and keep an eye on your income all in one place.
         </p>
       </div>
 
-      {/* Email verification banner */}
-      {isLoggedIn && user && !user.is_verified && (
-        <div className="alert alert-warning d-flex align-items-center" role="alert">
-          <div>
-            <strong>Verify your email</strong> to unlock your account. Didn’t get it?
-            <button
-              className="btn btn-sm btn-outline-secondary ms-2"
-              onClick={handleResend}
-              disabled={resendLoading}
-            >
-              {resendLoading ? "Sending…" : "Resend verification"}
-            </button>
-            {resendMsg && <span className="ms-2 text-success">{resendMsg}</span>}
-            {resendErr && <span className="ms-2 text-danger">{resendErr}</span>}
-          </div>
-        </div>
-      )}
-
-      {/* CTA cards */}
+      {/* CTA cards (no duplicate “resend verification” UI) */}
       <div className="row g-3">
         <div className="col-12 col-md-4">
           <div className="card shadow-sm h-100">
@@ -101,9 +64,7 @@ export default function Welcome() {
                 Log a new expense to keep your spending up to date.
               </p>
               {isLoggedIn ? (
-                <Link to="/create-expense?return=/welcome&onboarding=1" className="btn btn-primary">
-                   Add Expense
-                </Link>
+                <Link to="/create-expense" className="btn btn-primary">Add Expense</Link>
               ) : (
                 <Link to="/login?redirect=/create-expense" className="btn btn-primary">Login to continue</Link>
               )}
@@ -119,9 +80,7 @@ export default function Welcome() {
                 Set limits by category (monthly, weekly, yearly, etc.).
               </p>
               {isLoggedIn ? (
-                <Link to="/create-budget?return=/welcome&onboarding=1" className="btn btn-primary">
-                   Create Budget
-                </Link>
+                <Link to="/create-budget" className="btn btn-primary">Create Budget</Link>
               ) : (
                 <Link to="/login?redirect=/create-budget" className="btn btn-primary">Login to continue</Link>
               )}
@@ -132,14 +91,12 @@ export default function Welcome() {
         <div className="col-12 col-md-4">
           <div className="card shadow-sm h-100">
             <div className="card-body">
-              <h5 className="card-title">Add Income</h5>
+              <h5 className="card-title">Record Income</h5>
               <p className="card-text text-muted">
-                Record an income entry (salary, freelance, etc.).
+                Track salary, freelance, interest and more.
               </p>
               {isLoggedIn ? (
-                <Link to="/create-income?return=/welcome&onboarding=1" className="btn btn-outline-primary btn-sm">
-                   Add income
-                </Link>
+                <Link to="/create-income" className="btn btn-primary">Add Income</Link>
               ) : (
                 <Link to="/login?redirect=/create-income" className="btn btn-primary">Login to continue</Link>
               )}
@@ -148,28 +105,7 @@ export default function Welcome() {
         </div>
       </div>
 
-    <button
-      className="btn btn-primary"
-      onClick={() => {
-        localStorage.setItem("has_seen_welcome", "1");
-        window.location.href = "/dashboard";
-      }}
-    >
-      Continue to Dashboard
-    </button>
-
-      {/* Onboarding checklist (optional) */}
-      {isLoggedIn && (
-        <OnboardingChecklist
-          initialUser={{
-            is_verified: !!user?.is_verified,
-            username: user?.username ?? "",
-            email: user?.email ?? "",
-          }}
-        />
-      )}
-
-      {/* Auth helpers */}
+      {/* Optional secondary link for brand-new visitors */}
       {!isLoggedIn && (
         <div className="mt-4">
           <span className="text-muted me-2">New here?</span>

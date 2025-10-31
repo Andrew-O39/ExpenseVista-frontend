@@ -1,254 +1,46 @@
-import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import {
-  getBudgets,
-  getExpenses,
-  getIncomes,
-  getCurrentUser,
-  resendVerificationEmail,
-} from "../services/api";
-import { isTokenValid } from "../utils/auth";
 
-type Props = {
-  /** If you already loaded the user on the page, pass it to avoid re-fetch */
-  initialUser?: { is_verified: boolean; username: string; email: string };
-  /** Storage key to remember dismissal */
-  storageKey?: string;
-};
-
-type Item = {
-  id: string;
-  label: string;
-  done: boolean;
-  cta?: React.ReactNode;
-};
-
-const DEFAULT_STORAGE_KEY = "onboarding_checklist_dismissed";
-
-export default function OnboardingChecklist({
-  initialUser,
-  storageKey = DEFAULT_STORAGE_KEY,
-}: Props) {
-  const [loading, setLoading] = useState(true);
-  const [dismissed, setDismissed] = useState<boolean>(
-    () => localStorage.getItem(storageKey) === "1"
-  );
-
-  const [isVerified, setIsVerified] = useState<boolean>(
-    !!initialUser?.is_verified
-  );
-  const [hasBudget, setHasBudget] = useState<boolean>(false);
-  const [hasExpense, setHasExpense] = useState<boolean>(false);
-  const [hasIncome, setHasIncome] = useState<boolean>(false);
-
-  const token = localStorage.getItem("access_token");
-  const loggedIn = !!token && isTokenValid();
-
-  // 🔒 Only render for authenticated users
-  if (!loggedIn) return null;
-
-  useEffect(() => {
-    if (dismissed) {
-      setLoading(false);
-      return;
-    }
-    if (!token) {
-      setLoading(false);
-      return;
-    }
-
-    let mounted = true;
-    (async () => {
-      try {
-        // Only fetch user if not provided
-        if (!initialUser) {
-          const me = await getCurrentUser(token);
-          if (mounted) setIsVerified(!!me?.is_verified);
-        }
-
-        // We just need to know if there's any data at all
-        const [budgets, expenses, incomes] = await Promise.all([
-          getBudgets(token, { limit: 1 }),
-          getExpenses(token, { limit: 1 }),
-          getIncomes(token, { limit: 1 }),
-        ]);
-
-        if (!mounted) return;
-
-        setHasBudget(
-          Array.isArray(budgets?.items)
-            ? budgets.items.length > 0
-            : (budgets?.total ?? 0) > 0
-        );
-        setHasExpense(
-          Array.isArray(expenses?.items)
-            ? expenses.items.length > 0
-            : (expenses?.total ?? 0) > 0
-        );
-        setHasIncome(
-          Array.isArray(incomes?.items)
-            ? incomes.items.length > 0
-            : (incomes?.total ?? 0) > 0
-        );
-      } catch {
-        // swallow; show partial
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    })();
-
-    return () => {
-      mounted = false;
-    };
-  }, [dismissed, initialUser, token]);
-
-  const [resendLoading, setResendLoading] = useState(false);
-  const [resendMsg, setResendMsg] = useState<string | null>(null);
-  const [resendErr, setResendErr] = useState<string | null>(null);
-
-  const handleResend = async () => {
-    setResendLoading(true);
-    setResendMsg(null);
-    setResendErr(null);
-    try {
-      const res = await resendVerificationEmail(); // authenticated flow
-      setResendMsg(res?.msg || "Verification email sent.");
-    } catch (e: any) {
-      setResendErr(e?.message || "Failed to resend verification email.");
-    } finally {
-      setResendLoading(false);
-    }
-  };
-
-  const items: Item[] = useMemo(() => {
-    return [
-      {
-        id: "verify_email",
-        label: "Verify your email",
-        done: isVerified,
-        // 🔁 Resend button instead of linking to /verify-email
-        cta: (
-          <button
-            type="button"
-            className="btn btn-sm btn-outline-secondary"
-            onClick={handleResend}
-            disabled={resendLoading}
-          >
-            {resendLoading ? "Sending…" : "Resend verification"}
-          </button>
-        ),
-      },
-      {
-        id: "create_budget",
-        label: "Create your first budget",
-        done: hasBudget,
-        cta: (
-          <Link to="/create-budget" className="btn btn-primary">
-            Create Budget
-          </Link>
-        ),
-      },
-      {
-        id: "log_expense",
-        label: "Log your first expense",
-        done: hasExpense,
-        cta: (
-          <Link to="/create-expense" className="btn btn-primary">
-            Add Expense
-          </Link>
-        ),
-      },
-      {
-        id: "add_income",
-        label: "Add your first income",
-        done: hasIncome,
-        cta: (
-          <Link to="/create-income" className="btn btn-outline-primary btn-sm">
-            Add income
-          </Link>
-        ),
-      },
-    ];
-  }, [isVerified, hasBudget, hasExpense, hasIncome, resendLoading]);
-
-  const completed = items.filter((i) => i.done).length;
-  const total = items.length;
-  const progress = Math.round((completed / total) * 100);
-
-  if (dismissed || loading) return null;
-
-  // Auto-dismiss when everything’s done
-  if (completed === total) {
-    localStorage.setItem(storageKey, "1");
-    return null;
-  }
-
+/**
+ * Simplified OnboardingChecklist:
+ * Replaced with a clean "Tips & How It Works" panel for first-time users.
+ * No duplication of main action buttons.
+ */
+export default function OnboardingChecklist() {
   return (
-    <div className="card shadow-sm mb-4">
+    <div className="card shadow-sm mt-4">
       <div className="card-body">
-        <div className="d-flex align-items-center justify-content-between mb-2">
-          <h5 className="card-title mb-0">Getting started</h5>
-          <button
-            type="button"
-            className="btn btn-sm btn-outline-secondary"
-            onClick={() => {
-              setDismissed(true);
-              localStorage.setItem(storageKey, "1");
-            }}
-            aria-label="Dismiss onboarding checklist"
-          >
-            Dismiss
-          </button>
-        </div>
+        <h5 className="card-title mb-3">Getting Started Tips</h5>
 
-        {/* Progress */}
-        <div className="mb-3">
-          <div
-            className="progress"
-            role="progressbar"
-            aria-valuenow={progress}
-            aria-valuemin={0}
-            aria-valuemax={100}
-            style={{ height: 8 }}
-          >
-            <div className="progress-bar" style={{ width: `${progress}%` }} />
-          </div>
-          <div className="small text-muted mt-1">
-            {completed} of {total} completed
-          </div>
-        </div>
+        <ul className="mb-3">
+          <li>
+            <strong>Budgets</strong> are category-based and period-based
+            (weekly, monthly, quarterly, etc.). Each one helps you track
+            spending limits by timeframe.
+          </li>
 
-        {/* Items */}
-        <ul className="list-group list-group-flush">
-          {items.map((item) => (
-            <li
-              key={item.id}
-              className="list-group-item d-flex align-items-center justify-content-between"
-            >
-              <div>
-                <span
-                  className={`me-2 badge ${
-                    item.done ? "bg-success" : "bg-secondary"
-                  }`}
-                >
-                  {item.done ? "Done" : "Todo"}
-                </span>
-                {item.label}
-                {item.id === "verify_email" && !isVerified && (
-                  <>
-                    {resendMsg && (
-                      <span className="ms-2 text-success">{resendMsg}</span>
-                    )}
-                    {resendErr && (
-                      <span className="ms-2 text-danger">{resendErr}</span>
-                    )}
-                  </>
-                )}
-              </div>
-              {!item.done && item.cta}
-            </li>
-          ))}
+          <li>
+            <strong>Expenses</strong> automatically count toward their category’s
+            budget. You’ll see summaries and trends in your{" "}
+            <Link to="/dashboard">Dashboard</Link>.
+          </li>
+
+          <li>
+            <strong>Income</strong> helps you understand your net savings rate.
+            Record sources like salary, freelance, or interest earnings.
+          </li>
+
+          <li>
+            <strong>Smart Assistant</strong> can answer queries such as{" "}
+            <em>“How much did I spend on food last month?”</em> or{" "}
+            <em>“Am I over budget this quarter?”</em>.
+          </li>
         </ul>
+
+        <div className="small text-muted">
+          Pro tip: You can always revisit this Welcome page for quick access to
+          create actions or see your overall progress in the{" "}
+          <Link to="/dashboard">Dashboard</Link>.
+        </div>
       </div>
     </div>
   );
