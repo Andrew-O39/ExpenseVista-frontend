@@ -30,7 +30,7 @@ export default function OnboardingChecklist() {
           </li>
 
           <li>
-            <strong>Smart Assistant</strong> can answer queries such as{" "}
+            <strong>Finance Assistant</strong> can answer queries such as{" "}
             <em>“How much did I spend on food last month?”</em> or{" "}
             <em>“Am I over budget this quarter?”</em>.
           </li>

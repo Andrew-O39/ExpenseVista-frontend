@@ -12,6 +12,7 @@ import { getSummary, getBudgets, getCurrentUser, getOverview } from '../services
 import { isTokenValid } from '../utils/auth';
 
 import BudgetVsExpensesChart from '../components/BudgetVsExpensesChart';
+import RevisitWelcomeButton from "../components/RevisitWelcomeButton";
 
 /* =========================
    Types
@@ -468,6 +469,10 @@ export default function Dashboard() {
             <li><button className="dropdown-item" type="button" onClick={() => navigate('/incomes')}>Income List</button></li>
             <li><button className="dropdown-item" type="button" onClick={() => navigate('/expenses')}>Expense List</button></li>
             <li><button className="dropdown-item" type="button" onClick={() => navigate('/budgets')}>Budget List</button></li>
+
+            {/* 👇 Add this line */}
+            <li><RevisitWelcomeButton /></li>
+
             <li><hr className="dropdown-divider" /></li>
             <li><button className="dropdown-item text-danger" type="button" onClick={handleLogout}>Logout</button></li>
           </ul>

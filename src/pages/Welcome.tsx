@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getCurrentUser } from "../services/api";
 import { isTokenValid } from "../utils/auth";
-import OnboardingChecklist from "../components/OnboardingChecklist";
+import WelcomeInsights from "../components/WelcomeInsights"; //
 
 type CurrentUser = {
   id: number;
@@ -26,7 +26,6 @@ export default function Welcome() {
         const me = await getCurrentUser(token);
         setUser(me);
       } catch {
-        // token might be invalid/expired
         localStorage.removeItem("access_token");
         localStorage.removeItem("token_expiry");
       } finally {
@@ -52,7 +51,7 @@ export default function Welcome() {
           Welcome{isLoggedIn && user?.username ? `, ${user.username}` : ""}! 👋
         </h1>
         <p className="text-muted">
-          Track expenses, manage budgets, and keep an eye on your income all in one place.
+          Track expenses, manage budgets, and keep an eye on your income — all in one place.
         </p>
       </div>
 
@@ -66,19 +65,11 @@ export default function Welcome() {
                 Log a new expense to keep your spending up to date.
               </p>
               {isLoggedIn ? (
-                <Link
-                  to="/create-expense?return=/welcome&onboarding=1"
-                  className="btn btn-primary"
-                >
+                <Link to="/create-expense?return=/welcome&onboarding=1" className="btn btn-primary">
                   Add Expense
                 </Link>
               ) : (
-                <Link
-                  to="/login?redirect=/create-expense"
-                  className="btn btn-primary"
-                >
-                  Login to continue
-                </Link>
+                <Link to="/login?redirect=/create-expense" className="btn btn-primary">Login to continue</Link>
               )}
             </div>
           </div>
@@ -92,19 +83,11 @@ export default function Welcome() {
                 Set limits by category (monthly, weekly, yearly, etc.).
               </p>
               {isLoggedIn ? (
-                <Link
-                  to="/create-budget?return=/welcome&onboarding=1"
-                  className="btn btn-primary"
-                >
+                <Link to="/create-budget?return=/welcome&onboarding=1" className="btn btn-primary">
                   Create Budget
                 </Link>
               ) : (
-                <Link
-                  to="/login?redirect=/create-budget"
-                  className="btn btn-primary"
-                >
-                  Login to continue
-                </Link>
+                <Link to="/login?redirect=/create-budget" className="btn btn-primary">Login to continue</Link>
               )}
             </div>
           </div>
@@ -118,51 +101,32 @@ export default function Welcome() {
                 Record an income entry (salary, freelance, etc.).
               </p>
               {isLoggedIn ? (
-                <Link
-                  to="/create-income?return=/welcome&onboarding=1"
-                  className="btn btn-primary"
-                >
-                  Add Income
+                <Link to="/create-income?return=/welcome&onboarding=1" className="btn btn-outline-primary btn-sm">
+                  Add income
                 </Link>
               ) : (
-                <Link
-                  to="/login?redirect=/create-income"
-                  className="btn btn-primary"
-                >
-                  Login to continue
-                </Link>
+                <Link to="/login?redirect=/create-income" className="btn btn-primary">Login to continue</Link>
               )}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Helpful tips panel (formerly OnboardingChecklist) */}
-      <OnboardingChecklist />
+      {/* 👇 New tips & preview charts section */}
+      <WelcomeInsights />
 
-      {/* Continue button */}
-      <div className="mt-4">
-        <button
-          className="btn btn-outline-primary"
-          onClick={() => {
-            // Keep your existing flag behavior if you use it elsewhere
-            localStorage.setItem("has_seen_welcome", "1");
-            window.location.href = "/dashboard";
-          }}
-        >
-          Continue to Dashboard
-        </button>
-      </div>
-
-      {/* Auth helpers */}
-      {!isLoggedIn && (
-        <div className="mt-4">
-          <span className="text-muted me-2">New here?</span>
-          <Link to="/register">Create an account</Link>
-          <span className="text-muted ms-3 me-2">Forgot password?</span>
-          <Link to="/forgot-password">Reset it</Link>
-        </div>
-      )}
+      {/* (Optional) Keep your “Continue to Dashboard” button */}
+      <button
+        className="btn btn-primary mt-3"
+        onClick={() => {
+          // keep your existing “seen” flag logic if desired
+          const id = user?.id ? `:${user.id}` : "";
+          localStorage.setItem(`has_seen_welcome${id}`, "1");
+          window.location.href = "/dashboard";
+        }}
+      >
+        Continue to Dashboard
+      </button>
     </div>
   );
 }
