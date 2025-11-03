@@ -1,8 +1,8 @@
+// src/pages/BudgetList.tsx
 import { useEffect, useMemo, useState } from 'react';
 import { getBudgets, deleteBudget } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 import { isTokenValid } from '../utils/auth';
-import { useCurrency } from "../hooks/useCurrency";
 import { getCurrencyCode, formatMoney } from "../utils/currency";
 
 type Budget = {
@@ -26,7 +26,7 @@ type QuickRange = 'all' | 'week' | 'month' | 'quarter' | 'half-year' | 'custom';
 
 export default function BudgetList() {
   const navigate = useNavigate();
-  const { symbol } = useCurrency(); // ⬅️ NEW
+
   const currencyCode = getCurrencyCode();
   const money = (n: number) => formatMoney(n);
 
@@ -194,7 +194,7 @@ export default function BudgetList() {
         <h2 className="mb-0">
           Your Budgets{' '}
           <span className="badge bg-light text-dark ms-2">
-            {budgets.length} items · {money(totalBudgetLimit)}</span> {/* ⬅️ was euro() */}
+            {budgets.length} items · {money(totalBudgetLimit)}
           </span>
         </h2>
         <button
@@ -298,7 +298,7 @@ export default function BudgetList() {
           <tr>
             <th>Category</th>
             <th>Period</th>
-            <th>Limit ({currencyCode})</th> {/* ⬅️ was “Limit (€)” */}
+            <th>Limit ({currencyCode})</th>
             <th>Notes</th>
             <th>Created At</th>
             <th>Actions</th>
@@ -309,7 +309,7 @@ export default function BudgetList() {
             <tr key={b.id}>
               <td>{b.category}</td>
               <td>{b.period}</td>
-              <td>{money(b.limit_amount)}</td> {/* ⬅️ was €...toFixed(2) */}
+              <td>{money(b.limit_amount)}</td>
               <td>{b.notes || '-'}</td>
               <td>{fmt(b.created_at)}</td>
               <td>
@@ -347,7 +347,7 @@ export default function BudgetList() {
 
       {/* Totals row */}
       <div className="mt-3 alert alert-info">
-        <strong>Total Budgeted:</strong> {formatCurrency(totalBudgetLimit)} {/* ⬅️ was euro() */}
+        <strong>Total Budgeted:</strong> {money(totalBudgetLimit)}
       </div>
 
       {hasMore && (
