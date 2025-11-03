@@ -26,7 +26,7 @@ type QuickRange = 'all' | 'week' | 'month' | 'quarter' | 'half-year' | 'custom';
 
 export default function BudgetList() {
   const navigate = useNavigate();
-  const { symbol, code } = useCurrency(); // ⬅️ NEW
+  const { symbol } = useCurrency(); // ⬅️ NEW
 
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [page, setPage] = useState(1);

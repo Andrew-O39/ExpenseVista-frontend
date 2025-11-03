@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getCurrencyCode, setCurrencyCode, getLocale, setLocale, formatMoney } from "@/utils/currency";
+import { getCurrencyCode, setCurrencyCode, getLocale, setLocale, formatMoney } from "../utils/currency";
 
 const COMMON = [
   "USD","EUR","GBP","JPY","AUD","CAD","CHF","CNY","SEK","NZD",

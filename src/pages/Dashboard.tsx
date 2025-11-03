@@ -14,7 +14,7 @@ import { isTokenValid } from '../utils/auth';
 import BudgetVsExpensesChart from '../components/BudgetVsExpensesChart';
 import RevisitWelcomeButton from "../components/RevisitWelcomeButton";
 import CurrencySelector from "../components/CurrencySelector";
-import { formatMoney, getCurrencyCode } from "../utils/currency";
+import { formatMoney } from "../utils/currency";
 
 /* =========================
    Types

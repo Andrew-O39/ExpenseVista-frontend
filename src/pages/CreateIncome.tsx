@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { createIncome } from "../services/api";
 import { useCurrency } from "../hooks/useCurrency";
-import { formatCurrency } from "../utils/currency";
 
 function normalizeText(s: string) {
   return s.toLowerCase().trim().replace(/\s+/g, " ").normalize();

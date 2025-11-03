@@ -3,7 +3,6 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { getIncomeById, updateIncome } from '../services/api';
 import { isTokenValid } from '../utils/auth';
 import { useCurrency } from "../hooks/useCurrency";
-import { formatCurrency } from "../utils/currency";
 
 type IncomeForm = {
   amount: number;

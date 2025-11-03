@@ -3,7 +3,6 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { getExpenseById, updateExpense } from '../services/api';
 import { isTokenValid } from '../utils/auth';
 import { useCurrency } from "../hooks/useCurrency";
-import { formatCurrency } from "../utils/currency";
 
 type ExpenseForm = {
   category: string;
