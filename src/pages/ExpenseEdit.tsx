@@ -14,7 +14,6 @@ type ExpenseForm = {
 export default function ExpenseEdit() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { symbol } = useCurrency(); // <-- NEW
 
   const [expense, setExpense] = useState<ExpenseForm>({
     category: '',
