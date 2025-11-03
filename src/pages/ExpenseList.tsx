@@ -3,7 +3,7 @@ import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { getExpenses, deleteExpense } from "../services/api";
 import { isTokenValid } from "../utils/auth";
 import { useCurrency } from "../hooks/useCurrency";
-import { formatCurrency } from "../utils/currency";
+import { getCurrencyCode, formatMoney } from "../utils/currency";
 
 type Expense = {
   id: number;
@@ -20,6 +20,8 @@ export default function ExpenseList() {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
+  const currencyCode = getCurrencyCode();
+  const money = (n: number) => formatMoney(n);
 
   // ---------- UI state ----------
   const [expenses, setExpenses] = useState<Expense[]>([]);
@@ -290,8 +292,7 @@ export default function ExpenseList() {
         <h2 className="mb-0">
           Your Expenses{" "}
           <span className="badge bg-light text-dark ms-2">
-            {expenses.length} items · {formatCurrency(totalExpenses)}
-          </span>
+            {expenses.length} items · {money(totalExpenses)}</span>
         </h2>
         <div className="d-flex align-items-center gap-2">
           <select
@@ -378,7 +379,7 @@ export default function ExpenseList() {
         <thead>
           <tr>
             <th>Category</th>
-            <th>Amount</th> {/* was: Amount (€) */}
+            <th>Amount ({currencyCode})</th> {/* was: Amount (€) */}
             <th>Description</th>
             <th>Notes</th>
             <th>Created At</th>
@@ -396,7 +397,7 @@ export default function ExpenseList() {
             expenses.map((e) => (
               <tr key={e.id}>
                 <td>{e.category}</td>
-                <td>{formatCurrency(e.amount)}</td>
+                <td>{money(e.amount)}</td>
                 <td>{e.description || "-"}</td>
                 <td>{e.notes || "-"}</td>
                 <td>{fmt(e.created_at)}</td>

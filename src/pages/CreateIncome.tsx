@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { createIncome } from "../services/api";
-import { useCurrency } from "../hooks/useCurrency";
+import { getCurrencyCode } from "../utils/currency";
 
 function normalizeText(s: string) {
   return s.toLowerCase().trim().replace(/\s+/g, " ").normalize();
@@ -29,7 +29,7 @@ function extractFastAPIError(err: any): string {
 export default function CreateIncome() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { symbol } = useCurrency(); // <-- NEW
+  const currencyCode = getCurrencyCode();
 
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState("");
@@ -118,7 +118,7 @@ export default function CreateIncome() {
         <h3 className="mb-4 text-center">Record Income</h3>
 
         <div className="mb-3">
-          <label className="form-label">Amount ({symbol})</label> {/* <-- was (€) */}
+          <label className="form-label">Amount ({currencyCode})</label> {/* <-- was (€) */}
           <input
             type="number"
             min="0.01"

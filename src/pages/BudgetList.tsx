@@ -3,7 +3,7 @@ import { getBudgets, deleteBudget } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 import { isTokenValid } from '../utils/auth';
 import { useCurrency } from "../hooks/useCurrency";
-import { formatCurrency } from "../utils/currency";
+import { getCurrencyCode, formatMoney } from "../utils/currency";
 
 type Budget = {
   id: number;
@@ -27,6 +27,8 @@ type QuickRange = 'all' | 'week' | 'month' | 'quarter' | 'half-year' | 'custom';
 export default function BudgetList() {
   const navigate = useNavigate();
   const { symbol } = useCurrency(); // ⬅️ NEW
+  const currencyCode = getCurrencyCode();
+  const money = (n: number) => formatMoney(n);
 
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [page, setPage] = useState(1);
@@ -192,7 +194,7 @@ export default function BudgetList() {
         <h2 className="mb-0">
           Your Budgets{' '}
           <span className="badge bg-light text-dark ms-2">
-            {budgets.length} items · {formatCurrency(totalBudgetLimit)} {/* ⬅️ was euro() */}
+            {budgets.length} items · {money(totalBudgetLimit)}</span> {/* ⬅️ was euro() */}
           </span>
         </h2>
         <button
@@ -296,7 +298,7 @@ export default function BudgetList() {
           <tr>
             <th>Category</th>
             <th>Period</th>
-            <th>Limit ({symbol})</th> {/* ⬅️ was “Limit (€)” */}
+            <th>Limit ({currencyCode})</th> {/* ⬅️ was “Limit (€)” */}
             <th>Notes</th>
             <th>Created At</th>
             <th>Actions</th>
@@ -307,7 +309,7 @@ export default function BudgetList() {
             <tr key={b.id}>
               <td>{b.category}</td>
               <td>{b.period}</td>
-              <td>{formatCurrency(b.limit_amount)}</td> {/* ⬅️ was €...toFixed(2) */}
+              <td>{money(b.limit_amount)}</td> {/* ⬅️ was €...toFixed(2) */}
               <td>{b.notes || '-'}</td>
               <td>{fmt(b.created_at)}</td>
               <td>
