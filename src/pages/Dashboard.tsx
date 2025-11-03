@@ -13,6 +13,8 @@ import { isTokenValid } from '../utils/auth';
 
 import BudgetVsExpensesChart from '../components/BudgetVsExpensesChart';
 import RevisitWelcomeButton from "../components/RevisitWelcomeButton";
+import CurrencySelector from "../components/CurrencySelector";
+import { formatMoney, getCurrencyCode } from "../utils/currency";
 
 /* =========================
    Types
@@ -470,8 +472,9 @@ export default function Dashboard() {
             <li><button className="dropdown-item" type="button" onClick={() => navigate('/expenses')}>Expense List</button></li>
             <li><button className="dropdown-item" type="button" onClick={() => navigate('/budgets')}>Budget List</button></li>
 
-            {/* 👇 Add this line */}
+            {/* Revisit Welcome page and select currency */}
             <li><RevisitWelcomeButton /></li>
+            <li><CurrencySelector /></li>
 
             <li><hr className="dropdown-divider" /></li>
             <li><button className="dropdown-item text-danger" type="button" onClick={handleLogout}>Logout</button></li>
@@ -492,7 +495,7 @@ export default function Dashboard() {
                     <span className="badge bg-light text-muted border">{formatRange(overview.start, overview.end)}</span>
                   )}
                 </div>
-                <div className="fs-4">€{Number(overview.total_income || 0).toFixed(2)}</div>
+                <div className="fs-4">{formatMoney(overview.total_income || 0)}</div>
               </div>
             </div>
           </div>
@@ -519,7 +522,7 @@ export default function Dashboard() {
                   )}
                 </div>
                 <div className="fs-4">
-                  €{Number(appliedCategory ? (overviewCat?.total_expenses ?? 0) : (overview.total_expenses ?? 0)).toFixed(2)}
+                  {formatMoney(appliedCategory ? (overviewCat?.total_expenses ?? 0) : (overview.total_expenses ?? 0))}
                 </div>
               </div>
             </div>
@@ -536,7 +539,7 @@ export default function Dashboard() {
                   }
                 </div>
                 <div className={`fs-4 ${Number(appliedCategory ? (computedNet ?? 0) : (overview.net_balance ?? 0)) >= 0 ? 'text-success' : 'text-danger'}`}>
-                  €{Number(appliedCategory ? (computedNet ?? 0) : (overview.net_balance ?? 0)).toFixed(2)}
+                   {formatMoney(appliedCategory ? (computedNet ?? 0) : (overview.net_balance ?? 0))}
                 </div>
               </div>
             </div>
@@ -584,7 +587,7 @@ export default function Dashboard() {
                       />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(val: number) => `€${val.toFixed(2)}`} />
+                  <Tooltip formatter={(val: number) => formatMoney(val)} />
                   <Legend />
                 </PieChart>
               </ResponsiveContainer>
@@ -620,10 +623,10 @@ export default function Dashboard() {
                   return (
                     <tr key={index} style={{ borderLeft: `5px solid ${COLORS[index % COLORS.length]}` }}>
                       <td><strong>{category}</strong></td>
-                      <td>{budget > 0 ? `€${budget.toFixed(2)}` : 'No Budget'}</td>
-                      <td>€{spent.toFixed(2)}</td>
+                      <td>{budget > 0 ? formatMoney(budget) : 'No Budget'}</td>
+                      <td>{formatMoney(spent)}</td>
                       <td style={{ color: isOverBudget ? 'red' : 'green' }}>
-                        {remaining < 0 ? '-' : ''}€{Math.abs(remaining).toFixed(2)}
+                        {remaining < 0 ? '-' : ''}{formatMoney(Math.abs(remaining))}
                       </td>
                     </tr>
                   );
@@ -663,7 +666,7 @@ export default function Dashboard() {
                         Total Income for {prettyGroupedWindow('yearly')}
                       </div>
                       <div className="fs-4 fw-bold" style={{ color: '#2ecc71' }}>
-                        €{(overviewTotals?.income ?? 0).toFixed(2)}
+                        {formatMoney(overviewTotals?.income ?? 0)}
                       </div>
                       <div className="small mt-1">
                         <span style={{ display: 'inline-block', width: 10, height: 10, background: '#2ecc71', marginRight: 6, borderRadius: 2 }} />
@@ -681,7 +684,7 @@ export default function Dashboard() {
                         Total Expenses for {prettyGroupedWindow('yearly')}
                       </div>
                       <div className="fs-4 fw-bold" style={{ color: '#e74c3c' }}>
-                        €{(overviewTotals?.expenses ?? 0).toFixed(2)}
+                        {formatMoney(overviewTotals?.expenses ?? 0)}
                       </div>
                       <div className="small mt-1">
                         <span style={{ display: 'inline-block', width: 10, height: 10, background: '#e74c3c', marginRight: 6, borderRadius: 2 }} />
@@ -699,7 +702,7 @@ export default function Dashboard() {
                         Net Balance for {prettyGroupedWindow('yearly')}
                       </div>
                       <div className="fs-4 fw-bold" style={{ color: '#3498db' }}>
-                        €{(overviewTotals?.net ?? 0).toFixed(2)}
+                        {formatMoney(overviewTotals?.net ?? 0)}
                       </div>
                       <div className="small mt-1">
                         <span style={{ display: 'inline-block', width: 10, height: 10, background: '#3498db', marginRight: 6, borderRadius: 2 }} />
@@ -760,18 +763,18 @@ export default function Dashboard() {
                                       </div>
                                     )}
                                     <div className="small">
-                                      <div>
-                                        <span style={{ display: 'inline-block', width: 8, height: 8, background: '#2ecc71', marginRight: 6, borderRadius: 2 }} />
-                                        Income: €{Number(inc).toFixed(2)}
-                                      </div>
-                                      <div>
-                                        <span style={{ display: 'inline-block', width: 8, height: 8, background: '#e74c3c', marginRight: 6, borderRadius: 2 }} />
-                                        Expenses: €{Number(exp).toFixed(2)}
-                                      </div>
-                                      <div>
-                                        <span style={{ display: 'inline-block', width: 8, height: 8, background: '#3498db', marginRight: 6, borderRadius: 2 }} />
-                                        Net: €{Number(net).toFixed(2)}
-                                      </div>
+                                    <div>
+                                       <span style={{ display:'inline-block', width: 8, height: 8, background: '#2ecc71', marginRight: 6, borderRadius: 2 }} />
+                                       Income: {formatMoney(inc)}
+                                    </div>
+                                    <div>
+                                       <span style={{ display:'inline-block', width: 8, height: 8, background: '#e74c3c', marginRight: 6, borderRadius: 2 }} />
+                                       Expenses: {formatMoney(exp)}
+                                    </div>
+                                    <div>
+                                       <span style={{ display:'inline-block', width: 8, height: 8, background: '#3498db', marginRight: 6, borderRadius: 2 }} />
+                                       Net: {formatMoney(net)}
+                                    </div>
                                     </div>
                                   </div>
                                 );
@@ -805,16 +808,16 @@ export default function Dashboard() {
                                     )}
                                     <div className="small">
                                       <div>
-                                        <span style={{ display: 'inline-block', width: 8, height: 8, background: '#2ecc71', marginRight: 6, borderRadius: 2 }} />
-                                        Income: €{Number(inc).toFixed(2)}
+                                        <span style={{ display:'inline-block', width: 8, height: 8, background: '#2ecc71', marginRight: 6, borderRadius: 2 }} />
+                                        Income: {formatMoney(inc)}
+                                       </div>
+                                      <div>
+                                        <span style={{ display:'inline-block', width: 8, height: 8, background: '#e74c3c', marginRight: 6, borderRadius: 2 }} />
+                                        Expenses: {formatMoney(exp)}
                                       </div>
                                       <div>
-                                        <span style={{ display: 'inline-block', width: 8, height: 8, background: '#e74c3c', marginRight: 6, borderRadius: 2 }} />
-                                        Expenses: €{Number(exp).toFixed(2)}
-                                      </div>
-                                      <div>
-                                        <span style={{ display: 'inline-block', width: 8, height: 8, background: '#3498db', marginRight: 6, borderRadius: 2 }} />
-                                        Net: €{Number(net).toFixed(2)}
+                                        <span style={{ display:'inline-block', width: 8, height: 8, background: '#3498db', marginRight: 6, borderRadius: 2 }} />
+                                        Net: {formatMoney(net)}
                                       </div>
                                     </div>
                                   </div>

@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { getBudgets, deleteBudget } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 import { isTokenValid } from '../utils/auth';
+import { useCurrency } from "../hooks/useCurrency";
+import { formatCurrency } from "../utils/currency";
 
 type Budget = {
   id: number;
@@ -24,6 +26,7 @@ type QuickRange = 'all' | 'week' | 'month' | 'quarter' | 'half-year' | 'custom';
 
 export default function BudgetList() {
   const navigate = useNavigate();
+  const { symbol, code } = useCurrency(); // ⬅️ NEW
 
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [page, setPage] = useState(1);
@@ -43,7 +46,6 @@ export default function BudgetList() {
   const token = localStorage.getItem('access_token');
 
   // Helpers
-  const euro = (n: number) => `€${n.toFixed(2)}`;
   const toISO = (d: Date) => d.toISOString();
   const fmt = (iso: string) => new Date(iso).toLocaleString();
 
@@ -190,7 +192,7 @@ export default function BudgetList() {
         <h2 className="mb-0">
           Your Budgets{' '}
           <span className="badge bg-light text-dark ms-2">
-            {budgets.length} items · {euro(totalBudgetLimit)}
+            {budgets.length} items · {formatCurrency(totalBudgetLimit)} {/* ⬅️ was euro() */}
           </span>
         </h2>
         <button
@@ -294,7 +296,7 @@ export default function BudgetList() {
           <tr>
             <th>Category</th>
             <th>Period</th>
-            <th>Limit (€)</th>
+            <th>Limit ({symbol})</th> {/* ⬅️ was “Limit (€)” */}
             <th>Notes</th>
             <th>Created At</th>
             <th>Actions</th>
@@ -305,7 +307,7 @@ export default function BudgetList() {
             <tr key={b.id}>
               <td>{b.category}</td>
               <td>{b.period}</td>
-              <td>€{b.limit_amount.toFixed(2)}</td>
+              <td>{formatCurrency(b.limit_amount)}</td> {/* ⬅️ was €...toFixed(2) */}
               <td>{b.notes || '-'}</td>
               <td>{fmt(b.created_at)}</td>
               <td>
@@ -343,7 +345,7 @@ export default function BudgetList() {
 
       {/* Totals row */}
       <div className="mt-3 alert alert-info">
-        <strong>Total Budgeted:</strong> {euro(totalBudgetLimit)}
+        <strong>Total Budgeted:</strong> {formatCurrency(totalBudgetLimit)} {/* ⬅️ was euro() */}
       </div>
 
       {hasMore && (

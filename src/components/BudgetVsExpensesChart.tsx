@@ -7,6 +7,7 @@ import {
 } from 'recharts';
 import { getBudgets, getOverview } from '../services/api';
 import { isTokenValid } from '../utils/auth';
+import { formatMoney } from '../utils/currency';
 
 const COLOR_BUDGET = '#9b59b6';   // purple
 const COLOR_EXP    = '#e74c3c';   // red
@@ -15,8 +16,6 @@ const COLOR_REM    = '#3498db';   // blue
 type GroupBy = 'weekly' | 'monthly' | 'quarterly' | 'half-yearly';
 type WindowPeriod = 'weekly' | 'monthly' | 'yearly';
 type SeriesPoint = { label: string; budget: number; expenses: number; remaining: number };
-
-const euro = (n: number) => `€${Number(n || 0).toFixed(2)}`;
 
 function fmtDDMMYYYY(d: Date) {
   const dd = String(d.getUTCDate()).padStart(2, '0');
@@ -144,10 +143,8 @@ export default function BudgetVsExpensesChart({
       setLoading(true);
       setError(null);
       try {
-        // re-assert token as a string within this scope to satisfy TS
-        const tk = token as string;
-
         // 1) EXPENSES from overview
+        const tk = token as string;
         const ov = await getOverview(tk, {
           period: windowPeriod,
           group_by: groupBy,
@@ -180,7 +177,7 @@ export default function BudgetVsExpensesChart({
             const e = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth()+1, 0, 23,59,59,999));
             startISO = s.toISOString();
             endISO = e.toISOString();
-          } else { // weekly
+          } else { // weekly (fallback: today)
             const s = new Date(now); s.setUTCHours(0,0,0,0);
             const e = new Date(now); e.setUTCHours(23,59,59,999);
             startISO = s.toISOString();
@@ -319,7 +316,7 @@ export default function BudgetVsExpensesChart({
             <div className="card-body">
               <div className="text-muted small">Total Budget ({windowPeriod})</div>
               <div className="fs-4 fw-bold" style={{ color: COLOR_BUDGET }}>
-                {euro(totals.budget)}
+                {formatMoney(totals.budget)}
               </div>
               <div className="small mt-1">
                 <span style={{ display: 'inline-block', width: 10, height: 10, background: COLOR_BUDGET, marginRight: 6, borderRadius: 2 }} />
@@ -334,7 +331,7 @@ export default function BudgetVsExpensesChart({
             <div className="card-body">
               <div className="text-muted small">Total Expenses ({windowPeriod})</div>
               <div className="fs-4 fw-bold" style={{ color: COLOR_EXP }}>
-                {euro(totals.expenses)}
+                {formatMoney(totals.expenses)}
               </div>
               <div className="small mt-1">
                 <span style={{ display: 'inline-block', width: 10, height: 10, background: COLOR_EXP, marginRight: 6, borderRadius: 2 }} />
@@ -349,7 +346,7 @@ export default function BudgetVsExpensesChart({
             <div className="card-body">
               <div className="text-muted small">Remaining ({windowPeriod})</div>
               <div className="fs-4 fw-bold" style={{ color: COLOR_REM }}>
-                {euro(totals.remaining)}
+                {formatMoney(totals.remaining)}
               </div>
               <div className="small mt-1">
                 <span style={{ display: 'inline-block', width: 10, height: 10, background: COLOR_REM, marginRight: 6, borderRadius: 2 }} />
@@ -378,7 +375,7 @@ export default function BudgetVsExpensesChart({
                     <XAxis dataKey="label" />
                     <YAxis />
                     <Tooltip
-                      formatter={(v: any) => euro(Number(v))}
+                      formatter={(v: any) => formatMoney(Number(v))}
                       labelFormatter={(label) => {
                         const span = labelToSpanMemo(label);
                         return span ? `${label} (${span})` : label;
@@ -395,7 +392,7 @@ export default function BudgetVsExpensesChart({
                     <XAxis dataKey="label" />
                     <YAxis />
                     <Tooltip
-                      formatter={(v: any) => euro(Number(v))}
+                      formatter={(v: any) => formatMoney(Number(v))}
                       labelFormatter={(label) => {
                         const span = labelToSpanMemo(label);
                         return span ? `${label} (${span})` : label;

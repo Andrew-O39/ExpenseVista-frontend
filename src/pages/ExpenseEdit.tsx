@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getExpenseById, updateExpense } from '../services/api';
 import { isTokenValid } from '../utils/auth';
+import { useCurrency } from "../hooks/useCurrency";
+import { formatCurrency } from "../utils/currency";
 
 type ExpenseForm = {
   category: string;
@@ -13,6 +15,8 @@ type ExpenseForm = {
 export default function ExpenseEdit() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { symbol } = useCurrency(); // <-- NEW
+
   const [expense, setExpense] = useState<ExpenseForm>({
     category: '',
     amount: 0,
@@ -42,7 +46,7 @@ export default function ExpenseEdit() {
         const data = await getExpenseById(token, parseInt(id));
         setExpense({
           category: data.category || '',
-          amount: data.amount || 0,
+          amount: Number(data.amount) || 0,
           description: data.description || '',
           notes: data.notes || ''
         });
@@ -100,13 +104,15 @@ export default function ExpenseEdit() {
         </div>
 
         <div className="mb-3">
-          <label className="form-label">Amount (€)</label>
+          <label className="form-label">Amount ({symbol})</label>{/* <-- was (€) */}
           <input
             type="number"
             name="amount"
             className="form-control"
             value={expense.amount}
             onChange={handleChange}
+            min="0"
+            step="0.01"
             required
           />
         </div>

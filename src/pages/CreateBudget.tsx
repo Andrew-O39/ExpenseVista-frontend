@@ -1,6 +1,11 @@
+// src/pages/CreateBudget.tsx
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { createBudget } from "../services/api";
+import {
+  getCurrencyCode,
+  currencyFractionDigits,
+} from "../utils/currency"; // <-- dynamic currency
 
 type Period =
   | "weekly"
@@ -24,6 +29,11 @@ export default function CreateBudget() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // currency display + numeric step based on currency fraction digits
+  const code = getCurrencyCode();
+  const fraction = currencyFractionDigits(code);
+  const step = fraction === 0 ? "1" : `0.${"0".repeat(fraction - 1)}1`; // e.g. 0.01, 0.001, or 1 for JPY
 
   // only allow safe internal return paths and when onboarding=1
   const getReturnPath = () => {
@@ -96,13 +106,13 @@ export default function CreateBudget() {
 
         <div className="mb-3">
           <label htmlFor="limitAmount" className="form-label">
-            Limit Amount (€)
+            Limit Amount ({code})
           </label>
           <input
             id="limitAmount"
             type="number"
-            min="0.01"
-            step="0.01"
+            min={step}
+            step={step}
             value={limitAmount}
             onChange={(e) => setLimitAmount(e.target.value)}
             className="form-control"

@@ -1,8 +1,8 @@
-// src/pages/CreateExpense.tsx
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { createExpense, aiSuggestCategory, aiCategoryFeedback } from "../services/api";
 import { motion, AnimatePresence } from "framer-motion";
+import { getCurrency } from "../utils/currency";
 
 function normalizeCategory(cat: string) {
   return cat.toLowerCase().trim().replace(/\s+/g, " ").normalize();
@@ -153,7 +153,7 @@ export default function CreateExpense() {
 
         <div className="mb-3">
           <label htmlFor="amount" className="form-label">
-            Amount (€)
+            Amount ({getCurrency()})
           </label>
           <input
             id="amount"

@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { getExpenses, deleteExpense } from "../services/api";
 import { isTokenValid } from "../utils/auth";
+import { useCurrency } from "../hooks/useCurrency";
+import { formatCurrency } from "../utils/currency";
 
 type Expense = {
   id: number;
@@ -37,8 +39,10 @@ export default function ExpenseList() {
 
   const token = (typeof window !== "undefined" ? localStorage.getItem("access_token") : null) as string | null;
 
+  // NEW: access current currency (symbol, code if you need it later)
+  useCurrency();
+
   // ---------- Helpers ----------
-  const euro = (n: number) => `€${Number(n || 0).toFixed(2)}`;
   const toISO = (d: Date) => d.toISOString();
 
   const computeRange = (r: QuickRange): { start?: string; end?: string } => {
@@ -286,7 +290,7 @@ export default function ExpenseList() {
         <h2 className="mb-0">
           Your Expenses{" "}
           <span className="badge bg-light text-dark ms-2">
-            {expenses.length} items · {euro(totalExpenses)}
+            {expenses.length} items · {formatCurrency(totalExpenses)}
           </span>
         </h2>
         <div className="d-flex align-items-center gap-2">
@@ -374,7 +378,7 @@ export default function ExpenseList() {
         <thead>
           <tr>
             <th>Category</th>
-            <th>Amount (€)</th>
+            <th>Amount</th> {/* was: Amount (€) */}
             <th>Description</th>
             <th>Notes</th>
             <th>Created At</th>
@@ -392,7 +396,7 @@ export default function ExpenseList() {
             expenses.map((e) => (
               <tr key={e.id}>
                 <td>{e.category}</td>
-                <td>€{e.amount.toFixed(2)}</td>
+                <td>{formatCurrency(e.amount)}</td>
                 <td>{e.description || "-"}</td>
                 <td>{e.notes || "-"}</td>
                 <td>{fmt(e.created_at)}</td>
@@ -423,7 +427,7 @@ export default function ExpenseList() {
 
       {/* Totals & Load more */}
       <div className="mt-3 alert alert-info">
-        <strong>Total Expenses:</strong> {euro(totalExpenses)}
+        <strong>Total Expenses:</strong> {formatCurrency(totalExpenses)}
       </div>
 
       {hasMore && (

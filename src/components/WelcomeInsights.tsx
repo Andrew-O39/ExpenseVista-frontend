@@ -146,6 +146,7 @@ export default function WelcomeInsights() {
             </ul>
             <p className="small text-muted mb-0">
               Tip: you can always start from the dashboard and jump straight into the right list or category.
+              Moreover you can always revisit this Welcome page from your dashboard's Action Dropdown.
             </p>
           </div>
         </div>

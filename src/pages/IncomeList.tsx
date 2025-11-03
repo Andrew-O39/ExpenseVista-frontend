@@ -1,7 +1,9 @@
+// src/pages/IncomeList.tsx
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { getIncomes, deleteIncome } from "../services/api";
 import { isTokenValid } from "../utils/auth";
+import { formatMoney, getCurrencyCode } from "../utils/currency";
 
 type Income = {
   id: number;
@@ -41,8 +43,8 @@ export default function IncomeList() {
       ? localStorage.getItem("access_token")
       : null) as string | null;
 
-  const euro = (n: number) => `€${Number(n || 0).toFixed(2)}`;
   const toISO = (d: Date) => d.toISOString();
+  const currencyCode = getCurrencyCode();
 
   // Used only for manual quick-range filtering; assistant passes explicit start/end via URL
   const computeRange = (r: QuickRange): { start?: string; end?: string } => {
@@ -277,7 +279,7 @@ export default function IncomeList() {
         <h2 className="mb-0">
           Your Incomes{" "}
           <span className="badge bg-light text-dark ms-2">
-            {incomes.length} items · {euro(totalIncomes)}
+            {incomes.length} items · {formatMoney(totalIncomes)}
           </span>
         </h2>
         <div className="d-flex align-items-center gap-2">
@@ -370,7 +372,7 @@ export default function IncomeList() {
           <tr>
             <th>Source</th>
             <th>Category</th>
-            <th>Amount (€)</th>
+            <th>Amount ({currencyCode})</th>
             <th>Notes</th>
             <th>Received At</th>
             <th>Actions</th>
@@ -388,7 +390,7 @@ export default function IncomeList() {
               <tr key={e.id}>
                 <td>{e.source}</td>
                 <td>{e.category || "-"}</td>
-                <td>€{(e.amount || 0).toFixed(2)}</td>
+                <td>{formatMoney(e.amount)}</td>
                 <td>{e.notes || "-"}</td>
                 <td>{fmt(e.received_at)}</td>
                 <td>
@@ -427,7 +429,7 @@ export default function IncomeList() {
 
       {/* Totals */}
       <div className="mt-3 alert alert-info">
-        <strong>Total Incomes:</strong> {euro(totalIncomes)}
+        <strong>Total Incomes:</strong> {formatMoney(totalIncomes)}
       </div>
 
       {hasMore && (

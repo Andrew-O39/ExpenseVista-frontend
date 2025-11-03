@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getIncomeById, updateIncome } from '../services/api';
 import { isTokenValid } from '../utils/auth';
+import { useCurrency } from "../hooks/useCurrency";
+import { formatCurrency } from "../utils/currency";
 
 type IncomeForm = {
   amount: number;
@@ -58,6 +60,9 @@ export default function EditIncome() {
   const [error, setError] = useState<string | null>(null);
 
   const token = localStorage.getItem('access_token');
+
+  // NEW: use current currency symbol for the label
+  const { symbol } = useCurrency();
 
   useEffect(() => {
     // auth guard
@@ -159,7 +164,7 @@ export default function EditIncome() {
 
       <form onSubmit={handleSubmit} style={{ maxWidth: 500 }}>
         <div className="mb-3">
-          <label className="form-label">Amount (€)</label>
+          <label className="form-label">Amount ({symbol})</label>
           <input
             type="number"
             name="amount"
