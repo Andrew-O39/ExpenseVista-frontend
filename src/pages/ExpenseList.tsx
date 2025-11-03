@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { getExpenses, deleteExpense } from "../services/api";
 import { isTokenValid } from "../utils/auth";
-import { useCurrency } from "../hooks/useCurrency";
 import { getCurrencyCode, formatMoney } from "../utils/currency";
 
 type Expense = {
@@ -40,9 +39,6 @@ export default function ExpenseList() {
   const [endDate, setEndDate]     = useState(""); // yyyy-mm-dd
 
   const token = (typeof window !== "undefined" ? localStorage.getItem("access_token") : null) as string | null;
-
-  // NEW: access current currency (symbol, code if you need it later)
-  useCurrency();
 
   // ---------- Helpers ----------
   const toISO = (d: Date) => d.toISOString();

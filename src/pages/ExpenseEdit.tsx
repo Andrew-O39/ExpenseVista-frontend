@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getExpenseById, updateExpense } from '../services/api';
 import { isTokenValid } from '../utils/auth';
-import { useCurrency } from "../hooks/useCurrency";
+import { getCurrencyCode } from "../utils/currency";
 
 type ExpenseForm = {
   category: string;
@@ -103,7 +103,7 @@ export default function ExpenseEdit() {
         </div>
 
         <div className="mb-3">
-          <label className="form-label">Amount ({symbol})</label>{/* <-- was (€) */}
+          <label className="form-label">Amount ({getCurrencyCode()})</label> {/* <-- was (€) */}
           <input
             type="number"
             name="amount"

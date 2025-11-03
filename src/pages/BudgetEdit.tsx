@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getBudgetById, updateBudget } from '../services/api';
 import { isTokenValid } from '../utils/auth';
-import { useCurrency } from "../hooks/useCurrency";
+import { getCurrencyCode } from "../utils/currency";
 
 type BudgetForm = {
   category: string;
@@ -14,7 +14,6 @@ type BudgetForm = {
 export default function BudgetEdit() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { symbol } = useCurrency(); // <-- NEW
 
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -108,7 +107,7 @@ export default function BudgetEdit() {
 
         <div className="mb-3">
           <label htmlFor="amount" className="form-label">
-            Amount ({symbol})
+            Amount ({getCurrencyCode()})
           </label>
           <input
             type="number"
