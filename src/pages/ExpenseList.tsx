@@ -428,7 +428,7 @@ export default function ExpenseList() {
 
       {/* Totals & Load more */}
       <div className="mt-3 alert alert-info">
-        <strong>Total Expenses:</strong> {formatCurrency(totalExpenses)}
+        <strong>Total Expenses:</strong> {money(totalExpenses)}
       </div>
 
       {hasMore && (
