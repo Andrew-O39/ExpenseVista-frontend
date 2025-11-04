@@ -1,87 +1,34 @@
 // src/components/WelcomeInsights.tsx
 import { Link } from "react-router-dom";
+import {
+  ResponsiveContainer,
+  BarChart, Bar,
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend,
+} from "recharts";
+import { formatMoney, getCurrencyCode } from "../utils/currency";
 
-type Bar = { label: string; value: number };
 type PairBar = { label: string; a: number; b: number };
-
-function BarRow({
-  label,
-  value,
-  max,
-}: {
-  label: string;
-  value: number;
-  max: number;
-}) {
-  const pct = max > 0 ? Math.round((value / max) * 100) : 0;
-  return (
-    <div className="mb-2">
-      <div className="d-flex justify-content-between small">
-        <span className="text-muted">{label}</span>
-        <span className="text-muted">{value.toLocaleString(undefined, { style: "currency", currency: "EUR", maximumFractionDigits: 0 })}</span>
-      </div>
-      <div className="progress" style={{ height: 8 }}>
-        <div className="progress-bar" style={{ width: `${pct}%` }} />
-      </div>
-    </div>
-  );
-}
-
-function TinyGroupedBars({
-  items,
-  max,
-  aLabel,
-  bLabel,
-}: {
-  items: PairBar[];
-  max: number;
-  aLabel: string;
-  bLabel: string;
-}) {
-  // simple stacked layout: two thin bars per label
-  return (
-    <div>
-      <div className="d-flex gap-3 small text-muted mb-2">
-        <div><span className="badge bg-primary me-1">&nbsp;</span>{aLabel}</div>
-        <div><span className="badge bg-secondary me-1">&nbsp;</span>{bLabel}</div>
-      </div>
-      {items.map((it) => {
-        const aPct = max > 0 ? Math.round((it.a / max) * 100) : 0;
-        const bPct = max > 0 ? Math.round((it.b / max) * 100) : 0;
-        return (
-          <div key={it.label} className="mb-2">
-            <div className="d-flex justify-content-between small">
-              <span className="text-muted">{it.label}</span>
-            </div>
-            <div className="d-flex align-items-center gap-2">
-              <div className="progress flex-fill" style={{ height: 6 }}>
-                <div className="progress-bar bg-primary" style={{ width: `${aPct}%` }} />
-              </div>
-              <div className="progress flex-fill" style={{ height: 6 }}>
-                <div className="progress-bar bg-secondary" style={{ width: `${bPct}%` }} />
-              </div>
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
 
 export default function WelcomeInsights() {
   // --- Demo data (purely illustrative) ---
-  const incomeVsExpense: Bar[] = [
-    { label: "Income (Oct)", value: 3200 },
-    { label: "Expenses (Oct)", value: 2450 },
+  const incomeVsExpense = [
+    { name: "Income (Oct)", value: 3200 },
+    { name: "Expenses (Oct)", value: 2450 },
   ];
-  const maxIE = Math.max(...incomeVsExpense.map((b) => b.value), 1);
 
   const budgetVsActual: PairBar[] = [
     { label: "Groceries", a: 300, b: 260 },  // a = Budget, b = Spent
     { label: "Transport", a: 120, b: 90 },
     { label: "Utilities", a: 200, b: 210 },  // over budget example
   ];
-  const maxBA = Math.max(...budgetVsActual.flatMap((x) => [x.a, x.b]), 1);
+
+  const stacked = budgetVsActual.map((x) => ({
+    name: x.label,
+    Budget: x.a,
+    Spent: x.b,
+  }));
+
+  const currencyCode = getCurrencyCode();
 
   return (
     <div className="row g-3 mt-1">
@@ -90,9 +37,22 @@ export default function WelcomeInsights() {
         <div className="card shadow-sm h-100">
           <div className="card-body">
             <h5 className="card-title mb-3">Income vs. Expenses (preview)</h5>
-            {incomeVsExpense.map((b) => (
-              <BarRow key={b.label} label={b.label} value={b.value} max={maxIE} />
-            ))}
+            <div style={{ height: 220 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={incomeVsExpense} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis tickFormatter={(v) => formatMoney(v)} />
+                  <Tooltip
+                    formatter={(v: any) => formatMoney(Number(v))}
+                    labelFormatter={(l) => String(l)}
+                  />
+                  <Bar dataKey="value" name={`Amount (${currencyCode})`} fill="#3498db" radius={[4,4,0,0]} />
+                  <Legend />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
             <p className="small text-muted mt-3 mb-0">
               Your dashboard shows trends over time, top categories, and your net balance at a glance.
               <br />
@@ -107,12 +67,23 @@ export default function WelcomeInsights() {
         <div className="card shadow-sm h-100">
           <div className="card-body">
             <h5 className="card-title mb-3">Budget vs. Actual (preview)</h5>
-            <TinyGroupedBars
-              items={budgetVsActual}
-              max={maxBA}
-              aLabel="Budget"
-              bLabel="Spent"
-            />
+            <div style={{ height: 220 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={stacked} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis tickFormatter={(v) => formatMoney(v)} />
+                  <Tooltip
+                    formatter={(v: any) => formatMoney(Number(v))}
+                    labelFormatter={(l) => String(l)}
+                  />
+                  <Legend />
+                  <Bar dataKey="Budget" fill="#9b59b6" radius={[4,4,0,0]} />
+                  <Bar dataKey="Spent"  fill="#e74c3c" radius={[4,4,0,0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
             <p className="small text-muted mt-3 mb-0">
               See which categories are under or over budget, and adjust as needed.
               <br />
