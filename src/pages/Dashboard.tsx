@@ -199,6 +199,9 @@ export default function Dashboard() {
   const [overviewSeries, setOverviewSeries] = useState<OverviewPoint[]>([]);
   const [overviewTotals, setOverviewTotals] = useState<{ income: number; expenses: number; net: number } | null>(null);
 
+  // Currency Selector
+  const [currencyModalOpen, setCurrencyModalOpen] = useState(false);
+
   /* =========================
      Session timer
   ========================= */
@@ -473,8 +476,25 @@ export default function Dashboard() {
             <li><button className="dropdown-item" type="button" onClick={() => navigate('/budgets')}>Budget List</button></li>
 
             {/* Revisit Welcome page and select currency */}
-            <li><RevisitWelcomeButton /></li>
-            <li><CurrencySelector /></li>
+            <li>
+              <button
+              className="dropdown-item"
+              type="button"
+              onClick={() => navigate('/welcome')}
+            >
+              Onboarding / Welcome Tips
+           </button>
+           </li>
+
+            <li>
+              <button
+                className="dropdown-item"
+                type="button"
+                onClick={() => setCurrencyModalOpen(true)}
+             >
+                Change currency…
+               </button>
+            </li>
 
             <li><hr className="dropdown-divider" /></li>
             <li><button className="dropdown-item text-danger" type="button" onClick={handleLogout}>Logout</button></li>
@@ -838,6 +858,48 @@ export default function Dashboard() {
             </div>{/* /grouped section */}
           </div>
         </div>
+      )}
+      {currencyModalOpen && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="modal-backdrop fade show"
+            onClick={() => setCurrencyModalOpen(false)}
+          />
+          {/* Modal */}
+          <div
+            className="modal fade show"
+            style={{ display: "block" }}
+            role="dialog"
+            aria-modal="true"
+          >
+            <div className="modal-dialog modal-dialog-centered">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">Select currency & locale</h5>
+                  <button
+                    type="button"
+                    className="btn-close"
+                    aria-label="Close"
+                    onClick={() => setCurrencyModalOpen(false)}
+                  />
+                </div>
+                <div className="modal-body">
+                  <CurrencySelector />
+                </div>
+                <div className="modal-footer">
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => setCurrencyModalOpen(false)}
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
       )}
     </div>
   );
