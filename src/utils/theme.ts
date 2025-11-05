@@ -22,12 +22,12 @@ export function setTheme(t: Theme) {
 
 export function applyTheme(t: Theme) {
   const root = document.documentElement;
-  const systemDark =
-    window.matchMedia &&
-    window.matchMedia("(prefers-color-scheme: dark)").matches;
-
-  const finalTheme = t === "auto" ? (systemDark ? "dark" : "light") : t;
-  root.setAttribute("data-bs-theme", finalTheme);
+  if (t === 'auto') {
+    const dark = window.matchMedia?.('(prefers-color-scheme: dark)').matches;
+    root.setAttribute('data-bs-theme', dark ? 'dark' : 'light');
+  } else {
+    root.setAttribute('data-bs-theme', t);
+  }
 }
 
 /** Init once on app boot */
