@@ -203,7 +203,7 @@ export default function Dashboard() {
   // Currency Selector
   const [currencyModalOpen, setCurrencyModalOpen] = useState(false);
  // Session remaining
-  const [sessionOpen, setSessionOpen] = useState(false);
+  const [sessionModalOpen, setSessionModalOpen] = useState(false);
 
   /* =========================
      Session timer
@@ -493,7 +493,7 @@ export default function Dashboard() {
             <li><button className="dropdown-item" type="button" onClick={() => navigate('/welcome')}>Onboarding / Welcome Tips</button></li>
 
             {/* Timer */}
-            <li><button className="dropdown-item" type="button" onClick={() => setSessionOpen(true)}>Session info…</button></li>
+            <li><button className="dropdown-item" type="button" onClick={() => setSessionModalOpen(true)}>Session info…</button></li>
 
             <li><hr className="dropdown-divider" /></li>
 
