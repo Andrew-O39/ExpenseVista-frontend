@@ -1,4 +1,3 @@
-// src/components/WelcomeInsights.tsx
 import { Link } from "react-router-dom";
 import {
   ResponsiveContainer,

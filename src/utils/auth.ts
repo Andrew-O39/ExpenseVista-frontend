@@ -1,4 +1,3 @@
-
 export function isTokenValid(): boolean {
   const token = localStorage.getItem("access_token");
   const expiryStr = localStorage.getItem("token_expiry");

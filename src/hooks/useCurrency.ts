@@ -1,4 +1,3 @@
-// src/hooks/useCurrency.ts
 import { useSyncExternalStore } from "react";
 import { getCurrency, setCurrencyCode, setLocale } from "../utils/currency";
 

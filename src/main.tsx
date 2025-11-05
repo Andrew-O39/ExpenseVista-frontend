@@ -7,6 +7,10 @@ import { BrowserRouter } from 'react-router-dom';
 
 import App from './App';
 
+// Import and apply theme before rendering anything
+import { initTheme } from './utils/theme';
+initTheme();
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>

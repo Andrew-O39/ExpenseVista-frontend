@@ -14,6 +14,7 @@ import { isTokenValid } from '../utils/auth';
 import BudgetVsExpensesChart from '../components/BudgetVsExpensesChart';
 import CurrencySelector from "../components/CurrencySelector";
 import { formatMoney } from "../utils/currency";
+import ThemeToggle from "../components/ThemeToggle";
 
 /* =========================
    Types
@@ -474,28 +475,23 @@ export default function Dashboard() {
             <li><button className="dropdown-item" type="button" onClick={() => navigate('/expenses')}>Expense List</button></li>
             <li><button className="dropdown-item" type="button" onClick={() => navigate('/budgets')}>Budget List</button></li>
 
-            {/* Revisit Welcome page and select currency */}
-            <li>
-              <button
-              className="dropdown-item"
-              type="button"
-              onClick={() => navigate('/welcome')}
-            >
-              Onboarding / Welcome Tips
-           </button>
-           </li>
+            <li><hr className="dropdown-divider" /></li>
 
-            <li>
-              <button
-                className="dropdown-item"
-                type="button"
-                onClick={() => setCurrencyModalOpen(true)}
-             >
-                Change currency…
-               </button>
-            </li>
+            {/* Preferences section */}
+            <li><span className="dropdown-item-text text-muted">Preferences</span></li>
+
+            {/* Theme Toggle – prevent menu from closing when toggling */}
+            <li className="px-3 py-2" onClick={(e) => e.stopPropagation()}><ThemeToggle /></li>
+
+            {/* Change currency */}
+            <li><button className="dropdown-item" type="button" onClick={() => setCurrencyModalOpen(true)}>Change currency…</button></li>
+
+            {/* Revisit welcome page */}
+            <li><button className="dropdown-item" type="button" onClick={() => navigate('/welcome')}>Onboarding / Welcome Tips</button></li>
 
             <li><hr className="dropdown-divider" /></li>
+
+            {/* Logout */}
             <li><button className="dropdown-item text-danger" type="button" onClick={handleLogout}>Logout</button></li>
           </ul>
         </div>

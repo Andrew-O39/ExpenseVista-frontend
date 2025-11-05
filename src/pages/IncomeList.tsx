@@ -1,4 +1,3 @@
-// src/pages/IncomeList.tsx
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { getIncomes, deleteIncome } from "../services/api";

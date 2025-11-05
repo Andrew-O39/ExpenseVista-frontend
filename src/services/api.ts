@@ -1,4 +1,3 @@
-// src/services/api.ts
 import axios from "axios";
 
 /** Base URL picked from Vite env at build time; falls back to localhost for dev */

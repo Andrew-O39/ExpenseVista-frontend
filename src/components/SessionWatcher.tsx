@@ -1,4 +1,3 @@
-// src/components/SessionWatcher.tsx
 import { useEffect, useMemo, useState } from "react";
 import { isTokenValid } from "../utils/auth";
 

@@ -1,4 +1,3 @@
-// src/pages/CreateBudget.tsx
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { createBudget } from "../services/api";

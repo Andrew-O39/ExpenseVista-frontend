@@ -1,4 +1,3 @@
-// src/utils/currency.ts
 export type CurrencyCode = string; // ISO 4217, e.g., "USD", "EUR", "GHS"
 
 const CURRENCY_KEY = "currency_code";
