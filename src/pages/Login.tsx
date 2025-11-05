@@ -130,7 +130,7 @@ export default function Login() {
   };
 
   return (
-  <div className="login-page d-flex flex-column justify-content-center align-items-center vh-100 bg-light">
+  <div className="login-page d-flex flex-column justify-content-center align-items-center vh-100 bg-body">
     <h2 className="mb-4">Login</h2>
 
       {/* Optional alert if session expired */}
