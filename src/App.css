@@ -55,3 +55,43 @@
   padding: 0.25rem 0.5rem;
   font-size: 0.875rem; /* slightly smaller */
 }
+
+/* --- Custom warm cream theme for light mode --- */
+[data-bs-theme="light"] {
+  --bs-body-bg: #FFF8EE;
+  --bs-body-color: #2C2A26;
+  --bs-card-bg: #FFFFFF;
+  --bs-card-border-color: #E7D5C5;
+  --bs-border-color: #E7D5C5;
+  --bs-link-color: #6C4E2F;
+  --bs-link-hover-color: #523a24;
+  --bs-primary: #6C4E2F;
+  --bs-primary-hover: #523a24;
+  --bs-secondary: #856D57;
+  --bs-success: #4A6E4E;
+  --bs-warning: #B67A23;
+  --bs-info: #6B7A8F;
+  --bs-light: #FFFDF9;
+  --bs-dark: #2C2A26;
+  --bs-btn-bg: var(--bs-primary);
+  --bs-btn-border-color: var(--bs-primary);
+  --bs-btn-hover-bg: var(--bs-primary-hover);
+  --bs-btn-hover-border-color: var(--bs-primary-hover);
+  --bs-btn-color: #fff;
+}
+
+/* Optional: card shadows slightly warmer */
+.card {
+  box-shadow: 0 4px 10px rgba(108, 78, 47, 0.08);
+}
+
+/* Optional: make forms look slightly softer */
+.form-control, .form-select {
+  background-color: #fffdf9;
+  border-color: #e7d5c5;
+}
+
+.form-control:focus, .form-select:focus {
+  border-color: var(--bs-primary);
+  box-shadow: 0 0 0 0.15rem rgba(108, 78, 47, 0.25);
+}
