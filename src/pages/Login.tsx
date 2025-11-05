@@ -4,6 +4,23 @@ import { login, resendVerificationEmail, getCurrentUser } from "../services/api"
 import { isTokenValid } from "../utils/auth";
 import { WELCOME_KEY } from "../constants/onboarding";
 
+// utilities
+function getJwtExpiryMs(jwt: string): number | null {
+  try {
+    const [, payloadB64] = jwt.split(".");
+    const json = JSON.parse(
+      atob(payloadB64.replace(/-/g, "+").replace(/_/g, "/"))
+    );
+    // exp is in seconds since epoch
+    if (json && typeof json.exp === "number") {
+      return json.exp * 1000;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -49,9 +66,11 @@ export default function Login() {
     try {
       const data = await login(username, password);
 
-      // Save token + 30-minute expiry (matches backend)
       localStorage.setItem("access_token", data.access_token);
-      const expiryTime = Date.now() + 30 * 60 * 1000;
+
+      // Prefer JWT exp; fallback to 60 minutes if not present
+      const expMs = getJwtExpiryMs(data.access_token);
+      const expiryTime = expMs ?? (Date.now() + 60 * 60 * 1000);
       localStorage.setItem("token_expiry", String(expiryTime));
 
       // Decide if there was an explicit redirect param in the URL
