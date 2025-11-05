@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Theme, getTheme, setTheme, applyTheme } from "../utils/theme";
+import type { Theme } from "../utils/theme";
+import { getTheme, setTheme, applyTheme } from "../utils/theme";
 
 export default function ThemeToggle() {
   const [theme, setStateTheme] = useState<Theme>("auto");
