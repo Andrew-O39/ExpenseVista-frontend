@@ -1,3 +1,4 @@
+import './App.css';
 import { useEffect } from "react";
 import { Routes, Route, Link, Navigate } from "react-router-dom";
 import { WELCOME_KEY } from "./constants/onboarding";
