@@ -861,41 +861,53 @@ export default function Dashboard() {
         </div>
       )}
       {currencyModalOpen && (
-    <div
-    className="modal fade show"
-    style={{ display: "block", background: "rgba(0,0,0,0.35)" }}
-  >
-    <div className="modal-dialog modal-dialog-centered">
-      <div className="modal-content">
-        <div className="modal-header">
-          <h5 className="modal-title">Select currency & locale</h5>
-          <button
-            type="button"
-            className="btn-close"
-            aria-label="Close"
+        <>
+          {/* Backdrop */}
+          <div
+            className="modal-backdrop fade show"
             onClick={() => setCurrencyModalOpen(false)}
           />
-        </div>
-        <div className="modal-body">
-          <CurrencySelector />
-        </div>
-        <div className="modal-footer">
-          <button
-            type="button"
-            className="btn btn-secondary"
-            onClick={() => setCurrencyModalOpen(false)}
+          {/* Modal */}
+          <div
+            className="modal fade show"
+            style={{ display: "block" }}
+            role="dialog"
+            aria-modal="true"
           >
-            Close
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-)}
-
-{sessionModalOpen && (
+            <div className="modal-dialog modal-dialog-centered">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">Select currency & locale</h5>
+                  <button
+                    type="button"
+                    className="btn-close"
+                    aria-label="Close"
+                    onClick={() => setCurrencyModalOpen(false)}
+                  />
+                </div>
+                <div className="modal-body">
+                  <CurrencySelector />
+                </div>
+                <div className="modal-footer">
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => setCurrencyModalOpen(false)}
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+  {sessionModalOpen && (
   <SessionInfoModal
     open={sessionModalOpen}
     onClose={() => setSessionModalOpen(false)}
   />
 )}
+    </div>
+  );
+}
