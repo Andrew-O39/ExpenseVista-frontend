@@ -4,14 +4,9 @@ import { createBudget } from "../services/api";
 import {
   getCurrencyCode,
   currencyFractionDigits,
-} from "../utils/currency"; // <-- dynamic currency
+} from "../utils/currency";
 
-type Period =
-  | "weekly"
-  | "monthly"
-  | "quarterly"
-  | "half-yearly"
-  | "yearly";
+type Period = "weekly" | "monthly" | "quarterly" | "half-yearly" | "yearly";
 
 function normalizeCategory(cat: string): string {
   return cat.toLowerCase().trim().replace(/\s+/g, " ").normalize();
@@ -32,14 +27,14 @@ export default function CreateBudget() {
   // currency display + numeric step based on currency fraction digits
   const code = getCurrencyCode();
   const fraction = currencyFractionDigits(code);
-  const step = fraction === 0 ? "1" : `0.${"0".repeat(fraction - 1)}1`; // e.g. 0.01, 0.001, or 1 for JPY
+  const step = fraction === 0 ? "1" : `0.${"0".repeat(fraction - 1)}1`; // e.g. 1, 0.01, 0.001
 
   // only allow safe internal return paths and when onboarding=1
   const getReturnPath = () => {
     const qs = new URLSearchParams(location.search);
     const back = qs.get("return") || "";
     const onboarding = qs.get("onboarding") === "1";
-    const internal = back.startsWith("/"); // prevent open redirects
+    const internal = back.startsWith("/");
     return onboarding && internal ? back : "";
   };
 
@@ -80,18 +75,28 @@ export default function CreateBudget() {
   };
 
   return (
-    <div className="d-flex justify-content-center mt-5">
+    <div
+      className="d-flex justify-content-center mt-5"
+      style={{
+        background: "var(--bs-body-bg)",
+        color: "var(--bs-body-color)",
+      }}
+    >
       <form
         onSubmit={handleSubmit}
-        className="p-4 border rounded bg-white shadow"
-        style={{ maxWidth: "400px", width: "100%" }}
+        className="p-4 border rounded shadow"
+        style={{
+          maxWidth: "400px",
+          width: "100%",
+          background: "var(--bs-body-bg)",
+          color: "var(--bs-body-color)",
+          borderColor: "var(--bs-border-color)",
+        }}
       >
         <h3 className="mb-4 text-center">Create Budget</h3>
 
         <div className="mb-3">
-          <label htmlFor="category" className="form-label">
-            Category
-          </label>
+          <label htmlFor="category" className="form-label">Category</label>
           <input
             id="category"
             type="text"
@@ -120,9 +125,7 @@ export default function CreateBudget() {
         </div>
 
         <div className="mb-3">
-          <label htmlFor="period" className="form-label">
-            Period
-          </label>
+          <label htmlFor="period" className="form-label">Period</label>
           <select
             id="period"
             value={period}
@@ -139,9 +142,7 @@ export default function CreateBudget() {
         </div>
 
         <div className="mb-3">
-          <label htmlFor="notes" className="form-label">
-            Notes (optional)
-          </label>
+          <label htmlFor="notes" className="form-label">Notes (optional)</label>
           <textarea
             id="notes"
             value={notes}

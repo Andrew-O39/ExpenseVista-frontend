@@ -59,7 +59,7 @@ export default function CreateExpense() {
         notes: notes.trim() || undefined,
       });
 
-      // Optional: send feedback if we had a suggestion (accepted or overridden)
+      // Optional feedback if suggestion was shown
       try {
         if (suggestInfo.cat) {
           const chosen = normalizeCategory(category);
@@ -67,7 +67,7 @@ export default function CreateExpense() {
           await aiCategoryFeedback(token, textForMapping, chosen);
         }
       } catch {
-        /* feedback shouldn't block UX */
+        /* non-blocking */
       }
 
       setSuccess("Expense created successfully!");
@@ -77,7 +77,6 @@ export default function CreateExpense() {
       setNotes("");
       setSuggestInfo({});
 
-      // Smart post-submit redirect
       const back = getReturnPath();
       setTimeout(() => navigate(back || "/expenses", { replace: true }), 500);
     } catch (err: any) {
@@ -111,12 +110,12 @@ export default function CreateExpense() {
           conf: resp.confidence ?? 0,
           why: resp.rationale ?? undefined,
         });
-        // Optional: immediate “accept” feedback when we auto-fill the suggestion
+        // Immediate acceptance feedback is optional
         try {
           const textForMapping = (description || category || "transaction").toLowerCase();
           await aiCategoryFeedback(token, textForMapping, resp.suggested_category);
         } catch {
-          /* ignore feedback errors */
+          /* ignore */
         }
       } else {
         alert("No suggestion available.");
@@ -130,11 +129,23 @@ export default function CreateExpense() {
   };
 
   return (
-    <div className="d-flex justify-content-center align-items-start mt-5">
+    <div
+      className="d-flex justify-content-center align-items-start mt-5"
+      style={{
+        background: "var(--bs-body-bg)",
+        color: "var(--bs-body-color)",
+      }}
+    >
       <form
         onSubmit={handleSubmit}
-        className="p-4 border rounded bg-white shadow"
-        style={{ maxWidth: "480px", width: "100%" }}
+        className="p-4 border rounded shadow"
+        style={{
+          maxWidth: "480px",
+          width: "100%",
+          background: "var(--bs-body-bg)",
+          color: "var(--bs-body-color)",
+          borderColor: "var(--bs-border-color)",
+        }}
       >
         <h3 className="mb-4 text-center">Create Expense</h3>
 
@@ -192,7 +203,9 @@ export default function CreateExpense() {
               {suggesting ? "Suggesting…" : "Suggest"}
             </button>
           </div>
-          <div className="form-text">Tip: enter a description first, then click “Suggest”.</div>
+          <div className="form-text">
+            Tip: enter a description first, then click “Suggest”.
+          </div>
 
           <AnimatePresence>
             {suggestInfo.cat && (
@@ -202,8 +215,12 @@ export default function CreateExpense() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -6 }}
                 transition={{ duration: 0.25 }}
-                className="alert alert-light border mt-2 py-2 px-3 small d-flex justify-content-between align-items-center"
-                style={{ borderColor: "#dee2e6" }}
+                className="alert border mt-2 py-2 px-3 small d-flex justify-content-between align-items-center"
+                style={{
+                  background: "var(--bs-tertiary-bg)",
+                  borderColor: "var(--bs-border-color)",
+                  color: "var(--bs-body-color)",
+                }}
               >
                 <div>
                   💡 Suggested: <strong>{suggestInfo.cat}</strong>
@@ -220,7 +237,6 @@ export default function CreateExpense() {
                   whileTap={{ scale: 0.95 }}
                   onClick={async () => {
                     setCategory(suggestInfo.cat!);
-                    // Optional: explicit acceptance feedback
                     try {
                       const token = localStorage.getItem("access_token");
                       if (token && suggestInfo.cat) {

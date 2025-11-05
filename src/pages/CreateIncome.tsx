@@ -109,16 +109,28 @@ export default function CreateIncome() {
   };
 
   return (
-    <div className="d-flex justify-content-center align-items-start mt-5">
+    <div
+      className="d-flex justify-content-center align-items-start mt-5"
+      style={{
+        background: "var(--bs-body-bg)",
+        color: "var(--bs-body-color)",
+      }}
+    >
       <form
         onSubmit={handleSubmit}
-        className="p-4 border rounded bg-white shadow"
-        style={{ maxWidth: 420, width: "100%" }}
+        className="p-4 border rounded shadow"
+        style={{
+          maxWidth: 420,
+          width: "100%",
+          background: "var(--bs-body-bg)",
+          color: "var(--bs-body-color)",
+          borderColor: "var(--bs-border-color)",
+        }}
       >
         <h3 className="mb-4 text-center">Record Income</h3>
 
         <div className="mb-3">
-          <label className="form-label">Amount ({currencyCode})</label> {/* <-- was (€) */}
+          <label className="form-label">Amount ({currencyCode})</label>
           <input
             type="number"
             min="0.01"

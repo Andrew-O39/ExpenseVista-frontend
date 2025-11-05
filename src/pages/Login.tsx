@@ -4,7 +4,6 @@ import { login, resendVerificationEmail, getCurrentUser } from "../services/api"
 import { isTokenValid } from "../utils/auth";
 import { WELCOME_KEY } from "../constants/onboarding";
 
-
 export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -43,42 +42,43 @@ export default function Login() {
   }, [verifiedFlag]);
 
   const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setError("");
-  setInfo("");
+    e.preventDefault();
+    setError("");
+    setInfo("");
 
-  try {
-    const data = await login(username, password);
+    try {
+      const data = await login(username, password);
 
-    // Save token + 30-minute expiry (matches backend)
-    localStorage.setItem("access_token", data.access_token);
-    const expiryTime = Date.now() + 30 * 60 * 1000;
-    localStorage.setItem("token_expiry", String(expiryTime));
+      // Save token + 30-minute expiry (matches backend)
+      localStorage.setItem("access_token", data.access_token);
+      const expiryTime = Date.now() + 30 * 60 * 1000;
+      localStorage.setItem("token_expiry", String(expiryTime));
 
-    // Decide if there was an explicit redirect param in the URL
-    const hasExplicitRedirect =
-      new URLSearchParams(location.search).has("redirect");
+      // Decide if there was an explicit redirect param in the URL
+      const hasExplicitRedirect =
+        new URLSearchParams(location.search).has("redirect");
 
-    // Fetch the user so we can scope the “seen welcome” flag per-user
-    await getCurrentUser(data.access_token);
+      // Fetch the user so we can scope the “seen welcome” flag per-user
+      await getCurrentUser(data.access_token);
 
-    // If no explicit redirect and user hasn't seen welcome yet -> go to /welcome
-    if (!hasExplicitRedirect && !localStorage.getItem(WELCOME_KEY)) {
-     localStorage.setItem(WELCOME_KEY, "1");
-     navigate("/welcome", { replace: true });
-     return;
-   }
+      // If no explicit redirect and user hasn't seen welcome yet -> go to /welcome
+      if (!hasExplicitRedirect && !localStorage.getItem(WELCOME_KEY)) {
+        localStorage.setItem(WELCOME_KEY, "1");
+        navigate("/welcome", { replace: true });
+        return;
+      }
 
-    // Otherwise honor redirect (or default to /dashboard)
-    navigate(redirect, { replace: true });
-  } catch (err: any) {
-    const msg =
-      err?.response?.data?.detail ||
-      err?.message ||
-      "Invalid username or password";
-    setError(String(msg));
-  }
-};
+      // Otherwise honor redirect (or default to /dashboard)
+      navigate(redirect, { replace: true });
+    } catch (err: any) {
+      const msg =
+        err?.response?.data?.detail ||
+        err?.message ||
+        "Invalid username or password";
+      setError(String(msg));
+    }
+  };
+
   const handleResendVerification = async () => {
     setResendLoading(true);
     setError("");
@@ -107,7 +107,7 @@ export default function Login() {
     if (!looksUnverified) return null;
 
     return (
-      <div className="alert alert-warning mt-3">
+      <div className="alert alert-warning mt-3 w-100" style={{ maxWidth: 360 }}>
         <div className="d-flex justify-content-between align-items-center">
           <div>
             <strong>Email not verified.</strong> Some features are limited until
@@ -130,7 +130,13 @@ export default function Login() {
   };
 
   return (
-    <div className="d-flex flex-column justify-content-center align-items-center vh-100 bg-light">
+    <div
+      className="d-flex flex-column justify-content-center align-items-center vh-100"
+      style={{
+        background: "var(--bs-body-bg)",
+        color: "var(--bs-body-color)",
+      }}
+    >
       <h2 className="mb-4">Login</h2>
 
       {/* Optional alert if session expired */}
@@ -149,8 +155,13 @@ export default function Login() {
 
       <form
         onSubmit={handleSubmit}
-        className="bg-white p-4 rounded shadow"
-        style={{ width: 300, position: "relative" }}
+        className="p-4 rounded shadow border"
+        style={{
+          width: 320,
+          background: "var(--bs-body-bg)",
+          color: "var(--bs-body-color)",
+          borderColor: "var(--bs-border-color)",
+        }}
       >
         <div className="mb-3">
           <input
