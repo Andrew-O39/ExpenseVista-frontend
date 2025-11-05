@@ -186,6 +186,46 @@ html[data-bs-theme="dark"] .progress {
 }
 
 /* =========================================================
+   🏠 Hero Welcome Section Styling
+   ========================================================= */
+.hero-welcome {
+  background: linear-gradient(120deg, #FFF6E8, #FFEED6);
+  color: var(--bs-body-color);
+}
+
+html[data-bs-theme="dark"] .hero-welcome {
+  background: linear-gradient(120deg, #2B2927, #1F1E1C);
+  color: var(--bs-body-color);
+}
+
+/* Hero buttons adopt brand palette */
+.hero-welcome .btn-primary {
+  background-color: var(--bs-primary);
+  border-color: var(--bs-primary);
+  color: #fff;
+}
+
+.hero-welcome .btn-primary:hover {
+  background-color: #523A24;
+  border-color: #523A24;
+}
+
+.hero-welcome .btn-outline-primary {
+  border-color: var(--bs-primary);
+  color: var(--bs-primary);
+}
+
+.hero-welcome .btn-outline-primary:hover {
+  background-color: var(--bs-primary);
+  color: #fff;
+}
+
+/* Subtle shadow to lift hero section on bright background */
+.hero-welcome {
+  box-shadow: 0 4px 20px rgba(108, 78, 47, 0.08);
+}
+
+/* =========================================================
    Legacy demo styles from the original template (keep/remove)
    ========================================================= */
 #root {
@@ -225,4 +265,23 @@ html[data-bs-theme="dark"] .progress {
 
 .read-the-docs {
   color: #888;
+}
+
+/* Login page links: use brand link colors instead of Bootstrap blue */
+.login-page a,
+.login-page a:visited {
+  color: var(--bs-link-color);
+  text-decoration: underline;       /* optional: keeps linky feel */
+}
+
+.login-page a:hover,
+.login-page a:focus {
+  color: var(--bs-link-hover-color);
+  text-decoration-color: currentColor;
+}
+
+.login-page a:focus-visible {
+  outline: 2px solid var(--bs-primary);
+  outline-offset: 2px;
+  border-radius: 4px;
 }

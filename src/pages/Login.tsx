@@ -130,14 +130,8 @@ export default function Login() {
   };
 
   return (
-    <div
-      className="d-flex flex-column justify-content-center align-items-center vh-100"
-      style={{
-        background: "var(--bs-body-bg)",
-        color: "var(--bs-body-color)",
-      }}
-    >
-      <h2 className="mb-4">Login</h2>
+  <div className="login-page d-flex flex-column justify-content-center align-items-center vh-100 bg-light">
+    <h2 className="mb-4">Login</h2>
 
       {/* Optional alert if session expired */}
       {msg === "session_expired" && (
