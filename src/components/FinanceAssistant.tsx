@@ -9,7 +9,7 @@ type ChatMsg = {
 };
 
 export default function FinanceAssistant() {
-  const [open, setOpen] = useState(true); // set to false in production if you prefer
+  const [open, setOpen] = useState(false);   // Start closed by default; user can open manually
   const [busy, setBusy] = useState(false);
   const [input, setInput] = useState("");
   const [msgs, setMsgs] = useState<ChatMsg[]>([
