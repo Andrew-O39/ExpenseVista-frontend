@@ -91,78 +91,95 @@ export default function FinanceAssistant() {
     }
   }
 
-  // Floating styles
-  const wrap: React.CSSProperties = {
-    position: "fixed",
-    right: 16,
-    bottom: 16,
-    zIndex: 3000,
-    pointerEvents: "auto",
-  };
+  // Floating styles (unchanged)
+const wrap: React.CSSProperties = {
+  position: "fixed",
+  right: 16,
+  bottom: 16,
+  zIndex: 3000,
+  pointerEvents: "auto",
+};
 
-  // Make the panel a flex column so the input stays visible at the bottom
-  const panel: React.CSSProperties = {
-    width: 360,
-    maxWidth: "92vw",
-    height: "70vh",         // give it a real height so the body can flex
-    maxHeight: "85vh",
-    display: "flex",
-    flexDirection: "column",
-    boxShadow: "0 6px 24px rgba(0,0,0,0.15)",
-    borderRadius: 12,
-    overflow: "hidden",
-    background: "#fff",
-  };
+// Panel uses theme variables
+const panel: React.CSSProperties = {
+  width: 360,
+  maxWidth: "92vw",
+  height: "70vh",
+  maxHeight: "85vh",
+  display: "flex",
+  flexDirection: "column",
+  boxShadow: "0 6px 24px rgba(0,0,0,0.15)",
+  borderRadius: 12,
+  overflow: "hidden",
+  background: "var(--bs-body-bg)",
+  color: "var(--bs-body-color)",
+  border: "1px solid var(--bs-border-color)",
+};
 
-  const header: React.CSSProperties = {
-    background: "#0d6efd",
-    color: "#fff",
-    padding: "10px 12px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    flex: "0 0 auto",
-  };
+// Header uses primary color & contrast
+const header: React.CSSProperties = {
+  background: "var(--bs-primary)",
+  color: "var(--bs-primary-contrast)",
+  padding: "10px 12px",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  flex: "0 0 auto",
+};
 
-  const quickBar: React.CSSProperties = {
-    background: "#f8f9fa",
-    borderBottom: "1px solid #e9ecef",
-    padding: "8px 10px",
-    display: "flex",
-    flexWrap: "wrap",
-    gap: 8,
-    flex: "0 0 auto",
-  };
+// Quick prompts bar uses subtle surface + border
+const quickBar: React.CSSProperties = {
+  background: "var(--bs-tertiary-bg)",
+  borderBottom: "1px solid var(--bs-border-color)",
+  padding: "8px 10px",
+  display: "flex",
+  flexWrap: "wrap",
+  gap: 8,
+  flex: "0 0 auto",
+};
 
-  // Let body flex and scroll. Avoid fixed pixel height.
-  const body: React.CSSProperties = {
-    background: "#fff",
-    overflowY: "auto",
-    padding: 12,
-    flex: "1 1 auto",
-  };
+// Body uses body surface/colors
+const body: React.CSSProperties = {
+  background: "var(--bs-body-bg)",
+  color: "var(--bs-body-color)",
+  overflowY: "auto",
+  padding: 12,
+  flex: "1 1 auto",
+};
 
-  const inputBar: React.CSSProperties = {
-    background: "#f8f9fa",
-    padding: 10,
-    display: "flex",
-    gap: 8,
-    alignItems: "center",
-    borderTop: "1px solid #e9ecef",
-    flex: "0 0 auto",
-  };
+// Input bar matches quickBar surface
+const inputBar: React.CSSProperties = {
+  background: "var(--bs-tertiary-bg)",
+  padding: 10,
+  display: "flex",
+  gap: 8,
+  alignItems: "center",
+  borderTop: "1px solid var(--bs-border-color)",
+  flex: "0 0 auto",
+};
 
-  const bubble = (role: ChatMsg["role"]): React.CSSProperties => ({
+// Chat bubbles adapt by role, all variable-driven
+const bubble = (role: ChatMsg["role"]): React.CSSProperties => {
+  // Subtle backgrounds that flip with theme
+  const bg =
+    role === "user"
+      ? "var(--bs-primary-bg-subtle)"
+      : role === "system"
+      ? "var(--bs-secondary-bg)"
+      : "var(--bs-tertiary-bg)";
+
+  return {
     whiteSpace: "pre-wrap",
     alignSelf: role === "user" ? "flex-end" : "flex-start",
-    background:
-      role === "user" ? "#e7f1ff" : role === "system" ? "#f8f9fa" : "#f1f3f5",
-    border: "1px solid #e3e6ea",
+    background: bg,
+    color: "var(--bs-body-color)",
+    border: "1px solid var(--bs-border-color)",
     borderRadius: 10,
     padding: "8px 10px",
     maxWidth: "85%",
     marginBottom: 8,
-  });
+  };
+};
 
   return (
     <div style={wrap}>
@@ -179,12 +196,12 @@ export default function FinanceAssistant() {
           <div style={header}>
             <strong>Finance Assistant</strong>
             <button
-              type="button"
-              className="btn btn-sm btn-light"
-              onClick={() => setOpen(false)}
-              disabled={busy}
-            >
-              Close
+             type="button"
+             className="btn btn-sm btn-outline-light"
+             onClick={() => setOpen(false)}
+             disabled={busy}
+           >
+             Close
             </button>
           </div>
 
