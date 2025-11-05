@@ -1,8 +1,22 @@
+/* =========================================================
+   Global App Styles + Theming (Light/Dark + Polish)
+   ========================================================= */
+
+/* Always let the page inherit the theme body background */
+html, body {
+  height: 100%;
+}
+body {
+  background-color: var(--bs-body-bg);
+  color: var(--bs-body-color);
+}
+
 /* -----------------------------
    🌞 Custom Cream Light Theme
    ----------------------------- */
 html[data-bs-theme="light"] {
-  --bs-body-bg: #FFF8EE;        /* warm cream */
+  --bs-body-bg: #FFF8EE;               /* warm cream base */
+  --bs-body-bg-accent: #FFF4E2;        /* soft gradient end */
   --bs-body-color: #2C2A26;
 
   --bs-card-bg: #FFFFFF;
@@ -10,42 +24,145 @@ html[data-bs-theme="light"] {
   --bs-border-color: #E7D5C5;
 
   --bs-link-color: #6C4E2F;
-  --bs-link-hover-color: #523a24;
+  --bs-link-hover-color: #523A24;
 
-  --bs-primary: #6C4E2F;
+  --bs-primary: #6C4E2F;               /* cocoa */
   --bs-secondary: #856D57;
   --bs-success: #4A6E4E;
   --bs-warning: #B67A23;
   --bs-info: #6B7A8F;
   --bs-light: #FFFDF9;
   --bs-dark: #2C2A26;
-
-  /* Helpful for buttons using CSS vars */
-  --bs-btn-bg: var(--bs-primary);
-  --bs-btn-border-color: var(--bs-primary);
-  --bs-btn-hover-bg: #523a24; /* slightly darker than primary */
-  --bs-btn-hover-border-color: #523a24;
-  --bs-btn-color: #fff;
 }
 
-/* Optional: soften forms in light theme */
+/* Subtle paper-like background & component polish (light) */
+html[data-bs-theme="light"] body {
+  background: linear-gradient(180deg, var(--bs-body-bg) 0%, var(--bs-body-bg-accent) 100%);
+}
+
+html[data-bs-theme="light"] .card {
+  background-color: var(--bs-card-bg);
+  border: 1px solid var(--bs-card-border-color);
+  box-shadow: 0 3px 8px rgba(108, 78, 47, 0.08);
+}
+
+html[data-bs-theme="light"] .navbar,
+html[data-bs-theme="light"] .dropdown-menu {
+  background-color: #fffaf3 !important;
+  border: 1px solid var(--bs-card-border-color);
+}
+
+html[data-bs-theme="light"] .btn-primary {
+  background-color: var(--bs-primary);
+  border-color: var(--bs-primary);
+}
+html[data-bs-theme="light"] .btn-primary:hover {
+  background-color: #523A24;
+  border-color: #523A24;
+}
+
+html[data-bs-theme="light"] .btn-outline-secondary {
+  color: #5d4a3a;
+  border-color: #ccb8a6;
+}
+html[data-bs-theme="light"] .btn-outline-secondary:hover {
+  background-color: #f5ede6;
+  border-color: #bfa994;
+}
+
+/* Forms (light) */
 html[data-bs-theme="light"] .form-control,
-html[data-bs-theme="light"] .form-select {
+html[data-bs-theme="light"] .form-select,
+html[data-bs-theme="light"] .form-control:disabled,
+html[data-bs-theme="light"] .form-select:disabled {
   background-color: #fffdf9;
-  border-color: #e7d5c5;
+  border-color: var(--bs-card-border-color);
+  color: var(--bs-body-color);
 }
 html[data-bs-theme="light"] .form-control:focus,
 html[data-bs-theme="light"] .form-select:focus {
   border-color: var(--bs-primary);
-  box-shadow: 0 0 0 0.15rem rgba(108, 78, 47, 0.25);
+  box-shadow: 0 0 0 0.2rem rgba(108, 78, 47, 0.25);
 }
 
-/* Page background follows theme variable */
-body {
-  background-color: var(--bs-body-bg);
+/* Progress (light) */
+html[data-bs-theme="light"] .progress {
+  background-color: #f2e9e0;
 }
 
-/* --- Theme toggle fine-tuning inside dropdown --- */
+/* Optional gradient header/nav (light) */
+html[data-bs-theme="light"] .navbar {
+  background: linear-gradient(90deg, #FFF6E8, #FFEED6);
+}
+
+/* -----------------------------
+   🌙 Custom Elegant Dark Theme
+   ----------------------------- */
+html[data-bs-theme="dark"] {
+  --bs-body-bg: #1C1B1A;
+  --bs-body-color: #E8E6E3;
+
+  --bs-card-bg: #242322;
+  --bs-card-border-color: #373633;
+  --bs-border-color: #373633;
+
+  --bs-link-color: #CBA47A;           /* warm bronze */
+  --bs-link-hover-color: #E3BE8D;
+
+  --bs-primary: #A6896C;              /* bronze accent */
+  --bs-secondary: #88827A;
+  --bs-success: #4E7A5E;
+  --bs-info: #6FA5B8;
+  --bs-warning: #C9973D;
+  --bs-danger: #C05B4D;
+}
+
+/* Cards (dark) */
+html[data-bs-theme="dark"] .card {
+  background-color: var(--bs-card-bg);
+  border-color: var(--bs-card-border-color);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+
+/* Dropdown & navbar (dark) */
+html[data-bs-theme="dark"] .dropdown-menu,
+html[data-bs-theme="dark"] .navbar {
+  background-color: #222120 !important;
+  border: 1px solid var(--bs-card-border-color);
+}
+
+/* Forms (dark) */
+html[data-bs-theme="dark"] .form-control,
+html[data-bs-theme="dark"] .form-select,
+html[data-bs-theme="dark"] .form-control:disabled,
+html[data-bs-theme="dark"] .form-select:disabled {
+  background-color: #2C2B2A;
+  border-color: #474643;
+  color: var(--bs-body-color);
+}
+html[data-bs-theme="dark"] .form-control::placeholder {
+  color: #b9b6b1;
+  opacity: 1;
+}
+html[data-bs-theme="dark"] .form-control:focus,
+html[data-bs-theme="dark"] .form-select:focus {
+  border-color: var(--bs-primary);
+  box-shadow: 0 0 0 0.2rem rgba(166, 137, 108, 0.3);
+}
+
+/* Optional gradient header/nav (dark) */
+html[data-bs-theme="dark"] .navbar {
+  background: linear-gradient(90deg, #2B2927, #1F1E1C);
+}
+
+/* Progress (dark) */
+html[data-bs-theme="dark"] .progress {
+  background-color: #2b2a28;
+}
+
+/* -----------------------------
+   Theme toggle in dropdown
+   ----------------------------- */
 .dropdown-menu .theme-toggle {
   display: flex;
   align-items: center;
@@ -56,17 +173,21 @@ body {
 .dropdown-menu .theme-toggle button {
   flex: 1;
   padding: 0.25rem 0.5rem;
-  font-size: 0.875rem; /* slightly smaller */
-}
-
-/* Optional: card shadows slightly warmer */
-.card {
-  box-shadow: 0 4px 10px rgba(108, 78, 47, 0.08);
+  font-size: 0.875rem;
 }
 
 /* -----------------------------
-   Old app demo styles (keep if used)
+   Optional: Chart/Tooltip polish
    ----------------------------- */
+.recharts-default-tooltip {
+  border: 1px solid var(--bs-border-color) !important;
+  background: var(--bs-card-bg) !important;
+  color: var(--bs-body-color) !important;
+}
+
+/* =========================================================
+   Legacy demo styles from the original template (keep/remove)
+   ========================================================= */
 #root {
   max-width: 1280px;
   margin: 0 auto;
@@ -98,4 +219,10 @@ body {
   }
 }
 
-.read-the-docs { color: #888; }
+.card {
+  padding: 2em; /* keep existing padding unless your components add their own */
+}
+
+.read-the-docs {
+  color: #888;
+}
