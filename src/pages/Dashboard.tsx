@@ -16,7 +16,7 @@ import CurrencySelector from "../components/CurrencySelector";
 import { formatMoney } from "../utils/currency";
 import ThemeToggle from "../components/ThemeToggle";
 import SessionInfoModal from "../components/SessionInfoModal";
-import type { CurrentPeriod, GroupBy } from '../types/period';
+import type { CurrentPeriod } from '../types/period';
 
 
 /* =========================
