@@ -1,4 +1,5 @@
 import axios from "axios";
+import type { CurrentPeriod, GroupBy } from '../types/period';
 
 /** Base URL picked from Vite env at build time; falls back to localhost for dev */
 export const API_BASE_URL =
@@ -79,7 +80,7 @@ export async function getCurrentUser(token: string) {
 
 export async function getSummary(
   token: string,
-  period: "weekly" | "monthly" | "yearly",
+  period: CurrentPeriod,
   category?: string
 ) {
   try {
@@ -194,7 +195,7 @@ export async function createBudget(
 export async function getBudgets(
   token: string,
   opts: {
-    period?: "weekly" | "monthly" | "quarterly" | "half-yearly" | "yearly";
+    period?: CurrentPeriod;
     category?: string;
     search?: string;
     startDate?: string;
@@ -340,9 +341,9 @@ export async function deleteIncome(token: string, id: number) {
 export async function getOverview(
   token: string,
   params: {
-    period?: "weekly" | "monthly" | "yearly";
+    period?: CurrentPeriod;
     category?: string;
-    group_by?: "weekly" | "monthly" | "quarterly" | "half-yearly";
+    group_by?: GroupBy;
   } = {}
 ) {
   try {

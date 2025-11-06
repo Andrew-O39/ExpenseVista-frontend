@@ -9,7 +9,7 @@ import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import VerifyEmail from "./pages/VerifyEmail";
-import WelcomePage from "./pages/Welcome"; // <-- your real onboarding/verification page
+import WelcomePage from "./pages/Welcome"; //  Onboarding/verification page
 
 import CreateExpense from "./pages/CreateExpense";
 import CreateBudget from "./pages/CreateBudget";
@@ -66,7 +66,8 @@ function Home() {
   return hasSeenWelcome ? <Navigate to="/dashboard" replace /> : <WelcomePage />;
 }
 
-export default function App() {
+// Replace `export default function App() { ... }` with:
+function App() {
   return (
     <>
       {/* Session refresh/countdown handler shown globally */}
@@ -82,20 +83,18 @@ export default function App() {
         <Route path="/forgot-password" element={<Page title="Forgot Password"><ForgotPassword /></Page>} />
         <Route path="/verify-email" element={<Page title="Verify Email"><VerifyEmail /></Page>} />
         <Route path="/reset-password" element={<Page title="Reset Password"><ResetPassword /></Page>} />
-        <Route path="/resend-verification" element={<Page title="Resend Verification"><ResendVerification /></Page> } />
+        <Route path="/resend-verification" element={<Page title="Resend Verification"><ResendVerification /></Page>} />
 
         {/* App */}
         <Route path="/dashboard" element={<Page title="Dashboard"><Dashboard /></Page>} />
 
-        {/* CRUD pages (adjust paths if your app uses /expenses/new etc.) */}
+        {/* CRUD */}
         <Route path="/create-expense" element={<Page title="Create Expense"><CreateExpense /></Page>} />
         <Route path="/create-budget" element={<Page title="Create Budget"><CreateBudget /></Page>} />
         <Route path="/create-income" element={<Page title="Create Income"><CreateIncome /></Page>} />
-
         <Route path="/expenses" element={<Page title="Expenses"><ExpenseList /></Page>} />
         <Route path="/budgets" element={<Page title="Budgets"><BudgetList /></Page>} />
         <Route path="/incomes" element={<Page title="Incomes"><IncomeList /></Page>} />
-
         <Route path="/edit-expense/:id" element={<Page title="Edit Expense"><ExpenseEdit /></Page>} />
         <Route path="/edit-budget/:id" element={<Page title="Edit Budget"><BudgetEdit /></Page>} />
         <Route path="/edit-income/:id" element={<Page title="Edit Income"><EditIncome /></Page>} />
@@ -106,3 +105,6 @@ export default function App() {
     </>
   );
 }
+
+export default App;   // default export
+export { App };      // named export (helps TS resolver in some setups)

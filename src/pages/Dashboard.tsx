@@ -16,6 +16,8 @@ import CurrencySelector from "../components/CurrencySelector";
 import { formatMoney } from "../utils/currency";
 import ThemeToggle from "../components/ThemeToggle";
 import SessionInfoModal from "../components/SessionInfoModal";
+import type { CurrentPeriod, GroupBy } from '../types/period';
+
 
 /* =========================
    Types
@@ -43,7 +45,6 @@ type Overview = {
 
 type OverviewPoint = { label: string; income: number; expenses: number; net: number };
 
-type CurrentPeriod = 'weekly' | 'monthly' | 'quarterly' | 'half-yearly' | 'yearly';
 
 /* =========================
    Helpers
