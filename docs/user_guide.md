@@ -181,11 +181,19 @@ Each message includes your name, category, and remaining balance — sent secure
 ## 🔐 Session Management
 
 For your security:
-- Each session lasts **60 minutes**.  
-- A small notification appears 5 minutes before expiry.  
+- ExpenseVista automatically keeps you securely signed in for up to **60 minutes** at a time.
+- When your session nears expiration, a small notification appears 5 minutes before expiry.  
 - You can log out manually from the **Actions dropdown**.  
+- If you’d like to see exactly how much time is left in your current session:
+	1.	Go to your Dashboard.
+	2.	Click the Actions dropdown (top right).
+	3.	Select “Session info…”
+- A small modal will appear showing time remaining (live countdown in minutes and seconds), exact expiration time (in your local timezone), a subtle progress bar showing how far through your session you are
 
-Your account stays safe, even if left idle.
+Your account stays safe, even if left idle — you can also check your remaining time anytime without being interrupted.
+
+- When your session expires, you’ll be safely logged out and redirected to the login page.
+Your data remains secure, and you can sign in again instantly.
 
 ---
 
