@@ -16,6 +16,16 @@ export const api = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
+/** Attach Authorization: Bearer <token> to every request if present */
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem("access_token");
+  if (token) {
+    config.headers = config.headers ?? {};
+    (config.headers as any).Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 /** Helper to attach Authorization only when a token exists */
 const auth = (token?: string) =>
   token ? { Authorization: `Bearer ${token}` } : {};
@@ -42,17 +52,12 @@ export function extractFastAPIError(err: any): string {
 /* ------------------ AUTH ------------------ */
 
 export async function login(username: string, password: string) {
-  try {
-    const { data } = await api.post(
-      "/login",
-      new URLSearchParams({ username, password }),
-      { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
-    );
-    return data; // { access_token, token_type }
-  } catch (error: any) {
-    // surface server error so the caller can decide what to show
-    throw error;
-  }
+  const { data } = await api.post(
+    "/login",
+    new URLSearchParams({ username, password }),
+    { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
+  );
+  return data; // { access_token, token_type }
 }
 
 export async function registerUser(payload: {
@@ -60,27 +65,15 @@ export async function registerUser(payload: {
   email: string;
   password: string;
 }) {
-  try {
-    const { data } = await api.post("/register", payload, {
-      headers: { "Content-Type": "application/json" },
-    });
-    return data;
-  } catch (err: any) {
-    throw new Error(extractFastAPIError(err));
-  }
+  const { data } = await api.post("/register", payload);
+  return data;
 }
 
 /* ------------------ CURRENT USER ------------------ */
 
 export async function getCurrentUser(token: string) {
-  try {
-    const { data } = await api.get("/me", {
-      headers: auth(token),
-    });
-    return data;
-  } catch (error: any) {
-    throw error;
-  }
+  const { data } = await api.get("/me", { headers: auth(token) });
+  return data;
 }
 
 /* ------------------ SUMMARY ------------------ */
@@ -90,15 +83,11 @@ export async function getSummary(
   period: CurrentPeriod,
   category?: string
 ) {
-  try {
-    const { data } = await api.get("/summary", {
-      headers: auth(token),
-      params: { period, ...(category ? { category } : {}) },
-    });
-    return data;
-  } catch (error: any) {
-    throw error;
-  }
+  const { data } = await api.get("/summary", {
+    headers: auth(token),
+    params: { period, ...(category ? { category } : {}) },
+  });
+  return data;
 }
 
 /* ------------------ EXPENSES ------------------ */
@@ -112,14 +101,10 @@ export async function createExpense(
     notes?: string;
   }
 ) {
-  try {
-    const { data } = await api.post("/expenses", expenseData, {
-      headers: { ...auth(token), "Content-Type": "application/json" },
-    });
-    return data;
-  } catch (error: any) {
-    throw error;
-  }
+  const { data } = await api.post("/expenses/", expenseData, {
+    headers: auth(token),
+  });
+  return data;
 }
 
 export async function getExpenses(
@@ -139,7 +124,7 @@ export async function getExpenses(
   if (startDate) params.start_date = startDate;
   if (endDate) params.end_date = endDate;
 
-  const { data } = await api.get("/expenses", {
+  const { data } = await api.get("/expenses/", {
     headers: auth(token),
     params,
   });
@@ -147,14 +132,10 @@ export async function getExpenses(
 }
 
 export async function getExpenseById(token: string, id: number) {
-  try {
-    const { data } = await api.get(`/expenses/${id}`, {
-      headers: auth(token),
-    });
-    return data;
-  } catch (error: any) {
-    throw error;
-  }
+  const { data } = await api.get(`/expenses/${id}/`, {
+    headers: auth(token),
+  });
+  return data;
 }
 
 export async function updateExpense(
@@ -162,25 +143,17 @@ export async function updateExpense(
   id: number,
   payload: { amount?: number; category?: string; description?: string; notes?: string }
 ) {
-  try {
-    const { data } = await api.put(`/expenses/${id}`, payload, {
-      headers: auth(token),
-    });
-    return data;
-  } catch (error: any) {
-    throw error;
-  }
+  const { data } = await api.put(`/expenses/${id}/`, payload, {
+    headers: auth(token),
+  });
+  return data;
 }
 
 export async function deleteExpense(token: string, id: number) {
-  try {
-    const { data } = await api.delete(`/expenses/${id}`, {
-      headers: auth(token),
-    });
-    return data;
-  } catch (error: any) {
-    throw error;
-  }
+  const { data } = await api.delete(`/expenses/${id}/`, {
+    headers: auth(token),
+  });
+  return data;
 }
 
 /* ------------------ BUDGETS ------------------ */
@@ -189,14 +162,10 @@ export async function createBudget(
   token: string,
   budgetData: { category: string; limit_amount: number; period: string; notes?: string }
 ) {
-  try {
-    const { data } = await api.post("/budgets", budgetData, {
-      headers: { ...auth(token), "Content-Type": "application/json" },
-    });
-    return data;
-  } catch (error: any) {
-    throw error;
-  }
+  const { data } = await api.post("/budgets/", budgetData, {
+    headers: auth(token),
+  });
+  return data;
 }
 
 export async function getBudgets(
@@ -221,7 +190,7 @@ export async function getBudgets(
   if (startDate) params.start_date = startDate;
   if (endDate) params.end_date = endDate;
 
-  const { data } = await api.get("/budgets", {
+  const { data } = await api.get("/budgets/", {
     headers: auth(token),
     params,
   });
@@ -229,14 +198,10 @@ export async function getBudgets(
 }
 
 export async function getBudgetById(token: string, id: number) {
-  try {
-    const { data } = await api.get(`/budgets/${id}`, {
-      headers: auth(token),
-    });
-    return data;
-  } catch (error: any) {
-    throw error;
-  }
+  const { data } = await api.get(`/budgets/${id}/`, {
+    headers: auth(token),
+  });
+  return data;
 }
 
 export async function updateBudget(
@@ -244,25 +209,17 @@ export async function updateBudget(
   id: number,
   payload: { category?: string; limit_amount?: number; period?: string; notes?: string }
 ) {
-  try {
-    const { data } = await api.put(`/budgets/${id}`, payload, {
-      headers: auth(token),
-    });
-    return data;
-  } catch (error: any) {
-    throw error;
-  }
+  const { data } = await api.put(`/budgets/${id}/`, payload, {
+    headers: auth(token),
+  });
+  return data;
 }
 
 export async function deleteBudget(token: string, id: number) {
-  try {
-    const { data } = await api.delete(`/budgets/${id}`, {
-      headers: auth(token),
-    });
-    return data;
-  } catch (error: any) {
-    throw error;
-  }
+  const { data } = await api.delete(`/budgets/${id}/`, {
+    headers: auth(token),
+  });
+  return data;
 }
 
 /* ------------------ INCOMES ------------------ */
@@ -284,7 +241,7 @@ export async function getIncomes(
   if (startDate) params.start_date = startDate;
   if (endDate) params.end_date = endDate;
 
-  const { data } = await api.get("/incomes", {
+  const { data } = await api.get("/incomes/", {
     headers: auth(token),
     params,
   });
@@ -292,29 +249,20 @@ export async function getIncomes(
 }
 
 export async function getIncomeById(token: string, id: number) {
-  try {
-    const { data } = await api.get(`/incomes/${id}`, {
-      headers: auth(token),
-    });
-    return data;
-  } catch (error: any) {
-    throw error;
-  }
+  const { data } = await api.get(`/incomes/${id}/`, {
+    headers: auth(token),
+  });
+  return data;
 }
 
 export async function createIncome(
   token: string,
   payload: { amount: number; category: string; source?: string; notes?: string }
 ) {
-  try {
-    const { data } = await api.post("/incomes", payload, {
-      headers: auth(token),
-    });
-    return data;
-  } catch (err: any) {
-    const msg = extractFastAPIError(err);
-    throw new Error(msg);
-  }
+  const { data } = await api.post("/incomes/", payload, {
+    headers: auth(token),
+  });
+  return data;
 }
 
 export async function updateIncome(
@@ -322,25 +270,17 @@ export async function updateIncome(
   id: number,
   payload: { amount?: number; source?: string; category?: string; notes?: string; received_at?: string }
 ) {
-  try {
-    const { data } = await api.put(`/incomes/${id}`, payload, {
-      headers: auth(token),
-    });
-    return data;
-  } catch (error: any) {
-    throw error;
-  }
+  const { data } = await api.put(`/incomes/${id}/`, payload, {
+    headers: auth(token),
+  });
+  return data;
 }
 
 export async function deleteIncome(token: string, id: number) {
-  try {
-    const { data } = await api.delete(`/incomes/${id}`, {
-      headers: auth(token),
-    });
-    return data;
-  } catch (error: any) {
-    throw error;
-  }
+  const { data } = await api.delete(`/incomes/${id}/`, {
+    headers: auth(token),
+  });
+  return data;
 }
 
 /* ------------------ OVERVIEW (income vs expenses, net balance) ------------------ */
@@ -353,43 +293,31 @@ export async function getOverview(
     group_by?: GroupBy;
   } = {}
 ) {
-  try {
-    const { data } = await api.get("/summary/overview", {
-      headers: auth(token),
-      params,
-    });
-    return data;
-  } catch (error: any) {
-    throw error;
-  }
+  const { data } = await api.get("/summary/overview", {
+    headers: auth(token),
+    params,
+  });
+  return data;
 }
 
 /* ------------------ PASSWORD RESET (Forgot & Reset) ------------------ */
 
 export async function forgotPassword(email: string) {
-  try {
-    const { data } = await api.post(
-      "/forgot-password",
-      { email },
-      { headers: { "Content-Type": "application/json" } }
-    );
-    return data; // { msg: ... }
-  } catch (err: any) {
-    throw new Error(extractFastAPIError(err));
-  }
+  const { data } = await api.post(
+    "/forgot-password",
+    { email },
+    { headers: { "Content-Type": "application/json" } }
+  );
+  return data; // { msg: ... }
 }
 
 export async function resetPassword(token: string, new_password: string) {
-  try {
-    const { data } = await api.post(
-      "/reset-password",
-      { token, new_password },
-      { headers: { "Content-Type": "application/json" } }
-    );
-    return data; // { msg: ... }
-  } catch (err: any) {
-    throw new Error(extractFastAPIError(err));
-  }
+  const { data } = await api.post(
+    "/reset-password",
+    { token, new_password },
+    { headers: { "Content-Type": "application/json" } }
+  );
+  return data; // { msg: ... }
 }
 
 /* ------------------ AI ------------------ */
@@ -398,18 +326,14 @@ export async function aiSuggestCategory(
   token: string,
   payload: { description: string; amount?: number }
 ) {
-  try {
-    const { data } = await api.post("/ai/suggest-category", payload, {
-      headers: auth(token),
-    });
-    return data as {
-      suggested_category: string | null;
-      confidence: number;
-      rationale?: string | null;
-    };
-  } catch (err: any) {
-    throw new Error(extractFastAPIError(err));
-  }
+  const { data } = await api.post("/ai/suggest-category", payload, {
+    headers: auth(token),
+  });
+  return data as {
+    suggested_category: string | null;
+    confidence: number;
+    rationale?: string | null;
+  };
 }
 
 export async function aiCategoryFeedback(
@@ -440,12 +364,8 @@ export async function aiAssistant(token: string, message: string) {
 /* ------------------ EMAIL VERIFICATION ------------------ */
 
 export async function verifyEmail(token: string) {
-  try {
-    const { data } = await api.get("/verify-email", { params: { token } });
-    return data; // { msg }
-  } catch (err: any) {
-    throw new Error(extractFastAPIError(err));
-  }
+  const { data } = await api.get("/verify-email", { params: { token } });
+  return data; // { msg }
 }
 
 /**
@@ -454,23 +374,19 @@ export async function verifyEmail(token: string) {
  * - If logged out, pass an email; backend will send if the account exists (always returns 200).
  */
 export async function resendVerificationEmail(email?: string) {
-  try {
-    const token = localStorage.getItem("access_token");
-    const isAuthed = Boolean(token);
-    const body = isAuthed ? {} : { email };
+  const token = localStorage.getItem("access_token");
+  const isAuthed = Boolean(token);
+  const body = isAuthed ? {} : { email };
 
-    if (!isAuthed && !email) {
-      throw new Error("Please enter your email address.");
-    }
-
-    const { data } = await api.post("/resend-verification", body, {
-      headers: {
-        "Content-Type": "application/json",
-        ...(isAuthed ? { Authorization: `Bearer ${token}` } : {}),
-      },
-    });
-    return data; // { msg }
-  } catch (err: any) {
-    throw new Error(extractFastAPIError(err));
+  if (!isAuthed && !email) {
+    throw new Error("Please enter your email address.");
   }
+
+  const { data } = await api.post("/resend-verification", body, {
+    headers: {
+      "Content-Type": "application/json",
+      ...(isAuthed ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+  return data; // { msg }
 }
