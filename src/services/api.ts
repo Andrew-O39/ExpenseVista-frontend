@@ -1,12 +1,19 @@
 import axios from "axios";
-import type { CurrentPeriod, GroupBy } from '../types/period';
+import type { CurrentPeriod, GroupBy } from "../types/period";
 
-/** Base URL picked from Vite env at build time; falls back to localhost for dev */
+/**
+ * Base API URL logic:
+ * - In development: use VITE_API_BASE_URL or default to http://127.0.0.1:8000
+ * - In production: use /api (served via Nginx/Caddy reverse proxy)
+ */
 export const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
+  import.meta.env.MODE === "development"
+    ? import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000"
+    : import.meta.env.VITE_API_BASE_URL ?? "/api";
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
+  headers: { "Content-Type": "application/json" },
 });
 
 /** Helper to attach Authorization only when a token exists */
