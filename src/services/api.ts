@@ -1,7 +1,7 @@
 import axios from "axios";
 import type { CurrentPeriod, GroupBy } from "../types/period";
 
-// Determine base URL
+// --- base resolution ---
 function resolveBase(): string {
   const mode = import.meta.env.MODE;
   const envBase = import.meta.env.VITE_API_BASE_URL as string | undefined;
@@ -10,28 +10,46 @@ function resolveBase(): string {
   return "/api";
 }
 
-// strip ONE trailing slash from base, strip ALL leading slashes from endpoints
-const BASE = resolveBase().replace(/\/+$/, "");
+// ensure EXACTLY one trailing slash on base
+const RAW_BASE = resolveBase();
+const BASE = RAW_BASE.replace(/\/+$/, "") + "/";
+
+// strip ALL leading slashes on endpoints
 const join = (p: string) => p.replace(/^\/+/, "");
 
 export const API_BASE_URL = BASE;
 
 export const api = axios.create({
-  baseURL: BASE, // e.g. "/api"
+  baseURL: BASE, // e.g. "/api/"
   headers: { "Content-Type": "application/json" },
 });
 
-// Automatically attach token + log requests (optional debug)
+// normalize every request and add token
 api.interceptors.request.use((config) => {
+  // normalize base + url
+  const b = (config.baseURL ?? "").replace(/\/+$/, "") + "/";
+  let u = (config.url ?? "").toString().replace(/^\/+/, ""); // no leading slash
+  config.baseURL = b;
+  config.url = u;
+
+  // attach token
   const token = localStorage.getItem("access_token");
   if (token) {
     config.headers = config.headers ?? {};
     (config.headers as any).Authorization = `Bearer ${token}`;
   }
-  const urlShown = (config.baseURL ?? "") + (config.url ?? "");
-  console.log("[API CALL]", urlShown, config.method?.toUpperCase());
+
+  // accurate preview of the final URL
+  try {
+    const final = new URL(u, b).toString();
+    console.log("[API URL]", final, config.method?.toUpperCase());
+  } catch {
+    console.log("[API URL]", b + u, config.method?.toUpperCase());
+  }
+
   return config;
 });
+
 
 /** Helper to attach Authorization only when a token exists */
 const auth = (token?: string) =>
