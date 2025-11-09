@@ -90,7 +90,7 @@ export async function getSummary(
   period: CurrentPeriod,
   category?: string
 ) {
-  const { data } = await api.get("/summary", {
+  const { data } = await api.get("/summary/", {
     headers: auth(token),
     params: { period, ...(category ? { category } : {}) },
   });
@@ -300,7 +300,7 @@ export async function getOverview(
     group_by?: GroupBy;
   } = {}
 ) {
-  const { data } = await api.get("/summary/overview", {
+  const { data } = await api.get("/summary/overview/", {
     headers: auth(token),
     params,
   });
