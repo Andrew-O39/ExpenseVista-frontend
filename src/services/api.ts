@@ -1,22 +1,29 @@
 import axios from "axios";
 import type { CurrentPeriod, GroupBy } from "../types/period";
 
-/**
- * Base API URL logic:
- * - In development: use VITE_API_BASE_URL or default to http://127.0.0.1:8000
- * - In production: use /api (served via Nginx/Caddy reverse proxy)
- */
-export const API_BASE_URL =
-  import.meta.env.MODE === "development"
-    ? import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000"
-    : import.meta.env.VITE_API_BASE_URL ?? "/api";
+function resolveBase(): string {
+  const mode = import.meta.env.MODE;
+  const envBase = import.meta.env.VITE_API_BASE_URL as string | undefined;
+
+  if (mode === "development") {
+    // allow full URL in dev; fallback to local API
+    return envBase ?? "http://127.0.0.1:8000";
+  }
+
+  // PRODUCTION: only accept a RELATIVE base (starts with "/")
+  // otherwise fallback to "/api" to avoid mixed-content and host issues
+  if (envBase && envBase.startsWith("/")) return envBase;
+  return "/api";
+}
+
+export const API_BASE_URL = resolveBase();
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
   headers: { "Content-Type": "application/json" },
 });
 
-/** Attach Authorization: Bearer <token> to every request if present */
+// Attach Authorization automatically
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("access_token");
   if (token) {
