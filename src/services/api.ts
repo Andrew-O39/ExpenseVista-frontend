@@ -49,7 +49,6 @@ api.interceptors.request.use((config) => {
 /** auth helper */
 const auth = (token?: string) => (token ? { Authorization: `Bearer ${token}` } : {});
 
-
 /* ------------------ AUTH ------------------ */
 
 export async function login(username: string, password: string) {
@@ -76,7 +75,7 @@ export async function getCurrentUser(token: string) {
 /* ------------------ SUMMARY ------------------ */
 
 export async function getSummary(token: string, period: CurrentPeriod, category?: string) {
-  const { data } = await api.get("/summary", {
+  const { data } = await api.get("/summary/", {
     headers: auth(token),
     params: { period, ...(category ? { category } : {}) },
   });
@@ -87,7 +86,7 @@ export async function getOverview(
   token: string,
   params: { period?: CurrentPeriod; category?: string; group_by?: GroupBy } = {}
 ) {
-  const { data } = await api.get("/summary/overview", {
+  const { data } = await api.get("/summary/overview/", {
     headers: auth(token),
     params,
   });
@@ -115,12 +114,12 @@ export async function getExpenses(
   if (startDate) params.start_date = startDate;
   if (endDate) params.end_date = endDate;
 
-  const { data } = await api.get("/expenses", { headers: auth(token), params });
+  const { data } = await api.get("/expenses/", { headers: auth(token), params });
   return data;
 }
 
 export async function getExpenseById(token: string, id: number) {
-  const { data } = await api.get(`/expenses/${id}`, { headers: auth(token) });
+  const { data } = await api.get(`/expenses/${id}/`, { headers: auth(token) });
   return data;
 }
 
@@ -169,12 +168,12 @@ export async function getBudgets(
   if (startDate) params.start_date = startDate;
   if (endDate) params.end_date = endDate;
 
-  const { data } = await api.get("/budgets", { headers: auth(token), params });
+  const { data } = await api.get("/budgets/", { headers: auth(token), params });
   return data;
 }
 
 export async function getBudgetById(token: string, id: number) {
-  const { data } = await api.get(`/budgets/${id}`, { headers: auth(token) });
+  const { data } = await api.get(`/budgets/${id}/`, { headers: auth(token) });
   return data;
 }
 
@@ -213,12 +212,12 @@ export async function getIncomes(
   if (startDate) params.start_date = startDate;
   if (endDate) params.end_date = endDate;
 
-  const { data } = await api.get("/incomes", { headers: auth(token), params });
+  const { data } = await api.get("/incomes/", { headers: auth(token), params });
   return data;
 }
 
 export async function getIncomeById(token: string, id: number) {
-  const { data } = await api.get(`/incomes/${id}`, { headers: auth(token) });
+  const { data } = await api.get(`/incomes/${id}/`, { headers: auth(token) });
   return data;
 }
 
