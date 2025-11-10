@@ -104,7 +104,7 @@ export async function getSummary(
   period: CurrentPeriod,
   category?: string
 ) {
-  const { data } = await api.get(join("summary/"), {
+  const { data } = await api.get(join("summary"), {
     headers: auth(token),
     params: { period, ...(category ? { category } : {}) },
   });
@@ -122,7 +122,7 @@ export async function createExpense(
     notes?: string;
   }
 ) {
-  const { data } = await api.post(join("expenses/"), expenseData, {
+  const { data } = await api.post(join("expenses"), expenseData, {
     headers: auth(token),
   });
   return data;
@@ -145,7 +145,7 @@ export async function getExpenses(
   if (startDate) params.start_date = startDate;
   if (endDate) params.end_date = endDate;
 
-  const { data } = await api.get(join("expenses/"), {
+  const { data } = await api.get(join("expenses"), {
     headers: auth(token),
     params,
   });
@@ -153,7 +153,7 @@ export async function getExpenses(
 }
 
 export async function getExpenseById(token: string, id: number) {
-  const { data } = await api.get(join(`expenses/${id}/`), {
+  const { data } = await api.get(join(`expenses/${id}`), {
     headers: auth(token),
   });
   return data;
@@ -211,7 +211,7 @@ export async function getBudgets(
   if (startDate) params.start_date = startDate;
   if (endDate) params.end_date = endDate;
 
-  const { data } = await api.get(join("budgets/"), {
+  const { data } = await api.get(join("budgets"), {
     headers: auth(token),
     params,
   });
@@ -219,7 +219,7 @@ export async function getBudgets(
 }
 
 export async function getBudgetById(token: string, id: number) {
-  const { data } = await api.get(join(`budgets/${id}/`), {
+  const { data } = await api.get(join(`budgets/${id}`), {
     headers: auth(token),
   });
   return data;
@@ -262,7 +262,7 @@ export async function getIncomes(
   if (startDate) params.start_date = startDate;
   if (endDate) params.end_date = endDate;
 
-  const { data } = await api.get(join("incomes/"), {
+  const { data } = await api.get(join("incomes"), {
     headers: auth(token),
     params,
   });
@@ -270,7 +270,7 @@ export async function getIncomes(
 }
 
 export async function getIncomeById(token: string, id: number) {
-  const { data } = await api.get(join(`incomes/${id}/`), {
+  const { data } = await api.get(join(`incomes/${id}`), {
     headers: auth(token),
   });
   return data;
@@ -310,7 +310,7 @@ export async function getOverview(
   token: string,
   params: { period?: CurrentPeriod; category?: string; group_by?: GroupBy } = {}
 ) {
-  const { data } = await api.get(join("summary/overview/"), {
+  const { data } = await api.get(join("summary/overview"), {
     headers: auth(token),
     params,
   });
