@@ -1,57 +1,46 @@
 import axios from "axios";
 import type { CurrentPeriod, GroupBy } from "../types/period";
 
-/** Decide base URL */
+/** Robust base URL resolver that always returns an ABSOLUTE URL in production */
 function resolveBase(): string {
-  const envBase = import.meta.env.VITE_API_BASE_URL as string | undefined;
-  if (import.meta.env.MODE === "development") {
-    // When running Vite dev server on your laptop, point to the dev API
+  const mode = import.meta.env.MODE;
+  const envBase = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.trim();
+
+  if (mode === "development") {
+    // dev: allow override or default to local FastAPI
     return envBase ?? "http://127.0.0.1:8000";
   }
-  // In Docker/nginx builds, always go through the nginx proxy prefix
-  return envBase ?? "/api"; // <-- no trailing slash
+
+  // production:
+  if (envBase) {
+    if (/^https?:\/\//i.test(envBase)) return envBase;                // already absolute
+    if (envBase.startsWith("/")) return window.location.origin + envBase; // make absolute
+    return window.location.origin + "/" + envBase;                     // make absolute
+  }
+
+  // default: absolute /api on current origin
+  return window.location.origin + "/api";
 }
 
-export const API_BASE_URL = resolveBase();
+// one trailing slash at most
+const BASE = resolveBase().replace(/\/+$/, "");
 
+// axios instance
 export const api = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: BASE,
   headers: { "Content-Type": "application/json" },
 });
 
-/** Attach token + log final URL and status */
+// (optional) tiny logger so you can see the final URL
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("access_token");
-  if (token) {
-    config.headers = config.headers ?? {};
-    (config.headers as any).Authorization = `Bearer ${token}`;
-  }
-  // preview URL
-  try {
-    const final = new URL(config.url!, config.baseURL || location.origin).toString();
-    console.log("[API URL]", final, (config.method || "GET").toUpperCase());
-  } catch {
-    console.log("[API URL]", (config.baseURL || "") + (config.url || ""), (config.method || "GET").toUpperCase());
-  }
+  const urlShown = (config.baseURL ?? "") + (config.url ?? "");
+  // console.log("[API URL]", urlShown, config.method?.toUpperCase());
   return config;
 });
 
-api.interceptors.response.use(
-  (resp) => {
-    const final = new URL(resp.config.url!, resp.config.baseURL || location.origin).toString();
-    console.log("[API OK]", resp.status, final);
-    return resp;
-  },
-  (err) => {
-    const cfg = err?.config || {};
-    const final = new URL((cfg.url || ""), (cfg.baseURL || location.origin)).toString();
-    console.warn("[API ERR]", err?.response?.status ?? "NETWORK", final, err?.response?.data);
-    return Promise.reject(err);
-  }
-);
-
-/** Helper for auth header when you pass token explicitly */
+/** auth helper */
 const auth = (token?: string) => (token ? { Authorization: `Bearer ${token}` } : {});
+
 
 /* ------------------ AUTH ------------------ */
 
