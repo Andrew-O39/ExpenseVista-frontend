@@ -33,8 +33,16 @@ export const api = axios.create({
 
 // (optional) tiny logger so you can see the final URL
 api.interceptors.request.use((config) => {
-  const urlShown = (config.baseURL ?? "") + (config.url ?? "");
-  // console.log("[API URL]", urlShown, config.method?.toUpperCase());
+  // Only log in development (or when VITE_LOG_API=1)
+  const shouldLog =
+    import.meta.env.MODE === "development" ||
+    import.meta.env.VITE_LOG_API === "1";
+
+  if (shouldLog) {
+    const finalUrl = (config.baseURL ?? "") + (config.url ?? "");
+    // eslint-disable-next-line no-console
+    console.debug("[API URL]", finalUrl, (config.method || "GET").toUpperCase());
+  }
   return config;
 });
 
