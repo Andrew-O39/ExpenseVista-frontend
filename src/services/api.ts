@@ -1,7 +1,7 @@
 import axios from "axios";
 import type { CurrentPeriod, GroupBy } from "../types/period";
 
-/** Robust base URL resolver that always returns an ABSOLUTE URL in production */
+/** Resolve an absolute base URL in production, /api by default */
 function resolveBase(): string {
   const mode = import.meta.env.MODE;
   const envBase = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.trim();
@@ -11,34 +11,28 @@ function resolveBase(): string {
     return envBase ?? "http://127.0.0.1:8000";
   }
 
-  // production:
+  // production: make absolute
   if (envBase) {
-    if (/^https?:\/\//i.test(envBase)) return envBase;                // already absolute
-    if (envBase.startsWith("/")) return window.location.origin + envBase; // make absolute
-    return window.location.origin + "/" + envBase;                     // make absolute
+    if (/^https?:\/\//i.test(envBase)) return envBase.replace(/\/+$/, "");
+    if (envBase.startsWith("/")) return (window.location.origin + envBase).replace(/\/+$/, "");
+    return (window.location.origin + "/" + envBase).replace(/\/+$/, "");
   }
 
-  // default: absolute /api on current origin
-  return window.location.origin + "/api";
+  return (window.location.origin + "/api").replace(/\/+$/, "");
 }
 
-// one trailing slash at most
-const BASE = resolveBase().replace(/\/+$/, "");
+const BASE = resolveBase();
 
-// axios instance
+// Axios instance
 export const api = axios.create({
-  baseURL: BASE,
+  baseURL: BASE, // absolute in prod; e.g. https://app.expensevista.com/api
   headers: { "Content-Type": "application/json" },
+  withCredentials: false,
 });
 
-// (optional) tiny logger so you can see the final URL
+// Log final URL in dev
 api.interceptors.request.use((config) => {
-  // Only log in development (or when VITE_LOG_API=1)
-  const shouldLog =
-    import.meta.env.MODE === "development" ||
-    import.meta.env.VITE_LOG_API === "1";
-
-  if (shouldLog) {
+  if (import.meta.env.MODE === "development" || import.meta.env.VITE_LOG_API === "1") {
     const finalUrl = (config.baseURL ?? "") + (config.url ?? "");
     // eslint-disable-next-line no-console
     console.debug("[API URL]", finalUrl, (config.method || "GET").toUpperCase());
@@ -46,7 +40,37 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-/** auth helper */
+// Strict JSON guard: if the server ever returns HTML (index.html), fail loudly
+api.interceptors.response.use(
+  (res) => {
+    // allow 204/empty
+    if (res.status === 204 || res.data == null) return res;
+    const ct = String(res.headers?.["content-type"] || "");
+    if (!ct.includes("application/json")) {
+      // Preview a bit of the body if possible
+      const preview = typeof res.data === "string" ? res.data.slice(0, 200) : "";
+      throw new Error(
+        `Expected JSON from API but got '${ct}'. ` +
+          `Are we hitting the SPA instead of the API? ` +
+          `Check that the URL starts with ${BASE}. Preview: ${preview}`
+      );
+    }
+    return res;
+  },
+  async (err) => {
+    // Try to unwrap FastAPI-style errors
+    const data = err?.response?.data;
+    if (data?.detail) {
+      const detail = Array.isArray(data.detail)
+        ? data.detail.map((d: any) => d?.msg || d?.detail || d?.type).filter(Boolean).join("; ")
+        : data.detail;
+      err.message = detail || err.message;
+    }
+    return Promise.reject(err);
+  }
+);
+
+/** Auth header helper */
 const auth = (token?: string) => (token ? { Authorization: `Bearer ${token}` } : {});
 
 /* ------------------ AUTH ------------------ */
@@ -72,10 +96,10 @@ export async function getCurrentUser(token: string) {
   return data;
 }
 
-/* ------------------ SUMMARY ------------------ */
+/* ------------------ SUMMARY (GET: no trailing slash) ------------------ */
 
 export async function getSummary(token: string, period: CurrentPeriod, category?: string) {
-  const { data } = await api.get("/summary/", {
+  const { data } = await api.get("/summary", {
     headers: auth(token),
     params: { period, ...(category ? { category } : {}) },
   });
@@ -86,7 +110,7 @@ export async function getOverview(
   token: string,
   params: { period?: CurrentPeriod; category?: string; group_by?: GroupBy } = {}
 ) {
-  const { data } = await api.get("/summary/overview/", {
+  const { data } = await api.get("/summary/overview", {
     headers: auth(token),
     params,
   });
@@ -99,7 +123,7 @@ export async function createExpense(
   token: string,
   expenseData: { amount: number; category: string; description?: string; notes?: string }
 ) {
-  const { data } = await api.post("/expenses/", expenseData, { headers: auth(token) });
+  const { data } = await api.post("/expenses", expenseData, { headers: auth(token) });
   return data;
 }
 
@@ -114,12 +138,12 @@ export async function getExpenses(
   if (startDate) params.start_date = startDate;
   if (endDate) params.end_date = endDate;
 
-  const { data } = await api.get("/expenses/", { headers: auth(token), params });
+  const { data } = await api.get("/expenses", { headers: auth(token), params });
   return data;
 }
 
 export async function getExpenseById(token: string, id: number) {
-  const { data } = await api.get(`/expenses/${id}/`, { headers: auth(token) });
+  const { data } = await api.get(`/expenses/${id}`, { headers: auth(token) });
   return data;
 }
 
@@ -128,12 +152,12 @@ export async function updateExpense(
   id: number,
   payload: { amount?: number; category?: string; description?: string; notes?: string }
 ) {
-  const { data } = await api.put(`/expenses/${id}/`, payload, { headers: auth(token) });
+  const { data } = await api.put(`/expenses/${id}`, payload, { headers: auth(token) });
   return data;
 }
 
 export async function deleteExpense(token: string, id: number) {
-  const { data } = await api.delete(`/expenses/${id}/`, { headers: auth(token) });
+  const { data } = await api.delete(`/expenses/${id}`, { headers: auth(token) });
   return data;
 }
 
@@ -143,7 +167,7 @@ export async function createBudget(
   token: string,
   budgetData: { category: string; limit_amount: number; period: string; notes?: string }
 ) {
-  const { data } = await api.post("/budgets/", budgetData, { headers: auth(token) });
+  const { data } = await api.post("/budgets", budgetData, { headers: auth(token) });
   return data;
 }
 
@@ -168,12 +192,12 @@ export async function getBudgets(
   if (startDate) params.start_date = startDate;
   if (endDate) params.end_date = endDate;
 
-  const { data } = await api.get("/budgets/", { headers: auth(token), params });
+  const { data } = await api.get("/budgets", { headers: auth(token), params });
   return data;
 }
 
 export async function getBudgetById(token: string, id: number) {
-  const { data } = await api.get(`/budgets/${id}/`, { headers: auth(token) });
+  const { data } = await api.get(`/budgets/${id}`, { headers: auth(token) });
   return data;
 }
 
@@ -182,12 +206,12 @@ export async function updateBudget(
   id: number,
   payload: { category?: string; limit_amount?: number; period?: string; notes?: string }
 ) {
-  const { data } = await api.put(`/budgets/${id}/`, payload, { headers: auth(token) });
+  const { data } = await api.put(`/budgets/${id}`, payload, { headers: auth(token) });
   return data;
 }
 
 export async function deleteBudget(token: string, id: number) {
-  const { data } = await api.delete(`/budgets/${id}/`, { headers: auth(token) });
+  const { data } = await api.delete(`/budgets/${id}`, { headers: auth(token) });
   return data;
 }
 
@@ -197,7 +221,7 @@ export async function createIncome(
   token: string,
   payload: { amount: number; category: string; source?: string; notes?: string }
 ) {
-  const { data } = await api.post("/incomes/", payload, { headers: auth(token) });
+  const { data } = await api.post("/incomes", payload, { headers: auth(token) });
   return data;
 }
 
@@ -212,12 +236,12 @@ export async function getIncomes(
   if (startDate) params.start_date = startDate;
   if (endDate) params.end_date = endDate;
 
-  const { data } = await api.get("/incomes/", { headers: auth(token), params });
+  const { data } = await api.get("/incomes", { headers: auth(token), params });
   return data;
 }
 
 export async function getIncomeById(token: string, id: number) {
-  const { data } = await api.get(`/incomes/${id}/`, { headers: auth(token) });
+  const { data } = await api.get(`/incomes/${id}`, { headers: auth(token) });
   return data;
 }
 
@@ -226,16 +250,16 @@ export async function updateIncome(
   id: number,
   payload: { amount?: number; source?: string; category?: string; notes?: string; received_at?: string }
 ) {
-  const { data } = await api.put(`/incomes/${id}/`, payload, { headers: auth(token) });
+  const { data } = await api.put(`/incomes/${id}`, payload, { headers: auth(token) });
   return data;
 }
 
 export async function deleteIncome(token: string, id: number) {
-  const { data } = await api.delete(`/incomes/${id}/`, { headers: auth(token) });
+  const { data } = await api.delete(`/incomes/${id}`, { headers: auth(token) });
   return data;
 }
 
-/* ------------------ PASSWORD RESET / EMAIL VERIFICATION ------------------ */
+/* ------------------ PASSWORD RESET / EMAIL ------------------ */
 
 export async function forgotPassword(email: string) {
   const { data } = await api.post("/forgot-password", { email });
