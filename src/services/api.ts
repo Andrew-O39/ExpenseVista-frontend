@@ -1,50 +1,49 @@
 import axios from "axios";
 import type { CurrentPeriod, GroupBy } from "../types/period";
+import axios from "axios";
 
-/** Robust base URL resolver that always returns an ABSOLUTE URL in production */
 function resolveBase(): string {
-  const mode = import.meta.env.MODE;
-  const envBase = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.trim();
-
-  if (mode === "development") {
-    // dev: allow override or default to local FastAPI
-    return envBase ?? "http://127.0.0.1:8000";
+  const envBase = (import.meta.env.VITE_API_BASE_URL ?? "").trim();
+  if (import.meta.env.MODE === "development") {
+    return envBase || "http://127.0.0.1:8000";
   }
-
-  // production:
-  if (envBase) {
-    if (/^https?:\/\//i.test(envBase)) return envBase;                // already absolute
-    if (envBase.startsWith("/")) return window.location.origin + envBase; // make absolute
-    return window.location.origin + "/" + envBase;                     // make absolute
-  }
-
-  // default: absolute /api on current origin
-  return window.location.origin + "/api";
+  // production: make absolute
+  if (/^https?:\/\//i.test(envBase)) return envBase.replace(/\/+$/, "");
+  if (envBase.startsWith("/")) return (window.location.origin + envBase).replace(/\/+$/, "");
+  return (window.location.origin + "/api").replace(/\/+$/, "");
 }
 
-// one trailing slash at most
-const BASE = resolveBase().replace(/\/+$/, "");
+const BASE = resolveBase();
 
-// axios instance
 export const api = axios.create({
-  baseURL: BASE,
+  baseURL: BASE,                 // no trailing slash
   headers: { "Content-Type": "application/json" },
 });
 
-// (optional) tiny logger so you can see the final URL
+// attach Bearer token
 api.interceptors.request.use((config) => {
-  // Only log in development (or when VITE_LOG_API=1)
-  const shouldLog =
-    import.meta.env.MODE === "development" ||
-    import.meta.env.VITE_LOG_API === "1";
-
-  if (shouldLog) {
-    const finalUrl = (config.baseURL ?? "") + (config.url ?? "");
-    // eslint-disable-next-line no-console
-    console.debug("[API URL]", finalUrl, (config.method || "GET").toUpperCase());
+  const token = localStorage.getItem("access_token");
+  if (token) {
+    config.headers = config.headers ?? {};
+    (config.headers as any).Authorization = `Bearer ${token}`;
   }
   return config;
 });
+
+// guard: if we accidentally hit SPA, fail loudly
+api.interceptors.response.use(
+  (res) => {
+    const ct = res.headers?.["content-type"] ?? "";
+    if (typeof res.data === "string" && ct.includes("text/html")) {
+      throw new Error(
+        "Expected JSON but got HTML (likely hit the SPA). " +
+        "Check that requests start with /api and proxy is configured."
+      );
+    }
+    return res;
+  },
+  (err) => Promise.reject(err)
+);
 
 /** auth helper */
 const auth = (token?: string) => (token ? { Authorization: `Bearer ${token}` } : {});
