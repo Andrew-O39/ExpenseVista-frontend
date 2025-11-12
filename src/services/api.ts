@@ -1,6 +1,5 @@
 import axios from "axios";
 import type { CurrentPeriod, GroupBy } from "../types/period";
-import axios from "axios";
 
 function resolveBase(): string {
   const envBase = (import.meta.env.VITE_API_BASE_URL ?? "").trim();
