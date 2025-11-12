@@ -1,7 +1,7 @@
 import axios from "axios";
 import type { CurrentPeriod, GroupBy } from "../types/period";
 
-/** Resolve an absolute base URL in production, /api by default */
+/** Robust base URL resolver that always returns an ABSOLUTE URL in production */
 function resolveBase(): string {
   const mode = import.meta.env.MODE;
   const envBase = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.trim();
@@ -11,28 +11,34 @@ function resolveBase(): string {
     return envBase ?? "http://127.0.0.1:8000";
   }
 
-  // production: make absolute
+  // production:
   if (envBase) {
-    if (/^https?:\/\//i.test(envBase)) return envBase.replace(/\/+$/, "");
-    if (envBase.startsWith("/")) return (window.location.origin + envBase).replace(/\/+$/, "");
-    return (window.location.origin + "/" + envBase).replace(/\/+$/, "");
+    if (/^https?:\/\//i.test(envBase)) return envBase;                // already absolute
+    if (envBase.startsWith("/")) return window.location.origin + envBase; // make absolute
+    return window.location.origin + "/" + envBase;                     // make absolute
   }
 
-  return (window.location.origin + "/api").replace(/\/+$/, "");
+  // default: absolute /api on current origin
+  return window.location.origin + "/api";
 }
 
-const BASE = resolveBase();
+// one trailing slash at most
+const BASE = resolveBase().replace(/\/+$/, "");
 
-// Axios instance
+// axios instance
 export const api = axios.create({
-  baseURL: BASE, // absolute in prod; e.g. https://app.expensevista.com/api
+  baseURL: BASE,
   headers: { "Content-Type": "application/json" },
-  withCredentials: false,
 });
 
-// Log final URL in dev
+// (optional) tiny logger so you can see the final URL
 api.interceptors.request.use((config) => {
-  if (import.meta.env.MODE === "development" || import.meta.env.VITE_LOG_API === "1") {
+  // Only log in development (or when VITE_LOG_API=1)
+  const shouldLog =
+    import.meta.env.MODE === "development" ||
+    import.meta.env.VITE_LOG_API === "1";
+
+  if (shouldLog) {
     const finalUrl = (config.baseURL ?? "") + (config.url ?? "");
     // eslint-disable-next-line no-console
     console.debug("[API URL]", finalUrl, (config.method || "GET").toUpperCase());
@@ -40,38 +46,9 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Strict JSON guard: if the server ever returns HTML (index.html), fail loudly
-api.interceptors.response.use(
-  (res) => {
-    // allow 204/empty
-    if (res.status === 204 || res.data == null) return res;
-    const ct = String(res.headers?.["content-type"] || "");
-    if (!ct.includes("application/json")) {
-      // Preview a bit of the body if possible
-      const preview = typeof res.data === "string" ? res.data.slice(0, 200) : "";
-      throw new Error(
-        `Expected JSON from API but got '${ct}'. ` +
-          `Are we hitting the SPA instead of the API? ` +
-          `Check that the URL starts with ${BASE}. Preview: ${preview}`
-      );
-    }
-    return res;
-  },
-  async (err) => {
-    // Try to unwrap FastAPI-style errors
-    const data = err?.response?.data;
-    if (data?.detail) {
-      const detail = Array.isArray(data.detail)
-        ? data.detail.map((d: any) => d?.msg || d?.detail || d?.type).filter(Boolean).join("; ")
-        : data.detail;
-      err.message = detail || err.message;
-    }
-    return Promise.reject(err);
-  }
-);
-
-/** Auth header helper */
+/** auth helper */
 const auth = (token?: string) => (token ? { Authorization: `Bearer ${token}` } : {});
+
 
 /* ------------------ AUTH ------------------ */
 
@@ -96,7 +73,7 @@ export async function getCurrentUser(token: string) {
   return data;
 }
 
-/* ------------------ SUMMARY (GET: no trailing slash) ------------------ */
+/* ------------------ SUMMARY ------------------ */
 
 export async function getSummary(token: string, period: CurrentPeriod, category?: string) {
   const { data } = await api.get("/summary", {
@@ -259,7 +236,7 @@ export async function deleteIncome(token: string, id: number) {
   return data;
 }
 
-/* ------------------ PASSWORD RESET / EMAIL ------------------ */
+/* ------------------ PASSWORD RESET / EMAIL VERIFICATION ------------------ */
 
 export async function forgotPassword(email: string) {
   const { data } = await api.post("/forgot-password", { email });
