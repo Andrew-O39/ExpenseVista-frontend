@@ -282,15 +282,15 @@ export default function ExpenseList() {
   );
 
   return (
-    <div className="container container-app p-4">
-      {/* Header */}
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        <h2 className="mb-0">
-          Your Expenses{" "}
-          <span className="badge bg-light text-dark ms-2">
-            {expenses.length} items · {money(totalExpenses)}</span>
-        </h2>
-        <div className="d-flex align-items-center gap-2">
+    <div className="container container-app p-4 list-page">
+      <header className="list-page-header">
+        <div>
+          <h1 className="list-page-title mb-0">Expenses</h1>
+          <p className="list-page-subtitle mb-0">
+            {expenses.length} {expenses.length === 1 ? "item" : "items"} · {money(totalExpenses)} total
+          </p>
+        </div>
+        <div className="list-page-actions">
           <select
             className="form-select form-select-sm"
             value={limit}
@@ -305,133 +305,136 @@ export default function ExpenseList() {
             Back to Dashboard
           </button>
         </div>
-      </div>
+      </header>
 
-      {/* Filters */}
-      <div className="row g-2 mb-3">
-        <div className="col-md-5">
-          <div className="input-group">
+      <section className="list-page-filters">
+        <div className="row g-2">
+          <div className="col-md-5">
+            <div className="input-group">
+              <input
+                className="form-control"
+                placeholder="Search by category, description, notes..."
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+              />
+              <button className="btn btn-primary" onClick={handleSearchApply} disabled={loading}>
+                Search
+              </button>
+            </div>
+          </div>
+
+          <div className="col-md-3">
+            <select
+              className="form-select"
+              value={range}
+              onChange={(e) => setRange(e.target.value as QuickRange)}
+            >
+              <option value="all">All time</option>
+              <option value="week">This week</option>
+              <option value="month">This month</option>
+              <option value="quarter">This quarter</option>
+              <option value="half-year">This half-year</option>
+              <option value="custom">Custom range</option>
+            </select>
+          </div>
+
+          <div className="col-md-2">
             <input
+              type="date"
               className="form-control"
-              placeholder="Search by category, description, notes..."
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
+              disabled={range !== "custom"}
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
             />
-            <button className="btn btn-primary" onClick={handleSearchApply} disabled={loading}>
-              Search
+          </div>
+          <div className="col-md-2">
+            <input
+              type="date"
+              className="form-control"
+              disabled={range !== "custom"}
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+            />
+          </div>
+
+          <div className="col-12 col-md-auto">
+            <button
+              className="btn btn-outline-primary w-100"
+              onClick={handleRangeApply}
+              disabled={loading}
+            >
+              Apply Range
             </button>
           </div>
         </div>
+      </section>
 
-        <div className="col-md-3">
-          <select
-            className="form-select"
-            value={range}
-            onChange={(e) => setRange(e.target.value as QuickRange)}
-          >
-            <option value="all">All time</option>
-            <option value="week">This week</option>
-            <option value="month">This month</option>
-            <option value="quarter">This quarter</option>
-            <option value="half-year">This half-year</option>
-            <option value="custom">Custom range</option>
-          </select>
-        </div>
+      {error && <div className="alert alert-danger mb-0">{error}</div>}
 
-        <div className="col-md-2">
-          <input
-            type="date"
-            className="form-control"
-            disabled={range !== "custom"}
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-          />
-        </div>
-        <div className="col-md-2">
-          <input
-            type="date"
-            className="form-control"
-            disabled={range !== "custom"}
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-          />
-        </div>
-
-        <div className="col-12 col-md-auto">
-          <button
-            className="btn btn-outline-primary w-100"
-            onClick={handleRangeApply}
-            disabled={loading}
-          >
-            Apply Range
-          </button>
-        </div>
-      </div>
-
-      {error && <div className="alert alert-danger">{error}</div>}
-
-      {/* Table */}
-      <table className="table table-striped mt-3">
-        <thead>
-          <tr>
-            <th>Category</th>
-            <th>Amount ({currencyCode})</th> {/* was: Amount (€) */}
-            <th>Description</th>
-            <th>Notes</th>
-            <th>Created At</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {expenses.length === 0 ? (
+      <div className="list-page-table-wrap">
+        <table className="table table-striped list-page-table">
+          <thead>
             <tr>
-              <td colSpan={6} className="text-center text-muted py-4">
-                No expenses found.
-              </td>
+              <th>Category</th>
+              <th>Amount ({currencyCode})</th>
+              <th>Description</th>
+              <th>Notes</th>
+              <th>Created At</th>
+              <th>Actions</th>
             </tr>
-          ) : (
-            expenses.map((e) => (
-              <tr key={e.id}>
-                <td>{e.category}</td>
-                <td>{money(e.amount)}</td>
-                <td>{e.description || "-"}</td>
-                <td>{e.notes || "-"}</td>
-                <td>{fmt(e.created_at)}</td>
-                <td>
-                  <div className="dropdown">
-                    <button className="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
-                      Actions
-                    </button>
-                    <ul className="dropdown-menu">
-                      <li>
-                        <button className="dropdown-item" onClick={() => navigate(`/edit-expense/${e.id}`)}>
-                          Edit
-                        </button>
-                      </li>
-                      <li>
-                        <button className="dropdown-item text-danger" onClick={() => handleDelete(e.id)}>
-                          Delete
-                        </button>
-                      </li>
-                    </ul>
-                  </div>
+          </thead>
+          <tbody>
+            {expenses.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="text-center text-muted py-4">
+                  No expenses found.
                 </td>
               </tr>
-            ))
-          )}
-        </tbody>
-      </table>
-
-      {/* Totals & Load more */}
-      <div className="mt-3 alert alert-info">
-        <strong>Total Expenses:</strong> {money(totalExpenses)}
+            ) : (
+              expenses.map((e) => (
+                <tr key={e.id}>
+                  <td>{e.category}</td>
+                  <td>{money(e.amount)}</td>
+                  <td>{e.description || "-"}</td>
+                  <td>{e.notes || "-"}</td>
+                  <td>{fmt(e.created_at)}</td>
+                  <td>
+                    <div className="dropdown">
+                      <button className="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                        Actions
+                      </button>
+                      <ul className="dropdown-menu">
+                        <li>
+                          <button className="dropdown-item" onClick={() => navigate(`/edit-expense/${e.id}`)}>
+                            Edit
+                          </button>
+                        </li>
+                        <li>
+                          <button className="dropdown-item text-danger" onClick={() => handleDelete(e.id)}>
+                            Delete
+                          </button>
+                        </li>
+                      </ul>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
       </div>
 
-      {hasMore && (
-        <button className="btn btn-primary mt-3" disabled={loading || !hasMore} onClick={loadMore}>
-          {loading ? "Loading..." : "Load More"}
-        </button>
-      )}
+      <div className="list-page-summary-strip">
+        <strong>Total expenses (this view):</strong> {money(totalExpenses)}
+      </div>
+
+      <div className="list-page-footer">
+        {hasMore && (
+          <button className="btn btn-primary" disabled={loading || !hasMore} onClick={loadMore}>
+            {loading ? "Loading..." : "Load More"}
+          </button>
+        )}
+      </div>
     </div>
   );
 }

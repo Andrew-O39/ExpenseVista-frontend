@@ -188,176 +188,184 @@ export default function BudgetList() {
   );
 
   return (
-    <div className="container container-app p-4">
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        <h2 className="mb-0">
-          Your Budgets{' '}
-          <span className="badge bg-light text-dark ms-2">
-            {budgets.length} items · {money(totalBudgetLimit)}
-          </span>
-        </h2>
+    <div className="container container-app p-4 list-page">
+      <header className="list-page-header">
+        <div>
+          <h1 className="list-page-title mb-0">Budgets</h1>
+          <p className="list-page-subtitle mb-0">
+            {budgets.length} {budgets.length === 1 ? "item" : "items"} · {money(totalBudgetLimit)} total limit
+          </p>
+        </div>
         <button
           className="btn btn-secondary btn-sm"
-          onClick={() => navigate('/dashboard')}
+          onClick={() => navigate("/dashboard")}
         >
           Back to Dashboard
         </button>
+      </header>
+
+      <section className="list-page-filters">
+        <div className="row g-2">
+          <div className="col-md-5">
+            <div className="input-group">
+              <input
+                className="form-control"
+                placeholder="Search by category or notes..."
+                value={searchInput}
+                onChange={e => setSearchInput(e.target.value)}
+              />
+              <button className="btn btn-primary" onClick={handleSearchApply}>
+                Search
+              </button>
+            </div>
+          </div>
+
+          <div className="col-md-2">
+            <select
+              name="period"
+              className="form-select"
+              value={period}
+              onChange={e =>
+                setPeriod(
+                  e.target.value as PeriodFilter
+                )
+              }
+            >
+              <option value="all">All periods</option>
+              <option value="weekly">Weekly</option>
+              <option value="monthly">Monthly</option>
+              <option value="quarterly">Quarterly</option>
+              <option value="half-yearly">Half-yearly</option>
+              <option value="yearly">Yearly</option>
+            </select>
+          </div>
+
+          <div className="col-md-3">
+            <select
+              className="form-select"
+              value={range}
+              onChange={e => setRange(e.target.value as QuickRange)}
+            >
+              <option value="all">All time</option>
+              <option value="week">This week</option>
+              <option value="month">This month</option>
+              <option value="quarter">This quarter</option>
+              <option value="half-year">This half-year</option>
+              <option value="custom">Custom range</option>
+            </select>
+          </div>
+
+          <div className="col-md-1">
+            <input
+              type="date"
+              className="form-control"
+              disabled={range !== 'custom'}
+              value={startDate}
+              onChange={e => setStartDate(e.target.value)}
+            />
+          </div>
+          <div className="col-md-1">
+            <input
+              type="date"
+              className="form-control"
+              disabled={range !== 'custom'}
+              value={endDate}
+              onChange={e => setEndDate(e.target.value)}
+            />
+          </div>
+
+          {range === 'custom' && (
+            <div className="col-12 col-md-auto">
+              <button
+                className="btn btn-outline-primary w-100"
+                onClick={handleRangeApply}
+              >
+                Apply Range
+              </button>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {error && <div className="alert alert-danger mb-0">{error}</div>}
+
+      <div className="list-page-table-wrap">
+        <table className="table table-striped list-page-table">
+          <thead>
+            <tr>
+              <th>Category</th>
+              <th>Period</th>
+              <th>Limit ({currencyCode})</th>
+              <th>Notes</th>
+              <th>Created At</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {budgets.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="text-center text-muted py-4">
+                  No budgets found.
+                </td>
+              </tr>
+            ) : (
+            budgets.map(b => (
+              <tr key={b.id}>
+                <td>{b.category}</td>
+                <td>{b.period}</td>
+                <td>{money(b.limit_amount)}</td>
+                <td>{b.notes || '-'}</td>
+                <td>{fmt(b.created_at)}</td>
+                <td>
+                  <div className="dropdown">
+                    <button
+                      className="btn btn-sm btn-outline-secondary dropdown-toggle"
+                      data-bs-toggle="dropdown"
+                    >
+                      Actions
+                    </button>
+                    <ul className="dropdown-menu">
+                      <li>
+                        <button
+                          className="dropdown-item"
+                          onClick={() => navigate(`/edit-budget/${b.id}`)}
+                        >
+                          Edit
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          className="dropdown-item text-danger"
+                          onClick={() => handleDelete(b.id)}
+                        >
+                          Delete
+                        </button>
+                      </li>
+                    </ul>
+                  </div>
+                </td>
+              </tr>
+            )))
+            }
+          </tbody>
+        </table>
       </div>
 
-      {/* Filters */}
-      <div className="row g-2 mb-3">
-        {/* Search */}
-        <div className="col-md-5">
-          <div className="input-group">
-            <input
-              className="form-control"
-              placeholder="Search by category or notes..."
-              value={searchInput}
-              onChange={e => setSearchInput(e.target.value)}
-            />
-            <button className="btn btn-primary" onClick={handleSearchApply}>
-              Search
-            </button>
-          </div>
-        </div>
+      <div className="list-page-summary-strip">
+        <strong>Total budgeted (this view):</strong> {money(totalBudgetLimit)}
+      </div>
 
-        {/* Period (server-side field) */}
-        <div className="col-md-2">
-          <select
-            name="period"
-            className="form-select"
-            value={period}
-            onChange={e =>
-              setPeriod(
-                e.target.value as PeriodFilter
-              )
-            }
+      <div className="list-page-footer">
+        {hasMore && (
+          <button
+            className="btn btn-primary"
+            disabled={loading}
+            onClick={loadMore}
           >
-            <option value="all">All periods</option>
-            <option value="weekly">Weekly</option>
-            <option value="monthly">Monthly</option>
-            <option value="quarterly">Quarterly</option>
-            <option value="half-yearly">Half-yearly</option>
-            <option value="yearly">Yearly</option>
-          </select>
-        </div>
-
-        {/* Quick date range (created_at filtering) */}
-        <div className="col-md-3">
-          <select
-            className="form-select"
-            value={range}
-            onChange={e => setRange(e.target.value as QuickRange)}
-          >
-            <option value="all">All time</option>
-            <option value="week">This week</option>
-            <option value="month">This month</option>
-            <option value="quarter">This quarter</option>
-            <option value="half-year">This half-year</option>
-            <option value="custom">Custom range</option>
-          </select>
-        </div>
-
-        {/* Custom range pickers */}
-        <div className="col-md-1">
-          <input
-            type="date"
-            className="form-control"
-            disabled={range !== 'custom'}
-            value={startDate}
-            onChange={e => setStartDate(e.target.value)}
-          />
-        </div>
-        <div className="col-md-1">
-          <input
-            type="date"
-            className="form-control"
-            disabled={range !== 'custom'}
-            value={endDate}
-            onChange={e => setEndDate(e.target.value)}
-          />
-        </div>
-
-        {range === 'custom' && (
-          <div className="col-12 col-md-auto">
-            <button
-              className="btn btn-outline-primary w-100"
-              onClick={handleRangeApply}
-            >
-              Apply Range
-            </button>
-          </div>
+            {loading ? 'Loading...' : 'Load More'}
+          </button>
         )}
       </div>
-
-      {error && <div className="alert alert-danger">{error}</div>}
-
-      <table className="table table-striped mt-3">
-        <thead>
-          <tr>
-            <th>Category</th>
-            <th>Period</th>
-            <th>Limit ({currencyCode})</th>
-            <th>Notes</th>
-            <th>Created At</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {budgets.map(b => (
-            <tr key={b.id}>
-              <td>{b.category}</td>
-              <td>{b.period}</td>
-              <td>{money(b.limit_amount)}</td>
-              <td>{b.notes || '-'}</td>
-              <td>{fmt(b.created_at)}</td>
-              <td>
-                <div className="dropdown">
-                  <button
-                    className="btn btn-sm btn-outline-secondary dropdown-toggle"
-                    data-bs-toggle="dropdown"
-                  >
-                    Actions
-                  </button>
-                  <ul className="dropdown-menu">
-                    <li>
-                      <button
-                        className="dropdown-item"
-                        onClick={() => navigate(`/edit-budget/${b.id}`)}
-                      >
-                        Edit
-                      </button>
-                    </li>
-                    <li>
-                      <button
-                        className="dropdown-item text-danger"
-                        onClick={() => handleDelete(b.id)}
-                      >
-                        Delete
-                      </button>
-                    </li>
-                  </ul>
-                </div>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-
-      {/* Totals row */}
-      <div className="mt-3 alert alert-info">
-        <strong>Total Budgeted:</strong> {money(totalBudgetLimit)}
-      </div>
-
-      {hasMore && (
-        <button
-          className="btn btn-primary mt-3"
-          disabled={loading}
-          onClick={loadMore}
-        >
-          {loading ? 'Loading...' : 'Load More'}
-        </button>
-      )}
     </div>
   );
 }
