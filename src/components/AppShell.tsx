@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import { getCurrentUser } from "../services/api";
 import { isTokenValid } from "../utils/auth";
 import CurrencySelector from "./CurrencySelector";
@@ -12,7 +12,6 @@ import SessionInfoModal from "./SessionInfoModal";
  */
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
-  const location = useLocation();
   const [username, setUsername] = useState<string | null>(null);
   const [currencyModalOpen, setCurrencyModalOpen] = useState(false);
   const [sessionModalOpen, setSessionModalOpen] = useState(false);
@@ -48,20 +47,57 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const navLink = (to: string, label: string) => {
-    const isActive = location.pathname === to || (to !== "/dashboard" && location.pathname.startsWith(to));
-    return (
-      <Link
-        className={`app-shell-nav-link ${isActive ? "active" : ""}`}
-        to={to}
-      >
-        {label}
-      </Link>
-    );
-  };
+  const sidebarLink = (to: string, label: string, end: boolean = true) => (
+    <NavLink
+      to={to}
+      end={end}
+      className={({ isActive }) =>
+        `app-shell-sidebar-link ${isActive ? "active" : ""}`
+      }
+    >
+      {label}
+    </NavLink>
+  );
 
   return (
     <div className="app-shell">
+      <aside className="app-shell-sidebar">
+        <nav className="app-shell-sidebar-nav" aria-label="Main navigation">
+          <div className="app-shell-sidebar-section">
+            <div className="app-shell-sidebar-label">Overview</div>
+            <div className="app-shell-sidebar-links">
+              {sidebarLink("/dashboard", "Dashboard")}
+            </div>
+          </div>
+          <div className="app-shell-sidebar-section">
+            <div className="app-shell-sidebar-label">Create</div>
+            <div className="app-shell-sidebar-links">
+              {sidebarLink("/create-income", "Record Income")}
+              {sidebarLink("/create-expense", "Add Expense")}
+              {sidebarLink("/create-budget", "Create Budget")}
+            </div>
+          </div>
+          <div className="app-shell-sidebar-section">
+            <div className="app-shell-sidebar-label">Lists</div>
+            <div className="app-shell-sidebar-links">
+              {sidebarLink("/incomes", "Income List")}
+              {sidebarLink("/expenses", "Expense List")}
+              {sidebarLink("/budgets", "Budget List")}
+            </div>
+          </div>
+        </nav>
+        <div className="app-shell-sidebar-footer">
+          <button
+            type="button"
+            className="app-shell-sidebar-logout"
+            onClick={handleLogout}
+          >
+            Logout
+          </button>
+        </div>
+      </aside>
+
+      <div className="app-shell-body">
       <header className="app-shell-header">
         <div className="app-shell-container">
           <div className="app-shell-brand">
@@ -69,12 +105,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               ExpenseVista
             </Link>
           </div>
-          <nav className="app-shell-nav">
-            {navLink("/dashboard", "Dashboard")}
-            {navLink("/expenses", "Expenses")}
-            {navLink("/incomes", "Incomes")}
-            {navLink("/budgets", "Budgets")}
-          </nav>
           <div className="app-shell-actions">
             <div className="dropdown">
               <button
@@ -100,61 +130,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                     <li><hr className="dropdown-divider" /></li>
                   </>
                 )}
-                <li>
-                  <button
-                    className="dropdown-item"
-                    type="button"
-                    onClick={() => navigate("/create-income")}
-                  >
-                    Record Income
-                  </button>
-                </li>
-                <li>
-                  <button
-                    className="dropdown-item"
-                    type="button"
-                    onClick={() => navigate("/create-expense")}
-                  >
-                    Add Expense
-                  </button>
-                </li>
-                <li>
-                  <button
-                    className="dropdown-item"
-                    type="button"
-                    onClick={() => navigate("/create-budget")}
-                  >
-                    Create Budget
-                  </button>
-                </li>
-                <li>
-                  <button
-                    className="dropdown-item"
-                    type="button"
-                    onClick={() => navigate("/incomes")}
-                  >
-                    Income List
-                  </button>
-                </li>
-                <li>
-                  <button
-                    className="dropdown-item"
-                    type="button"
-                    onClick={() => navigate("/expenses")}
-                  >
-                    Expense List
-                  </button>
-                </li>
-                <li>
-                  <button
-                    className="dropdown-item"
-                    type="button"
-                    onClick={() => navigate("/budgets")}
-                  >
-                    Budget List
-                  </button>
-                </li>
-                <li><hr className="dropdown-divider" /></li>
                 <li><span className="dropdown-item-text text-muted">Preferences</span></li>
                 <li className="px-3 py-2" onClick={(e) => e.stopPropagation()}>
                   <ThemeToggle />
@@ -186,16 +161,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                     Session info…
                   </button>
                 </li>
-                <li><hr className="dropdown-divider" /></li>
-                <li>
-                  <button
-                    className="dropdown-item text-danger"
-                    type="button"
-                    onClick={handleLogout}
-                  >
-                    Logout
-                  </button>
-                </li>
               </ul>
             </div>
           </div>
@@ -204,6 +169,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       <main className="app-shell-main">
         {children}
       </main>
+      </div>
 
       {/* Currency modal */}
       {currencyModalOpen && (
