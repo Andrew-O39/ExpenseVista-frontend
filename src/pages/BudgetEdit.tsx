@@ -85,10 +85,10 @@ export default function BudgetEdit() {
     }
   };
 
-  if (loading) return <div className="container p-4">Loading...</div>;
+  if (loading) return <div className="container container-app p-4">Loading...</div>;
 
   return (
-    <div className="container p-4">
+    <div className="container container-app p-4">
       <h2>Edit Budget</h2>
       {error && <div className="alert alert-danger">{error}</div>}
 

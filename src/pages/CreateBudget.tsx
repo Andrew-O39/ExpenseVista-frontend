@@ -76,7 +76,7 @@ export default function CreateBudget() {
 
   return (
     <div
-      className="d-flex justify-content-center mt-5"
+      className="container container-app d-flex justify-content-center pt-5 pb-4 px-4"
       style={{
         background: "var(--bs-body-bg)",
         color: "var(--bs-body-color)",

@@ -82,10 +82,10 @@ export default function ExpenseEdit() {
     }
   };
 
-  if (loading) return <div className="container p-4">Loading expense...</div>;
+  if (loading) return <div className="container container-app p-4">Loading expense...</div>;
 
   return (
-    <div className="container p-4">
+    <div className="container container-app p-4">
       <h2>Edit Expense</h2>
       {error && <div className="alert alert-danger">{error}</div>}
 

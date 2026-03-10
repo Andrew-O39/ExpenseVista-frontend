@@ -24,6 +24,7 @@ import EditIncome from "./pages/EditIncome";
 import SessionWatcher from "./components/SessionWatcher";
 import FinanceAssistant from "./components/FinanceAssistant";
 import ResendVerification from "./components/ResendVerification";
+import AppShell from "./components/AppShell";
 
 import { isTokenValid } from "./utils/auth";
 
@@ -77,7 +78,7 @@ function App() {
         {/* Public */}
         <Route path="*" element={<Navigate to="/" replace />} />
         <Route path="/" element={<Page title="Welcome"><Home /></Page>} />
-        <Route path="/welcome" element={<Page title="Welcome"><WelcomePage /></Page>} />
+        <Route path="/welcome" element={<Page title="Welcome"><AppShell><WelcomePage /></AppShell></Page>} />
         <Route path="/login" element={<Page title="Login"><Login /></Page>} />
         <Route path="/register" element={<Page title="Register"><Register /></Page>} />
         <Route path="/forgot-password" element={<Page title="Forgot Password"><ForgotPassword /></Page>} />
@@ -86,18 +87,18 @@ function App() {
         <Route path="/resend-verification" element={<Page title="Resend Verification"><ResendVerification /></Page>} />
 
         {/* App */}
-        <Route path="/dashboard" element={<Page title="Dashboard"><Dashboard /></Page>} />
+        <Route path="/dashboard" element={<Page title="Dashboard"><AppShell><Dashboard /></AppShell></Page>} />
 
         {/* CRUD */}
-        <Route path="/create-expense" element={<Page title="Create Expense"><CreateExpense /></Page>} />
-        <Route path="/create-budget" element={<Page title="Create Budget"><CreateBudget /></Page>} />
-        <Route path="/create-income" element={<Page title="Create Income"><CreateIncome /></Page>} />
-        <Route path="/expenses" element={<Page title="Expenses"><ExpenseList /></Page>} />
-        <Route path="/budgets" element={<Page title="Budgets"><BudgetList /></Page>} />
-        <Route path="/incomes" element={<Page title="Incomes"><IncomeList /></Page>} />
-        <Route path="/edit-expense/:id" element={<Page title="Edit Expense"><ExpenseEdit /></Page>} />
-        <Route path="/edit-budget/:id" element={<Page title="Edit Budget"><BudgetEdit /></Page>} />
-        <Route path="/edit-income/:id" element={<Page title="Edit Income"><EditIncome /></Page>} />
+        <Route path="/create-expense" element={<Page title="Create Expense"><AppShell><CreateExpense /></AppShell></Page>} />
+        <Route path="/create-budget" element={<Page title="Create Budget"><AppShell><CreateBudget /></AppShell></Page>} />
+        <Route path="/create-income" element={<Page title="Create Income"><AppShell><CreateIncome /></AppShell></Page>} />
+        <Route path="/expenses" element={<Page title="Expenses"><AppShell><ExpenseList /></AppShell></Page>} />
+        <Route path="/budgets" element={<Page title="Budgets"><AppShell><BudgetList /></AppShell></Page>} />
+        <Route path="/incomes" element={<Page title="Incomes"><AppShell><IncomeList /></AppShell></Page>} />
+        <Route path="/edit-expense/:id" element={<Page title="Edit Expense"><AppShell><ExpenseEdit /></AppShell></Page>} />
+        <Route path="/edit-budget/:id" element={<Page title="Edit Budget"><AppShell><BudgetEdit /></AppShell></Page>} />
+        <Route path="/edit-income/:id" element={<Page title="Edit Income"><AppShell><EditIncome /></AppShell></Page>} />
       </Routes>
 
       {/* Floating assistant shows on every page */}

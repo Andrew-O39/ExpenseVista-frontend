@@ -110,7 +110,7 @@ export default function CreateIncome() {
 
   return (
     <div
-      className="d-flex justify-content-center align-items-start mt-5"
+      className="container container-app d-flex justify-content-center align-items-start pt-5 pb-4 px-4"
       style={{
         background: "var(--bs-body-bg)",
         color: "var(--bs-body-color)",

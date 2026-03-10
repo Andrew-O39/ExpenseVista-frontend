@@ -36,7 +36,7 @@ export default function Welcome() {
 
   if (loading) {
     return (
-      <div className="container py-5">
+      <div className="container container-app py-5">
         <div className="text-center text-muted">Loading…</div>
       </div>
     );
@@ -45,7 +45,7 @@ export default function Welcome() {
   const isLoggedIn = !!user;
 
   return (
-    <div className="container py-5">
+    <div className="container container-app py-5">
       <div className="mb-4">
         <h1 className="h3 mb-2">
           Welcome{isLoggedIn && user?.username ? `, ${user.username}` : ""}! 👋

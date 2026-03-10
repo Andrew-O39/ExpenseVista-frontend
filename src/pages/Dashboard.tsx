@@ -8,14 +8,11 @@ import {
 } from 'recharts';
 import { useNavigate } from 'react-router-dom';
 
-import { getSummary, getBudgets, getCurrentUser, getOverview } from '../services/api';
+import { getSummary, getBudgets, getOverview } from '../services/api';
 import { isTokenValid } from '../utils/auth';
 
 import BudgetVsExpensesChart from '../components/BudgetVsExpensesChart';
-import CurrencySelector from "../components/CurrencySelector";
 import { formatMoney } from "../utils/currency";
-import ThemeToggle from "../components/ThemeToggle";
-import SessionInfoModal from "../components/SessionInfoModal";
 import type { CurrentPeriod } from '../types/period';
 
 
@@ -173,9 +170,6 @@ const spanFromLabel = (label: string) => {
 export default function Dashboard() {
   const navigate = useNavigate();
 
-  // Auth/session
-  const [username, setUsername] = useState<string>('User');
-
   // UI state
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -201,44 +195,6 @@ export default function Dashboard() {
   const [overviewSeries, setOverviewSeries] = useState<OverviewPoint[]>([]);
   const [overviewTotals, setOverviewTotals] = useState<{ income: number; expenses: number; net: number } | null>(null);
 
-  // Currency Selector
-  const [currencyModalOpen, setCurrencyModalOpen] = useState(false);
- // Session remaining
-  const [sessionModalOpen, setSessionModalOpen] = useState(false);
-
-  /* =========================
-     Session timer
-  ========================= */
-  const handleLogout = async () => {
-  try {
-    // If you have user in state:
-    // localStorage.removeItem(`has_seen_welcome:${user.id}`);
-    // localStorage.removeItem(`onboarding_checklist_dismissed:${user.id}`);
-
-    // If you DON'T have user in state, fetch it quickly using the token:
-    const token = localStorage.getItem("access_token");
-    if (token) {
-      try {
-        const me = await getCurrentUser(token);
-        if (me?.id) {
-          localStorage.removeItem(`has_seen_welcome:${me.id}`);
-          localStorage.removeItem(`onboarding_checklist_dismissed:${me.id}`);
-        }
-      } catch {
-        // ignore—token might be expired; continue clearing generic keys
-      }
-    }
-  } finally {
-    // Always clear auth + generic fallbacks
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("token_expiry");
-    localStorage.removeItem("has_seen_welcome"); // legacy global key (if it was ever set)
-    localStorage.removeItem("onboarding_checklist_dismissed"); // legacy global key
-
-    navigate("/login", { replace: true });
-  }
-};
-
   /* =========================
      Data fetch for TOP section
      (depends on period/category; grouped chart is independent)
@@ -260,11 +216,6 @@ export default function Dashboard() {
       setError(null);
 
       try {
-        // Current user
-        const user = await getCurrentUser(t);
-        if (!mounted) return;
-        setUsername(user.username ?? 'User');
-
         // Spending summary
         const rawSummary = await getSummary(t, appliedPeriod as any, appliedCategory || undefined);
         if (!mounted) return;
@@ -459,51 +410,12 @@ export default function Dashboard() {
   /* =========================
      Render
   ========================= */
-  if (loading) return <div className="container mt-5">Loading your dashboard...</div>;
-  if (error)   return <div className="container mt-5 text-danger">{String(error)}</div>;
+  if (loading) return <div className="container container-app mt-5">Loading your dashboard...</div>;
+  if (error)   return <div className="container container-app mt-5 text-danger">{String(error)}</div>;
 
   return (
-    <div className="container p-4">
-      {/* Navbar and actions */}
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h1>Welcome to your Dashboard, {username}!</h1>
-        <div className="dropdown">
-          <button className="btn btn-secondary dropdown-toggle" type="button" id="dashboardActionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-            Actions
-          </button>
-          <ul className="dropdown-menu dropdown-menu-end" aria-labelledby="dashboardActionsDropdown">
-            <li><button className="dropdown-item" type="button" onClick={() => navigate('/create-income')}>Record Income</button></li>
-            <li><button className="dropdown-item" type="button" onClick={() => navigate('/create-expense')}>Add Expense</button></li>
-            <li><button className="dropdown-item" type="button" onClick={() => navigate('/create-budget')}>Create Budget</button></li>
-            <li><button className="dropdown-item" type="button" onClick={() => navigate('/incomes')}>Income List</button></li>
-            <li><button className="dropdown-item" type="button" onClick={() => navigate('/expenses')}>Expense List</button></li>
-            <li><button className="dropdown-item" type="button" onClick={() => navigate('/budgets')}>Budget List</button></li>
-
-            <li><hr className="dropdown-divider" /></li>
-
-            {/* Preferences section */}
-            <li><span className="dropdown-item-text text-muted">Preferences</span></li>
-
-            {/* Theme Toggle – prevent menu from closing when toggling */}
-            <li className="px-3 py-2" onClick={(e) => e.stopPropagation()}><ThemeToggle /></li>
-
-            {/* Change currency */}
-            <li><button className="dropdown-item" type="button" onClick={() => setCurrencyModalOpen(true)}>Change currency…</button></li>
-
-            {/* Revisit welcome page */}
-            <li><button className="dropdown-item" type="button" onClick={() => navigate('/welcome')}>Onboarding / Welcome Tips</button></li>
-
-            {/* Timer */}
-            <li><button className="dropdown-item" type="button" onClick={() => setSessionModalOpen(true)}>Session info…</button></li>
-
-            <li><hr className="dropdown-divider" /></li>
-
-            {/* Logout */}
-            <li><button className="dropdown-item text-danger" type="button" onClick={handleLogout}>Logout</button></li>
-          </ul>
-        </div>
-      </div>
-
+    <div className="container container-app p-4">
+      <h1 className="app-shell-page-title mb-4">Overview</h1>
       {/* Overview cards */}
       {overview && (
         <div className="row g-3 mb-4">
@@ -861,54 +773,6 @@ export default function Dashboard() {
           </div>
         </div>
       )}
-      {currencyModalOpen && (
-        <>
-          {/* Backdrop */}
-          <div
-            className="modal-backdrop fade show"
-            onClick={() => setCurrencyModalOpen(false)}
-          />
-          {/* Modal */}
-          <div
-            className="modal fade show"
-            style={{ display: "block" }}
-            role="dialog"
-            aria-modal="true"
-          >
-            <div className="modal-dialog modal-dialog-centered">
-              <div className="modal-content">
-                <div className="modal-header">
-                  <h5 className="modal-title">Select currency & locale</h5>
-                  <button
-                    type="button"
-                    className="btn-close"
-                    aria-label="Close"
-                    onClick={() => setCurrencyModalOpen(false)}
-                  />
-                </div>
-                <div className="modal-body">
-                  <CurrencySelector />
-                </div>
-                <div className="modal-footer">
-                  <button
-                    type="button"
-                    className="btn btn-secondary"
-                    onClick={() => setCurrencyModalOpen(false)}
-                  >
-                    Close
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </>
-      )}
-  {sessionModalOpen && (
-  <SessionInfoModal
-    open={sessionModalOpen}
-    onClose={() => setSessionModalOpen(false)}
-  />
-)}
     </div>
   );
 }

@@ -2,13 +2,49 @@
    Global App Styles + Theming (Light/Dark + Polish)
    ========================================================= */
 
-/* Always let the page inherit the theme body background */
+/* -----------------------------
+   Design tokens (global)
+   ----------------------------- */
+:root {
+  /* Spacing scale (4px base) */
+  --ev-space-1: 0.25rem;   /* 4px */
+  --ev-space-2: 0.5rem;     /* 8px */
+  --ev-space-3: 0.75rem;    /* 12px */
+  --ev-space-4: 1rem;       /* 16px */
+  --ev-space-5: 1.25rem;    /* 20px */
+  --ev-space-6: 1.5rem;     /* 24px */
+  --ev-space-8: 2rem;       /* 32px */
+  --ev-space-10: 2.5rem;    /* 40px */
+  --ev-space-12: 3rem;      /* 48px */
+
+  /* Surfaces (semantic; theme blocks override) */
+  --ev-surface-page: var(--bs-body-bg);
+  --ev-surface-elevated: var(--bs-card-bg);
+  --ev-border-subtle: var(--bs-border-color);
+
+  /* Shadows */
+  --ev-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --ev-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.06);
+  --ev-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+}
+
+/* -----------------------------
+   Root & body (dashboard-appropriate)
+   ----------------------------- */
+#root {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
 html, body {
   height: 100%;
+  margin: 0;
 }
 body {
   background-color: var(--bs-body-bg);
   color: var(--bs-body-color);
+  text-align: left;
 }
 
 /* -----------------------------
@@ -43,7 +79,8 @@ html[data-bs-theme="light"] body {
 html[data-bs-theme="light"] .card {
   background-color: var(--bs-card-bg);
   border: 1px solid var(--bs-card-border-color);
-  box-shadow: 0 3px 8px rgba(108, 78, 47, 0.08);
+  box-shadow: var(--ev-shadow-md);
+  padding: var(--ev-space-5);
 }
 
 html[data-bs-theme="light"] .navbar,
@@ -122,6 +159,7 @@ html[data-bs-theme="dark"] .card {
   background-color: var(--bs-card-bg);
   border-color: var(--bs-card-border-color);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  padding: var(--ev-space-5);
 }
 
 /* Dropdown & navbar (dark) */
@@ -227,44 +265,106 @@ html[data-bs-theme="dark"] .hero-welcome {
 
 /* =========================================================
    Legacy demo styles from the original template (keep/remove)
+   REMOVED: #root max-width/centering, .logo, logo-spin, .read-the-docs.
+   Global .card padding is set in theme blocks above.
    ========================================================= */
-#root {
-  max-width: 1280px;
+
+/* =========================================================
+   Authenticated app shell
+   ========================================================= */
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--ev-surface-page);
+}
+
+.app-shell-header {
+  flex: 0 0 auto;
+  background: var(--bs-card-bg);
+  border-bottom: 1px solid var(--ev-border-subtle);
+  box-shadow: var(--ev-shadow-sm);
+}
+
+.app-shell-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ev-space-6);
+  padding: var(--ev-space-3) var(--ev-space-4);
+  max-width: 1400px;
   margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  width: 100%;
+  flex-wrap: wrap;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
+.app-shell-brand-link {
+  font-weight: 600;
+  font-size: 1.125rem;
+  color: var(--bs-body-color);
+  text-decoration: none;
 }
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+.app-shell-brand-link:hover {
+  color: var(--bs-primary);
 }
 
-@keyframes logo-spin {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
+.app-shell-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--ev-space-1);
+}
+.app-shell-nav-link {
+  padding: var(--ev-space-2) var(--ev-space-3);
+  border-radius: 6px;
+  color: var(--bs-body-color);
+  text-decoration: none;
+  font-size: 0.9375rem;
+}
+.app-shell-nav-link:hover {
+  background: var(--bs-tertiary-bg);
+  color: var(--bs-body-color);
+}
+.app-shell-nav-link.active {
+  background: var(--bs-primary-bg-subtle);
+  color: var(--bs-primary);
+  font-weight: 500;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
+.app-shell-actions {
+  display: flex;
+  align-items: center;
+}
+
+.app-shell-main {
+  flex: 1 1 auto;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+/* Main content container inside shell (consistent max-width + padding) */
+.container-app {
+  max-width: 1400px;
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
+}
+
+.app-shell-page-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--bs-body-color);
+  margin-bottom: var(--ev-space-4);
+}
+
+@media (max-width: 768px) {
+  .app-shell-container {
+    padding: var(--ev-space-3);
   }
-}
-
-.card {
-  padding: 2em; /* keep existing padding unless your components add their own */
-}
-
-.read-the-docs {
-  color: #888;
+  .app-shell-nav {
+    order: 3;
+    width: 100%;
+    flex-wrap: wrap;
+  }
 }
 
 /* Login page links: use brand link colors instead of Bootstrap blue */
