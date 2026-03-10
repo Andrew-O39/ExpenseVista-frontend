@@ -843,6 +843,11 @@ html[data-bs-theme="dark"] .hero-welcome {
   box-shadow: var(--ev-shadow-sm);
 }
 
+.list-page-table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 .list-page-table {
   margin-bottom: 0;
   font-size: 0.9375rem;

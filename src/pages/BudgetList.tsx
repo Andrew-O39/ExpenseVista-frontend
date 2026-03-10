@@ -3,6 +3,7 @@ import { getBudgets, deleteBudget } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 import { isTokenValid } from '../utils/auth';
 import { getCurrencyCode, formatMoney } from "../utils/currency";
+import ListActionsDropdown from "../components/ListActionsDropdown";
 
 type Budget = {
   id: number;
@@ -290,6 +291,7 @@ export default function BudgetList() {
       {error && <div className="alert alert-danger mb-0">{error}</div>}
 
       <div className="list-page-table-wrap">
+        <div className="list-page-table-scroll">
         <table className="table table-striped list-page-table">
           <thead>
             <tr>
@@ -317,38 +319,20 @@ export default function BudgetList() {
                 <td>{b.notes || '-'}</td>
                 <td>{fmt(b.created_at)}</td>
                 <td>
-                  <div className="dropdown">
-                    <button
-                      className="btn btn-sm btn-outline-secondary dropdown-toggle"
-                      data-bs-toggle="dropdown"
-                    >
-                      Actions
-                    </button>
-                    <ul className="dropdown-menu">
-                      <li>
-                        <button
-                          className="dropdown-item"
-                          onClick={() => navigate(`/edit-budget/${b.id}`)}
-                        >
-                          Edit
-                        </button>
-                      </li>
-                      <li>
-                        <button
-                          className="dropdown-item text-danger"
-                          onClick={() => handleDelete(b.id)}
-                        >
-                          Delete
-                        </button>
-                      </li>
-                    </ul>
-                  </div>
+                  <ListActionsDropdown
+                    id={`budget-actions-${b.id}`}
+                    items={[
+                      { label: "Edit", onClick: () => navigate(`/edit-budget/${b.id}`) },
+                      { label: "Delete", onClick: () => handleDelete(b.id), variant: "danger" },
+                    ]}
+                  />
                 </td>
               </tr>
             )))
             }
           </tbody>
         </table>
+        </div>
       </div>
 
       <div className="list-page-summary-strip">

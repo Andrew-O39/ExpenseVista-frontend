@@ -3,6 +3,7 @@ import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { getExpenses, deleteExpense } from "../services/api";
 import { isTokenValid } from "../utils/auth";
 import { getCurrencyCode, formatMoney } from "../utils/currency";
+import ListActionsDropdown from "../components/ListActionsDropdown";
 
 type Expense = {
   id: number;
@@ -372,6 +373,7 @@ export default function ExpenseList() {
       {error && <div className="alert alert-danger mb-0">{error}</div>}
 
       <div className="list-page-table-wrap">
+        <div className="list-page-table-scroll">
         <table className="table table-striped list-page-table">
           <thead>
             <tr>
@@ -399,29 +401,20 @@ export default function ExpenseList() {
                   <td>{e.notes || "-"}</td>
                   <td>{fmt(e.created_at)}</td>
                   <td>
-                    <div className="dropdown">
-                      <button className="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
-                        Actions
-                      </button>
-                      <ul className="dropdown-menu">
-                        <li>
-                          <button className="dropdown-item" onClick={() => navigate(`/edit-expense/${e.id}`)}>
-                            Edit
-                          </button>
-                        </li>
-                        <li>
-                          <button className="dropdown-item text-danger" onClick={() => handleDelete(e.id)}>
-                            Delete
-                          </button>
-                        </li>
-                      </ul>
-                    </div>
+                    <ListActionsDropdown
+                      id={`expense-actions-${e.id}`}
+                      items={[
+                        { label: "Edit", onClick: () => navigate(`/edit-expense/${e.id}`) },
+                        { label: "Delete", onClick: () => handleDelete(e.id), variant: "danger" },
+                      ]}
+                    />
                   </td>
                 </tr>
               ))
             )}
           </tbody>
         </table>
+        </div>
       </div>
 
       <div className="list-page-summary-strip">
