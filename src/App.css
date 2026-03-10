@@ -453,6 +453,67 @@ html[data-bs-theme="dark"] .hero-welcome {
   justify-content: flex-end;
 }
 
+/* =========================================================
+   Form layout (create/edit pages)
+   ========================================================= */
+.form-page {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: var(--ev-space-6);
+  padding-bottom: var(--ev-space-6);
+}
+
+.form-card {
+  max-width: 480px;
+  width: 100%;
+  background: var(--ev-surface-elevated);
+  color: var(--bs-body-color);
+  border: 1px solid var(--ev-border-subtle);
+  border-radius: 0.75rem;
+  box-shadow: var(--ev-shadow-md);
+  padding: var(--ev-space-5);
+}
+
+.form-card-header {
+  margin-bottom: var(--ev-space-4);
+}
+
+.form-card-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: var(--ev-space-1);
+}
+
+.form-card-subtitle {
+  font-size: 0.875rem;
+}
+
+.form-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ev-space-3);
+}
+
+.form-card-footer {
+  margin-top: var(--ev-space-4);
+}
+
+.form-feedback {
+  margin-top: var(--ev-space-2);
+}
+
+.form-feedback .alert {
+  margin-bottom: 0;
+}
+
+@media (max-width: 768px) {
+  .form-page {
+    padding-top: var(--ev-space-4);
+    padding-bottom: var(--ev-space-4);
+  }
+}
+
 /* Login page links: use brand link colors instead of Bootstrap blue */
 .login-page a,
 .login-page a:visited {

@@ -88,76 +88,90 @@ export default function BudgetEdit() {
   if (loading) return <div className="container container-app p-4">Loading...</div>;
 
   return (
-    <div className="container container-app p-4">
-      <h2>Edit Budget</h2>
-      {error && <div className="alert alert-danger">{error}</div>}
-
-      <form onSubmit={handleSubmit}>
-        <div className="mb-3">
-          <label className="form-label">Category</label>
-          <input
-            type="text"
-            name="category"
-            className="form-control"
-            value={budget.category}
-            onChange={handleChange}
-            required
-          />
+    <div className="container container-app form-page">
+      <form onSubmit={handleSubmit} className="form-card">
+        <div className="form-card-header">
+          <h2 className="form-card-title mb-0">Edit budget</h2>
+          <p className="form-card-subtitle text-muted mb-0">
+            Adjust the limit and details for this budget.
+          </p>
         </div>
 
-        <div className="mb-3">
-          <label htmlFor="amount" className="form-label">
-            Amount ({getCurrencyCode()})
-          </label>
-          <input
-            type="number"
-            name="limit_amount"
-            className="form-control"
-            value={budget.limit_amount}
-            onChange={handleChange}
-            min="0"
-            step="0.01"
-            required
-          />
+        <div className="form-card-body">
+          {error && (
+            <div className="form-feedback">
+              <div className="alert alert-danger">{error}</div>
+            </div>
+          )}
+
+          <div>
+            <label className="form-label">Category</label>
+            <input
+              type="text"
+              name="category"
+              className="form-control"
+              value={budget.category}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          <div>
+            <label htmlFor="amount" className="form-label">
+              Amount ({getCurrencyCode()})
+            </label>
+            <input
+              type="number"
+              name="limit_amount"
+              className="form-control"
+              value={budget.limit_amount}
+              onChange={handleChange}
+              min="0"
+              step="0.01"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="form-label">Period</label>
+            <select
+              name="period"
+              className="form-select"
+              value={budget.period}
+              onChange={handleChange}
+              required
+            >
+              <option value="weekly">Weekly</option>
+              <option value="monthly">Monthly</option>
+              <option value="quarterly">Quarterly</option>
+              <option value="half-yearly">Half-yearly</option>
+              <option value="yearly">Yearly</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="form-label">Notes</label>
+            <textarea
+              name="notes"
+              className="form-control"
+              value={budget.notes}
+              onChange={handleChange}
+            />
+          </div>
         </div>
 
-        <div className="mb-3">
-          <label className="form-label">Period</label>
-          <select
-            name="period"
-            className="form-select"
-            value={budget.period}
-            onChange={handleChange}
-            required
+        <div className="form-card-footer">
+          <button type="submit" className="btn btn-primary me-2">
+            Save Changes
+          </button>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={() => navigate('/budgets')}
           >
-            <option value="weekly">Weekly</option>
-            <option value="monthly">Monthly</option>
-            <option value="quarterly">Quarterly</option>
-            <option value="half-yearly">Half-yearly</option>
-            <option value="yearly">Yearly</option>
-          </select>
+            Cancel
+          </button>
         </div>
-
-        <div className="mb-3">
-          <label className="form-label">Notes</label>
-          <textarea
-            name="notes"
-            className="form-control"
-            value={budget.notes}
-            onChange={handleChange}
-          />
-        </div>
-
-        <button type="submit" className="btn btn-primary me-2">
-          Save Changes
-        </button>
-        <button
-          type="button"
-          className="btn btn-secondary"
-          onClick={() => navigate('/budgets')}
-        >
-          Cancel
-        </button>
       </form>
     </div>
   );

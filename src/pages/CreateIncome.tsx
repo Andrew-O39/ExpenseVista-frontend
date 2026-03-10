@@ -110,26 +110,21 @@ export default function CreateIncome() {
 
   return (
     <div
-      className="container container-app d-flex justify-content-center align-items-start pt-5 pb-4 px-4"
-      style={{
-        background: "var(--bs-body-bg)",
-        color: "var(--bs-body-color)",
-      }}
+      className="container container-app form-page"
     >
       <form
         onSubmit={handleSubmit}
-        className="p-4 border rounded shadow"
-        style={{
-          maxWidth: 420,
-          width: "100%",
-          background: "var(--bs-body-bg)",
-          color: "var(--bs-body-color)",
-          borderColor: "var(--bs-border-color)",
-        }}
+        className="form-card"
       >
-        <h3 className="mb-4 text-center">Record Income</h3>
+        <div className="form-card-header">
+          <h2 className="form-card-title mb-0">Record income</h2>
+          <p className="form-card-subtitle text-muted mb-0">
+            Capture a new income entry such as salary, freelance, or refunds.
+          </p>
+        </div>
 
-        <div className="mb-3">
+        <div className="form-card-body">
+        <div>
           <label className="form-label">Amount ({currencyCode})</label>
           <input
             type="number"
@@ -142,7 +137,7 @@ export default function CreateIncome() {
           />
         </div>
 
-        <div className="mb-3">
+        <div>
           <label className="form-label">Category (required)</label>
           <input
             className="form-control"
@@ -153,7 +148,7 @@ export default function CreateIncome() {
           />
         </div>
 
-        <div className="mb-3">
+        <div>
           <label className="form-label">Source (optional)</label>
           <input
             className="form-control"
@@ -163,7 +158,7 @@ export default function CreateIncome() {
           />
         </div>
 
-        <div className="mb-3">
+        <div>
           <label className="form-label">Received At (optional)</label>
           <input
             type="datetime-local"
@@ -176,7 +171,7 @@ export default function CreateIncome() {
           </div>
         </div>
 
-        <div className="mb-3">
+        <div>
           <label className="form-label">Notes (optional)</label>
           <textarea
             className="form-control"
@@ -187,12 +182,17 @@ export default function CreateIncome() {
           />
         </div>
 
-        {error && <div className="alert alert-danger">{error}</div>}
-        {success && <div className="alert alert-success">{success}</div>}
+        <div className="form-feedback">
+          {error && <div className="alert alert-danger">{error}</div>}
+          {success && <div className="alert alert-success">{success}</div>}
+        </div>
+        </div>
 
-        <button type="submit" className="btn btn-primary w-100" disabled={loading}>
-          {loading ? "Creating..." : "Create Income"}
-        </button>
+        <div className="form-card-footer">
+          <button type="submit" className="btn btn-primary w-100" disabled={loading}>
+            {loading ? "Creating..." : "Create Income"}
+          </button>
+        </div>
       </form>
     </div>
   );

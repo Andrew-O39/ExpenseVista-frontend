@@ -155,85 +155,101 @@ export default function EditIncome() {
   if (loading) return <div className="container container-app p-4">Loading...</div>;
 
   return (
-    <div className="container container-app p-4">
-      <h2>Edit Income</h2>
-      {error && <div className="alert alert-danger">{error}</div>}
-
-      <form onSubmit={handleSubmit} style={{ maxWidth: 500 }}>
-        <div className="mb-3">
-          <label className="form-label">Amount ({getCurrencyCode()})</label>
-          <input
-            type="number"
-            name="amount"
-            min="0"
-            step="0.01"
-            className="form-control"
-            value={income.amount}
-            onChange={handleChange}
-            required
-          />
+    <div className="container container-app form-page">
+      <form onSubmit={handleSubmit} className="form-card">
+        <div className="form-card-header">
+          <h2 className="form-card-title mb-0">Edit income</h2>
+          <p className="form-card-subtitle text-muted mb-0">
+            Adjust the details for this income entry.
+          </p>
         </div>
 
-        <div className="mb-3">
-          <label className="form-label">Source</label>
-          <input
-            name="source"
-            className="form-control"
-            placeholder="e.g., salary, freelance, refund"
-            value={income.source}
-            onChange={handleChange}
-            required
-          />
-          <div className="form-text">Will be normalized (lowercase, trimmed).</div>
+        <div className="form-card-body">
+          {error && (
+            <div className="form-feedback">
+              <div className="alert alert-danger">{error}</div>
+            </div>
+          )}
+
+          <div>
+            <label className="form-label">Amount ({getCurrencyCode()})</label>
+            <input
+              type="number"
+              name="amount"
+              min="0"
+              step="0.01"
+              className="form-control"
+              value={income.amount}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          <div>
+            <label className="form-label">Source</label>
+            <input
+              name="source"
+              className="form-control"
+              placeholder="e.g., salary, freelance, refund"
+              value={income.source}
+              onChange={handleChange}
+              required
+            />
+            <div className="form-text">Will be normalized (lowercase, trimmed).</div>
+          </div>
+
+          <div>
+            <label className="form-label">Category</label>
+            <input
+              name="category"
+              className="form-control"
+              placeholder="e.g., job, side hustle"
+              value={income.category}
+              onChange={handleChange}
+              required
+            />
+            <div className="form-text">Will be normalized (lowercase, trimmed).</div>
+          </div>
+
+          <div>
+            <label className="form-label">Received at</label>
+            <input
+              type="datetime-local"
+              name="received_at"
+              className="form-control"
+              value={receivedAtLocal}
+              onChange={handleChange}
+            />
+            <div className="form-text">
+              Optional. Leave empty to keep existing server timestamp.
+            </div>
+          </div>
+
+          <div>
+            <label className="form-label">Notes</label>
+            <textarea
+              name="notes"
+              className="form-control"
+              rows={3}
+              value={income.notes}
+              onChange={handleChange}
+            />
+          </div>
         </div>
 
-        <div className="mb-3">
-          <label className="form-label">Category</label>
-          <input
-            name="category"
-            className="form-control"
-            placeholder="e.g., job, side hustle"
-            value={income.category}
-            onChange={handleChange}
-            required
-          />
-          <div className="form-text">Will be normalized (lowercase, trimmed).</div>
+        <div className="form-card-footer">
+          <button type="submit" className="btn btn-primary me-2" disabled={saving}>
+            {saving ? 'Saving...' : 'Save Changes'}
+          </button>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={() => navigate('/incomes')}
+            disabled={saving}
+          >
+            Cancel
+          </button>
         </div>
-
-        <div className="mb-3">
-          <label className="form-label">Received at</label>
-          <input
-            type="datetime-local"
-            name="received_at"
-            className="form-control"
-            value={receivedAtLocal}
-            onChange={handleChange}
-          />
-          <div className="form-text">Optional. Leave empty to keep existing server timestamp.</div>
-        </div>
-
-        <div className="mb-3">
-          <label className="form-label">Notes</label>
-          <textarea
-            name="notes"
-            className="form-control"
-            rows={3}
-            value={income.notes}
-            onChange={handleChange}
-          />
-        </div>
-
-        <button type="submit" className="btn btn-primary me-2" disabled={saving}>
-          {saving ? 'Saving...' : 'Save Changes'}
-        </button>
-        <button
-          type="button"
-          className="btn btn-secondary"
-          onClick={() => navigate('/incomes')}
-          disabled={saving}
-        >
-          Cancel
-        </button>
       </form>
     </div>
   );

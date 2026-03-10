@@ -130,26 +130,21 @@ export default function CreateExpense() {
 
   return (
     <div
-      className="container container-app d-flex justify-content-center align-items-start pt-5 pb-4 px-4"
-      style={{
-        background: "var(--bs-body-bg)",
-        color: "var(--bs-body-color)",
-      }}
+      className="container container-app form-page"
     >
       <form
         onSubmit={handleSubmit}
-        className="p-4 border rounded shadow"
-        style={{
-          maxWidth: "480px",
-          width: "100%",
-          background: "var(--bs-body-bg)",
-          color: "var(--bs-body-color)",
-          borderColor: "var(--bs-border-color)",
-        }}
+        className="form-card"
       >
-        <h3 className="mb-4 text-center">Create Expense</h3>
+        <div className="form-card-header">
+          <h2 className="form-card-title mb-0">Create expense</h2>
+          <p className="form-card-subtitle text-muted mb-0">
+            Log a new transaction to keep your spending up to date.
+          </p>
+        </div>
 
-        <div className="mb-3">
+        <div className="form-card-body">
+        <div>
           <label htmlFor="description" className="form-label">
             Description (optional)
           </label>
@@ -163,7 +158,7 @@ export default function CreateExpense() {
           />
         </div>
 
-        <div className="mb-3">
+        <div>
           <label htmlFor="amount" className="form-label">
             Amount ({currencyCode})
           </label>
@@ -179,7 +174,7 @@ export default function CreateExpense() {
           />
         </div>
 
-        <div className="mb-2">
+        <div>
           <label htmlFor="category" className="form-label">
             Category
           </label>
@@ -255,7 +250,7 @@ export default function CreateExpense() {
           </AnimatePresence>
         </div>
 
-        <div className="mb-3">
+        <div>
           <label htmlFor="notes" className="form-label">
             Notes (optional)
           </label>
@@ -268,12 +263,17 @@ export default function CreateExpense() {
           />
         </div>
 
-        {error && <div className="alert alert-danger">{error}</div>}
-        {success && <div className="alert alert-success">{success}</div>}
+        <div className="form-feedback">
+          {error && <div className="alert alert-danger">{error}</div>}
+          {success && <div className="alert alert-success">{success}</div>}
+        </div>
+        </div>
 
-        <button type="submit" className="btn btn-primary w-100">
-          Create Expense
-        </button>
+        <div className="form-card-footer">
+          <button type="submit" className="btn btn-primary w-100">
+            Create Expense
+          </button>
+        </div>
       </form>
     </div>
   );

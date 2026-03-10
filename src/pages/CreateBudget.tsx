@@ -76,26 +76,21 @@ export default function CreateBudget() {
 
   return (
     <div
-      className="container container-app d-flex justify-content-center pt-5 pb-4 px-4"
-      style={{
-        background: "var(--bs-body-bg)",
-        color: "var(--bs-body-color)",
-      }}
+      className="container container-app form-page"
     >
       <form
         onSubmit={handleSubmit}
-        className="p-4 border rounded shadow"
-        style={{
-          maxWidth: "400px",
-          width: "100%",
-          background: "var(--bs-body-bg)",
-          color: "var(--bs-body-color)",
-          borderColor: "var(--bs-border-color)",
-        }}
+        className="form-card"
       >
-        <h3 className="mb-4 text-center">Create Budget</h3>
+        <div className="form-card-header">
+          <h2 className="form-card-title mb-0">Create budget</h2>
+          <p className="form-card-subtitle text-muted mb-0">
+            Set a limit for a category over a chosen period.
+          </p>
+        </div>
 
-        <div className="mb-3">
+        <div className="form-card-body">
+        <div>
           <label htmlFor="category" className="form-label">Category</label>
           <input
             id="category"
@@ -108,7 +103,7 @@ export default function CreateBudget() {
           />
         </div>
 
-        <div className="mb-3">
+        <div>
           <label htmlFor="limitAmount" className="form-label">
             Limit Amount ({code})
           </label>
@@ -124,7 +119,7 @@ export default function CreateBudget() {
           />
         </div>
 
-        <div className="mb-3">
+        <div>
           <label htmlFor="period" className="form-label">Period</label>
           <select
             id="period"
@@ -141,7 +136,7 @@ export default function CreateBudget() {
           </select>
         </div>
 
-        <div className="mb-3">
+        <div>
           <label htmlFor="notes" className="form-label">Notes (optional)</label>
           <textarea
             id="notes"
@@ -153,12 +148,17 @@ export default function CreateBudget() {
           />
         </div>
 
-        {error && <div className="alert alert-danger">{error}</div>}
-        {success && <div className="alert alert-success">{success}</div>}
+        <div className="form-feedback">
+          {error && <div className="alert alert-danger">{error}</div>}
+          {success && <div className="alert alert-success">{success}</div>}
+        </div>
+        </div>
 
-        <button type="submit" className="btn btn-primary w-100" disabled={loading}>
-          {loading ? "Creating..." : "Create Budget"}
-        </button>
+        <div className="form-card-footer">
+          <button type="submit" className="btn btn-primary w-100" disabled={loading}>
+            {loading ? "Creating..." : "Create Budget"}
+          </button>
+        </div>
       </form>
     </div>
   );
