@@ -367,6 +367,92 @@ html[data-bs-theme="dark"] .hero-welcome {
   }
 }
 
+/* =========================================================
+   Dashboard layout & sections
+   ========================================================= */
+.dashboard-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ev-space-4);
+}
+
+.dashboard-section {
+  margin-bottom: var(--ev-space-4);
+}
+
+.dashboard-section-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--ev-space-3);
+  margin-bottom: var(--ev-space-3);
+}
+
+.dashboard-section-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.dashboard-section-subtitle {
+  font-size: 0.875rem;
+}
+
+.dashboard-kpi-row {
+  margin: 0;
+}
+
+.dashboard-kpi-card .card-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ev-space-2);
+}
+
+.dashboard-kpi-label {
+  font-size: 0.8125rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--bs-secondary-color, #6c757d);
+}
+
+.dashboard-kpi-value {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.dashboard-filters-card .card-body {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ev-space-3);
+  align-items: flex-end;
+}
+
+.dashboard-filters-card .form-group {
+  margin-bottom: 0;
+}
+
+.dashboard-filters-card .btn {
+  min-width: 90px;
+}
+
+.dashboard-chart-and-table-card .card-body {
+  padding-top: var(--ev-space-4);
+}
+
+.dashboard-secondary-metrics .card-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ev-space-2);
+}
+
+.dashboard-secondary-metrics .fs-4 {
+  font-size: 1.25rem;
+}
+
+.dashboard-chart-toggle {
+  display: flex;
+  justify-content: flex-end;
+}
+
 /* Login page links: use brand link colors instead of Bootstrap blue */
 .login-page a,
 .login-page a:visited {

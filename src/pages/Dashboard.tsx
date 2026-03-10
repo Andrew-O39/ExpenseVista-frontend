@@ -414,365 +414,609 @@ export default function Dashboard() {
   if (error)   return <div className="container container-app mt-5 text-danger">{String(error)}</div>;
 
   return (
-    <div className="container container-app p-4">
+    <div className="container container-app p-4 dashboard-page">
       <h1 className="app-shell-page-title mb-4">Overview</h1>
       {/* Overview cards */}
       {overview && (
-        <div className="row g-3 mb-4">
-          {/* Income (always global) */}
-          <div className="col-md-4">
-            <div className="card shadow-sm h-100">
-              <div className="card-body">
-                <div className="d-flex justify-content-between align-items-center">
-                  <div className="text-muted small">Total Income for {prettyPeriod(summary.period)}</div>
+        <section className="dashboard-section">
+          <div className="row g-3 dashboard-kpi-row">
+            {/* Income (always global) */}
+            <div className="col-md-4">
+              <div className="card shadow-sm h-100 dashboard-kpi-card">
+                <div className="card-body">
+                  <div className="dashboard-kpi-label">
+                    Total Income · {prettyPeriod(summary.period)}
+                  </div>
+                  <div className="dashboard-kpi-value">
+                    {formatMoney(overview.total_income || 0)}
+                  </div>
                   {overview.start && overview.end && (
-                    <span className="badge bg-light text-muted border">{formatRange(overview.start, overview.end)}</span>
+                    <div className="small text-muted">
+                      {formatRange(overview.start, overview.end)}
+                    </div>
                   )}
                 </div>
-                <div className="fs-4">{formatMoney(overview.total_income || 0)}</div>
               </div>
             </div>
-          </div>
 
-          {/* Expenses (category-specific when selected) */}
-          <div className="col-md-4">
-            <div className="card shadow-sm h-100">
-              <div className="card-body">
-                <div className="d-flex justify-content-between align-items-center">
-                  <div className="text-muted small">
+            {/* Expenses (category-specific when selected) */}
+            <div className="col-md-4">
+              <div className="card shadow-sm h-100 dashboard-kpi-card">
+                <div className="card-body">
+                  <div className="dashboard-kpi-label">
                     {appliedCategory
-                      ? <>Total Expenses for {prettyPeriod(summary.period)} <strong>for {appliedCategory}</strong></>
-                      : <>Total Expenses for {prettyPeriod(summary.period)}</>
+                      ? <>Expenses · {prettyPeriod(summary.period)} · <strong>{appliedCategory}</strong></>
+                      : <>Total Expenses · {prettyPeriod(summary.period)}</>
                     }
+                  </div>
+                  <div className="dashboard-kpi-value">
+                    {formatMoney(
+                      appliedCategory
+                        ? (overviewCat?.total_expenses ?? 0)
+                        : (overview.total_expenses ?? 0)
+                    )}
                   </div>
                   {(appliedCategory ? overviewCat?.start : overview.start) &&
                    (appliedCategory ? overviewCat?.end   : overview.end) && (
-                    <span className="badge bg-light text-muted border">
+                    <div className="small text-muted">
                       {formatRange(
                         appliedCategory ? overviewCat!.start! : overview.start!,
                         appliedCategory ? overviewCat!.end!   : overview.end!
                       )}
-                    </span>
+                    </div>
                   )}
                 </div>
-                <div className="fs-4">
-                  {formatMoney(appliedCategory ? (overviewCat?.total_expenses ?? 0) : (overview.total_expenses ?? 0))}
-                </div>
               </div>
             </div>
-          </div>
 
-          {/* Net (computed when category is selected) */}
-          <div className="col-md-4">
-            <div className="card shadow-sm h-100">
-              <div className="card-body">
-                <div className="text-muted small">
-                  {appliedCategory
-                    ? <>Net Balance after <strong>{appliedCategory}</strong> for {prettyPeriod(summary.period)}</>
-                    : <>Net Balance for {prettyPeriod(summary.period)}</>
-                  }
-                </div>
-                <div className={`fs-4 ${Number(appliedCategory ? (computedNet ?? 0) : (overview.net_balance ?? 0)) >= 0 ? 'text-success' : 'text-danger'}`}>
-                   {formatMoney(appliedCategory ? (computedNet ?? 0) : (overview.net_balance ?? 0))}
+            {/* Net (computed when category is selected) */}
+            <div className="col-md-4">
+              <div className="card shadow-sm h-100 dashboard-kpi-card">
+                <div className="card-body">
+                  <div className="dashboard-kpi-label">
+                    {appliedCategory
+                      ? <>Net after <strong>{appliedCategory}</strong> · {prettyPeriod(summary.period)}</>
+                      : <>Net Balance · {prettyPeriod(summary.period)}</>
+                    }
+                  </div>
+                  <div
+                    className={`dashboard-kpi-value ${
+                      Number(
+                        appliedCategory ? (computedNet ?? 0) : (overview.net_balance ?? 0)
+                      ) >= 0 ? 'text-success' : 'text-danger'
+                    }`}
+                  >
+                    {formatMoney(
+                      appliedCategory ? (computedNet ?? 0) : (overview.net_balance ?? 0)
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
+        </section>
       )}
 
       {/* Filters (top) */}
-      <form className="mb-4 d-flex gap-3 flex-wrap align-items-end" onSubmit={(e) => { e.preventDefault(); handleApply(); }}>
-        <div className="form-group">
-          <label htmlFor="period" className="form-label">Select Period:</label>
-          <select id="period" className="form-select" value={pendingPeriod} onChange={(e) => setPendingPeriod(e.target.value as CurrentPeriod)}>
-            <option value="weekly">Weekly</option>
-            <option value="monthly">Monthly</option>
-            <option value="quarterly">Quarterly</option>
-            <option value="half-yearly">Half-yearly</option>
-            <option value="yearly">Yearly</option>
-          </select>
-        </div>
-        <div className="form-group" style={{ minWidth: 220 }}>
-          <label htmlFor="category" className="form-label">Filter by Category:</label>
-          <input id="category" type="text" className="form-control" placeholder="Optional category" value={pendingCategory} onChange={(e) => setPendingCategory(e.target.value)} />
-        </div>
-        <div className="d-flex gap-2">
-          <button type="submit" className="btn btn-primary">Apply</button>
-          <button type="button" className="btn btn-secondary" onClick={handleReset}>Reset</button>
-        </div>
-      </form>
-
-      {/* Spending summary */}
-      <h2 className="mb-3">Spending Summary ({summary.period})</h2>
-      {chartData.length === 0 ? (
-        <p className="text-muted">No results found for this filter.</p>
-      ) : (
-        <div>
-          <div className="row mb-4">
-            <div className="col-md-6" style={{ height: 300 }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie data={chartData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} label>
-                    {chartData.map((entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={entry.isOverspentNoBudget ? '#DC3545' : COLORS[index % COLORS.length]}
-                      />
-                    ))}
-                  </Pie>
-                  <Tooltip formatter={(val: number) => formatMoney(val)} />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="mt-2 small text-muted">
-                <span style={{ color: '#DC3545', fontWeight: 'bold' }}>■</span> No budget set, but spending occurred
+      <section className="dashboard-section">
+        <div className="card shadow-sm dashboard-filters-card">
+          <div className="card-body">
+            <form
+              className="d-flex gap-3 flex-wrap align-items-end mb-0"
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleApply();
+              }}
+            >
+              <div className="form-group">
+                <label htmlFor="period" className="form-label">Select Period</label>
+                <select
+                  id="period"
+                  className="form-select"
+                  value={pendingPeriod}
+                  onChange={(e) => setPendingPeriod(e.target.value as CurrentPeriod)}
+                >
+                  <option value="weekly">Weekly</option>
+                  <option value="monthly">Monthly</option>
+                  <option value="quarterly">Quarterly</option>
+                  <option value="half-yearly">Half-yearly</option>
+                  <option value="yearly">Yearly</option>
+                </select>
               </div>
+              <div className="form-group" style={{ minWidth: 220 }}>
+                <label htmlFor="category" className="form-label">Filter by Category</label>
+                <input
+                  id="category"
+                  type="text"
+                  className="form-control"
+                  placeholder="Optional category"
+                  value={pendingCategory}
+                  onChange={(e) => setPendingCategory(e.target.value)}
+                />
+              </div>
+              <div className="d-flex gap-2">
+                <button type="submit" className="btn btn-primary">Apply</button>
+                <button type="button" className="btn btn-secondary" onClick={handleReset}>Reset</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      {/* Spending summary + budgets + advanced reporting */}
+      <section className="dashboard-section">
+        <div className="dashboard-section-header">
+          <div>
+            <h2 className="dashboard-section-title mb-1">Spending by category</h2>
+            <p className="dashboard-section-subtitle mb-0 text-muted">
+              For {prettyPeriod(summary.period)}
+              {appliedCategory ? <> · focusing on <strong>{appliedCategory}</strong></> : null}
+            </p>
+          </div>
+        </div>
+
+        {chartData.length === 0 ? (
+          <p className="text-muted">No results found for this filter.</p>
+        ) : (
+          <div className="card shadow-sm dashboard-chart-and-table-card">
+            <div className="card-body">
+              <div className="row mb-4">
+                <div className="col-md-6" style={{ height: 300 }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={chartData}
+                        dataKey="value"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={100}
+                        label
+                      >
+                        {chartData.map((entry, index) => (
+                          <Cell
+                            key={`cell-${index}`}
+                            fill={
+                              entry.isOverspentNoBudget
+                                ? '#DC3545'
+                                : COLORS[index % COLORS.length]
+                            }
+                          />
+                        ))}
+                      </Pie>
+                      <Tooltip formatter={(val: number) => formatMoney(val)} />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div className="mt-2 small text-muted">
+                    <span style={{ color: '#DC3545', fontWeight: 'bold' }}>■</span>{' '}
+                    No budget set, but spending occurred
+                  </div>
+                </div>
+              </div>
+
+              <div className="table-responsive mb-4">
+                <table className="table table-striped table-bordered mb-0">
+                  <thead className="table-light">
+                    <tr>
+                      <th>Category</th>
+                      <th>Budgeted Amount</th>
+                      <th>Amount Spent</th>
+                      <th>Remaining</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredCombinedData.map(({ category, spent, budget }, index) => {
+                      let remaining = 0;
+                      let isOverBudget = false;
+
+                      if (budget > 0) {
+                        remaining = budget - spent;
+                        isOverBudget = remaining < 0;
+                      } else if (spent > 0) {
+                        remaining = -spent; // negative remaining when no budget but spend exists
+                        isOverBudget = true;
+                      }
+
+                      return (
+                        <tr
+                          key={index}
+                          style={{ borderLeft: `5px solid ${COLORS[index % COLORS.length]}` }}
+                        >
+                          <td><strong>{category}</strong></td>
+                          <td>{budget > 0 ? formatMoney(budget) : 'No Budget'}</td>
+                          <td>{formatMoney(spent)}</td>
+                          <td style={{ color: isOverBudget ? 'red' : 'green' }}>
+                            {remaining < 0 ? '-' : ''}
+                            {formatMoney(Math.abs(remaining))}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Budget vs Expenses overview */}
+              <div className="mt-4">
+                <h3 className="h6 mb-2">Budgets vs actual spending</h3>
+                <p className="text-muted small mb-3">
+                  Compare how your configured budgets track against real spending over time.
+                </p>
+                <BudgetVsExpensesChart
+                  windowPeriod="yearly"
+                  initialGroupBy="monthly"
+                  // category={appliedCategory || undefined}
+                />
+              </div>
+
+              {/* Income vs Expenses (grouped, independent) */}
+              <div className="mt-5">
+                <div className="dashboard-section-header mb-3">
+                  <div>
+                    <h3 className="dashboard-section-title mb-1">
+                      Income vs expenses over time
+                    </h3>
+                    <p className="dashboard-section-subtitle mb-0 text-muted">
+                      Aggregated yearly window, grouped by your selected interval.
+                    </p>
+                  </div>
+                  <div className="d-flex align-items-center gap-2">
+                    <label className="form-label mb-0">Group by</label>
+                    <select
+                      className="form-select form-select-sm w-auto"
+                      value={groupBy}
+                      onChange={(e) => setGroupBy(e.target.value as any)}
+                    >
+                      <option value="weekly">Weekly</option>
+                      <option value="monthly">Monthly</option>
+                      <option value="quarterly">Quarterly</option>
+                      <option value="half-yearly">Half-yearly</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Totals for grouped chart (independent) */}
+                <div className="row g-3 mb-3 dashboard-secondary-metrics">
+                  {/* Income (green) */}
+                  <div className="col-md-4">
+                    <div className="card shadow-sm h-100">
+                      <div className="card-body">
+                        <div className="text-muted small">
+                          Total Income for {prettyGroupedWindow('yearly')}
+                        </div>
+                        <div className="fs-4 fw-bold" style={{ color: '#2ecc71' }}>
+                          {formatMoney(overviewTotals?.income ?? 0)}
+                        </div>
+                        <div className="small mt-1">
+                          <span
+                            style={{
+                              display: 'inline-block',
+                              width: 10,
+                              height: 10,
+                              background: '#2ecc71',
+                              marginRight: 6,
+                              borderRadius: 2,
+                            }}
+                          />
+                          Income series color in chart
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Expenses (red) */}
+                  <div className="col-md-4">
+                    <div className="card shadow-sm h-100">
+                      <div className="card-body">
+                        <div className="text-muted small">
+                          Total Expenses for {prettyGroupedWindow('yearly')}
+                        </div>
+                        <div className="fs-4 fw-bold" style={{ color: '#e74c3c' }}>
+                          {formatMoney(overviewTotals?.expenses ?? 0)}
+                        </div>
+                        <div className="small mt-1">
+                          <span
+                            style={{
+                              display: 'inline-block',
+                              width: 10,
+                              height: 10,
+                              background: '#e74c3c',
+                              marginRight: 6,
+                              borderRadius: 2,
+                            }}
+                          />
+                          Expenses series color in chart
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Net (blue) */}
+                  <div className="col-md-4">
+                    <div className="card shadow-sm h-100">
+                      <div className="card-body">
+                        <div className="text-muted small">
+                          Net Balance for {prettyGroupedWindow('yearly')}
+                        </div>
+                        <div className="fs-4 fw-bold" style={{ color: '#3498db' }}>
+                          {formatMoney(overviewTotals?.net ?? 0)}
+                        </div>
+                        <div className="small mt-1">
+                          <span
+                            style={{
+                              display: 'inline-block',
+                              width: 10,
+                              height: 10,
+                              background: '#3498db',
+                              marginRight: 6,
+                              borderRadius: 2,
+                            }}
+                          />
+                          Net series color in chart
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Chart type toggle */}
+                <div className="dashboard-chart-toggle mb-2">
+                  <div className="btn-group btn-group-sm" role="group" aria-label="Chart type">
+                    <button
+                      type="button"
+                      className={`btn ${chartType === 'bar' ? 'btn-primary' : 'btn-outline-primary'}`}
+                      onClick={() => setChartType('bar')}
+                    >
+                      Bar
+                    </button>
+                    <button
+                      type="button"
+                      className={`btn ${chartType === 'line' ? 'btn-primary' : 'btn-outline-primary'}`}
+                      onClick={() => setChartType('line')}
+                    >
+                      Line
+                    </button>
+                  </div>
+                </div>
+
+                {/* Grouped chart */}
+                <div className="card shadow-sm">
+                  <div className="card-body">
+                    {overviewSeries.length === 0 ? (
+                      <p className="text-muted mb-0">
+                        No grouped series returned for these filters. Totals are shown above.
+                      </p>
+                    ) : (
+                      <div style={{ height: 360 }}>
+                        <ResponsiveContainer width="100%" height="100%">
+                          {chartType === 'bar' ? (
+                            <BarChart
+                              data={overviewSeries}
+                              margin={{ top: 16, right: 24, left: 0, bottom: 8 }}
+                            >
+                              <CartesianGrid strokeDasharray="3 3" />
+                              <XAxis dataKey="label" />
+                              <YAxis />
+                              <Tooltip
+                                content={({ active, payload, label }) => {
+                                  if (!active || !payload?.length) return null;
+                                  const inc =
+                                    payload.find(
+                                      (p) => (p as any).dataKey === 'income'
+                                    )?.value ?? 0;
+                                  const exp =
+                                    payload.find(
+                                      (p) => (p as any).dataKey === 'expenses'
+                                    )?.value ?? 0;
+                                  const net =
+                                    payload.find(
+                                      (p) => (p as any).dataKey === 'net'
+                                    )?.value ?? 0;
+                                  const span =
+                                    typeof label === 'string'
+                                      ? spanFromLabel(label)
+                                      : null;
+
+                                  return (
+                                    <div
+                                      className="card shadow-sm p-2"
+                                      style={{ minWidth: 220 }}
+                                    >
+                                      <div className="fw-semibold mb-1">
+                                        {String(label ?? '')}
+                                      </div>
+                                      {span && (
+                                        <div className="text-muted small mb-2">
+                                          {fmtDDMMYYYY(span.start)} —{' '}
+                                          {fmtDDMMYYYY(span.end)}
+                                        </div>
+                                      )}
+                                      <div className="small">
+                                        <div>
+                                          <span
+                                            style={{
+                                              display: 'inline-block',
+                                              width: 8,
+                                              height: 8,
+                                              background: '#2ecc71',
+                                              marginRight: 6,
+                                              borderRadius: 2,
+                                            }}
+                                          />
+                                          Income: {formatMoney(inc)}
+                                        </div>
+                                        <div>
+                                          <span
+                                            style={{
+                                              display: 'inline-block',
+                                              width: 8,
+                                              height: 8,
+                                              background: '#e74c3c',
+                                              marginRight: 6,
+                                              borderRadius: 2,
+                                            }}
+                                          />
+                                          Expenses: {formatMoney(exp)}
+                                        </div>
+                                        <div>
+                                          <span
+                                            style={{
+                                              display: 'inline-block',
+                                              width: 8,
+                                              height: 8,
+                                              background: '#3498db',
+                                              marginRight: 6,
+                                              borderRadius: 2,
+                                            }}
+                                          />
+                                          Net: {formatMoney(net)}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  );
+                                }}
+                              />
+                              <Legend />
+                              <Bar dataKey="income" name="Income" fill="#2ecc71" />
+                              <Bar
+                                dataKey="expenses"
+                                name="Expenses"
+                                fill="#e74c3c"
+                              />
+                              <Bar
+                                dataKey="net"
+                                name="Net Balance"
+                                fill="#3498db"
+                              />
+                            </BarChart>
+                          ) : (
+                            <LineChart
+                              data={overviewSeries}
+                              margin={{ top: 16, right: 24, left: 0, bottom: 8 }}
+                            >
+                              <CartesianGrid strokeDasharray="3 3" />
+                              <XAxis dataKey="label" />
+                              <YAxis />
+                              <Tooltip
+                                content={({ active, payload, label }) => {
+                                  if (!active || !payload?.length) return null;
+                                  const inc =
+                                    payload.find(
+                                      (p) => (p as any).dataKey === 'income'
+                                    )?.value ?? 0;
+                                  const exp =
+                                    payload.find(
+                                      (p) => (p as any).dataKey === 'expenses'
+                                    )?.value ?? 0;
+                                  const net =
+                                    payload.find(
+                                      (p) => (p as any).dataKey === 'net'
+                                    )?.value ?? 0;
+                                  const span =
+                                    typeof label === 'string'
+                                      ? spanFromLabel(label)
+                                      : null;
+
+                                  return (
+                                    <div
+                                      className="card shadow-sm p-2"
+                                      style={{ minWidth: 220 }}
+                                    >
+                                      <div className="fw-semibold mb-1">
+                                        {String(label ?? '')}
+                                      </div>
+                                      {span && (
+                                        <div className="text-muted small mb-2">
+                                          {fmtDDMMYYYY(span.start)} —{' '}
+                                          {fmtDDMMYYYY(span.end)}
+                                        </div>
+                                      )}
+                                      <div className="small">
+                                        <div>
+                                          <span
+                                            style={{
+                                              display: 'inline-block',
+                                              width: 8,
+                                              height: 8,
+                                              background: '#2ecc71',
+                                              marginRight: 6,
+                                              borderRadius: 2,
+                                            }}
+                                          />
+                                          Income: {formatMoney(inc)}
+                                        </div>
+                                        <div>
+                                          <span
+                                            style={{
+                                              display: 'inline-block',
+                                              width: 8,
+                                              height: 8,
+                                              background: '#e74c3c',
+                                              marginRight: 6,
+                                              borderRadius: 2,
+                                            }}
+                                          />
+                                          Expenses: {formatMoney(exp)}
+                                        </div>
+                                        <div>
+                                          <span
+                                            style={{
+                                              display: 'inline-block',
+                                              width: 8,
+                                              height: 8,
+                                              background: '#3498db',
+                                              marginRight: 6,
+                                              borderRadius: 2,
+                                            }}
+                                          />
+                                          Net: {formatMoney(net)}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  );
+                                }}
+                              />
+                              <Legend />
+                              <Line
+                                type="monotone"
+                                dataKey="income"
+                                name="Income"
+                                stroke="#2ecc71"
+                                strokeWidth={2}
+                                dot={false}
+                                activeDot={{ r: 5 }}
+                              />
+                              <Line
+                                type="monotone"
+                                dataKey="expenses"
+                                name="Expenses"
+                                stroke="#e74c3c"
+                                strokeWidth={2}
+                                dot={false}
+                                activeDot={{ r: 5 }}
+                              />
+                              <Line
+                                type="monotone"
+                                dataKey="net"
+                                name="Net Balance"
+                                stroke="#3498db"
+                                strokeWidth={2}
+                                dot={false}
+                                activeDot={{ r: 5 }}
+                              />
+                            </LineChart>
+                          )}
+                        </ResponsiveContainer>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>{/* /grouped section */}
             </div>
           </div>
-
-          <div className="table-responsive">
-            <table className="table table-striped table-bordered">
-              <thead className="table-light">
-                <tr>
-                  <th>Category</th>
-                  <th>Budgeted Amount</th>
-                  <th>Amount Spent</th>
-                  <th>Remaining</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredCombinedData.map(({ category, spent, budget }, index) => {
-                  let remaining = 0;
-                  let isOverBudget = false;
-
-                  if (budget > 0) {
-                    remaining = budget - spent;
-                    isOverBudget = remaining < 0;
-                  } else if (spent > 0) {
-                    remaining = -spent; // negative remaining when no budget but spend exists
-                    isOverBudget = true;
-                  }
-
-                  return (
-                    <tr key={index} style={{ borderLeft: `5px solid ${COLORS[index % COLORS.length]}` }}>
-                      <td><strong>{category}</strong></td>
-                      <td>{budget > 0 ? formatMoney(budget) : 'No Budget'}</td>
-                      <td>{formatMoney(spent)}</td>
-                      <td style={{ color: isOverBudget ? 'red' : 'green' }}>
-                        {remaining < 0 ? '-' : ''}{formatMoney(Math.abs(remaining))}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-
-            {/* Budget vs Expenses overview */}
-            <BudgetVsExpensesChart
-              windowPeriod="yearly"
-              initialGroupBy="monthly"
-              // category={appliedCategory || undefined}
-            />
-
-            {/* Income vs Expenses (grouped, independent) */}
-            <div className="mt-5">
-              <div className="d-flex justify-content-between align-items-center mb-3">
-                <h3 className="mb-0">Income vs Expenses Over Time (Advanced Reporting)</h3>
-                <div className="d-flex align-items-center gap-2">
-                  <label className="form-label mb-0">Group by:</label>
-                  <select className="form-select form-select-sm w-auto" value={groupBy} onChange={(e) => setGroupBy(e.target.value as any)}>
-                    <option value="weekly">Weekly</option>
-                    <option value="monthly">Monthly</option>
-                    <option value="quarterly">Quarterly</option>
-                    <option value="half-yearly">Half-yearly</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Totals for grouped chart (independent) */}
-              <div className="row g-3 mb-3">
-                {/* Income (green) */}
-                <div className="col-md-4">
-                  <div className="card shadow-sm h-100">
-                    <div className="card-body">
-                      <div className="text-muted small">
-                        Total Income for {prettyGroupedWindow('yearly')}
-                      </div>
-                      <div className="fs-4 fw-bold" style={{ color: '#2ecc71' }}>
-                        {formatMoney(overviewTotals?.income ?? 0)}
-                      </div>
-                      <div className="small mt-1">
-                        <span style={{ display: 'inline-block', width: 10, height: 10, background: '#2ecc71', marginRight: 6, borderRadius: 2 }} />
-                        Income series color in chart
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Expenses (red) */}
-                <div className="col-md-4">
-                  <div className="card shadow-sm h-100">
-                    <div className="card-body">
-                      <div className="text-muted small">
-                        Total Expenses for {prettyGroupedWindow('yearly')}
-                      </div>
-                      <div className="fs-4 fw-bold" style={{ color: '#e74c3c' }}>
-                        {formatMoney(overviewTotals?.expenses ?? 0)}
-                      </div>
-                      <div className="small mt-1">
-                        <span style={{ display: 'inline-block', width: 10, height: 10, background: '#e74c3c', marginRight: 6, borderRadius: 2 }} />
-                        Expenses series color in chart
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Net (blue) */}
-                <div className="col-md-4">
-                  <div className="card shadow-sm h-100">
-                    <div className="card-body">
-                      <div className="text-muted small">
-                        Net Balance for {prettyGroupedWindow('yearly')}
-                      </div>
-                      <div className="fs-4 fw-bold" style={{ color: '#3498db' }}>
-                        {formatMoney(overviewTotals?.net ?? 0)}
-                      </div>
-                      <div className="small mt-1">
-                        <span style={{ display: 'inline-block', width: 10, height: 10, background: '#3498db', marginRight: 6, borderRadius: 2 }} />
-                        Net series color in chart
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Chart type toggle */}
-              <div className="d-flex justify-content-end mb-2">
-                <div className="btn-group btn-group-sm" role="group" aria-label="Chart type">
-                  <button
-                    type="button"
-                    className={`btn ${chartType === 'bar' ? 'btn-primary' : 'btn-outline-primary'}`}
-                    onClick={() => setChartType('bar')}
-                  >
-                    Bar
-                  </button>
-                  <button
-                    type="button"
-                    className={`btn ${chartType === 'line' ? 'btn-primary' : 'btn-outline-primary'}`}
-                    onClick={() => setChartType('line')}
-                  >
-                    Line
-                  </button>
-                </div>
-              </div>
-
-              {/* Grouped chart */}
-              <div className="card shadow-sm">
-                <div className="card-body">
-                  {overviewSeries.length === 0 ? (
-                    <p className="text-muted mb-0">No grouped series returned for these filters. Totals are shown above.</p>
-                  ) : (
-                    <div style={{ height: 360 }}>
-                      <ResponsiveContainer width="100%" height="100%">
-                        {chartType === 'bar' ? (
-                          <BarChart data={overviewSeries} margin={{ top: 16, right: 24, left: 0, bottom: 8 }}>
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="label" />
-                            <YAxis />
-                            <Tooltip
-                              content={({ active, payload, label }) => {
-                                if (!active || !payload?.length) return null;
-                                const inc = payload.find(p => (p as any).dataKey === 'income')?.value ?? 0;
-                                const exp = payload.find(p => (p as any).dataKey === 'expenses')?.value ?? 0;
-                                const net = payload.find(p => (p as any).dataKey === 'net')?.value ?? 0;
-                                const span = typeof label === 'string' ? spanFromLabel(label) : null;
-
-                                return (
-                                  <div className="card shadow-sm p-2" style={{ minWidth: 220 }}>
-                                    <div className="fw-semibold mb-1">{String(label ?? '')}</div>
-                                    {span && (
-                                      <div className="text-muted small mb-2">
-                                        {fmtDDMMYYYY(span.start)} — {fmtDDMMYYYY(span.end)}
-                                      </div>
-                                    )}
-                                    <div className="small">
-                                    <div>
-                                       <span style={{ display:'inline-block', width: 8, height: 8, background: '#2ecc71', marginRight: 6, borderRadius: 2 }} />
-                                       Income: {formatMoney(inc)}
-                                    </div>
-                                    <div>
-                                       <span style={{ display:'inline-block', width: 8, height: 8, background: '#e74c3c', marginRight: 6, borderRadius: 2 }} />
-                                       Expenses: {formatMoney(exp)}
-                                    </div>
-                                    <div>
-                                       <span style={{ display:'inline-block', width: 8, height: 8, background: '#3498db', marginRight: 6, borderRadius: 2 }} />
-                                       Net: {formatMoney(net)}
-                                    </div>
-                                    </div>
-                                  </div>
-                                );
-                              }}
-                            />
-                            <Legend />
-                            <Bar dataKey="income" name="Income" fill="#2ecc71" />
-                            <Bar dataKey="expenses" name="Expenses" fill="#e74c3c" />
-                            <Bar dataKey="net" name="Net Balance" fill="#3498db" />
-                          </BarChart>
-                        ) : (
-                          <LineChart data={overviewSeries} margin={{ top: 16, right: 24, left: 0, bottom: 8 }}>
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="label" />
-                            <YAxis />
-                            <Tooltip
-                              content={({ active, payload, label }) => {
-                                if (!active || !payload?.length) return null;
-                                const inc = payload.find(p => (p as any).dataKey === 'income')?.value ?? 0;
-                                const exp = payload.find(p => (p as any).dataKey === 'expenses')?.value ?? 0;
-                                const net = payload.find(p => (p as any).dataKey === 'net')?.value ?? 0;
-                                const span = typeof label === 'string' ? spanFromLabel(label) : null;
-
-                                return (
-                                  <div className="card shadow-sm p-2" style={{ minWidth: 220 }}>
-                                    <div className="fw-semibold mb-1">{String(label ?? '')}</div>
-                                    {span && (
-                                      <div className="text-muted small mb-2">
-                                        {fmtDDMMYYYY(span.start)} — {fmtDDMMYYYY(span.end)}
-                                      </div>
-                                    )}
-                                    <div className="small">
-                                      <div>
-                                        <span style={{ display:'inline-block', width: 8, height: 8, background: '#2ecc71', marginRight: 6, borderRadius: 2 }} />
-                                        Income: {formatMoney(inc)}
-                                       </div>
-                                      <div>
-                                        <span style={{ display:'inline-block', width: 8, height: 8, background: '#e74c3c', marginRight: 6, borderRadius: 2 }} />
-                                        Expenses: {formatMoney(exp)}
-                                      </div>
-                                      <div>
-                                        <span style={{ display:'inline-block', width: 8, height: 8, background: '#3498db', marginRight: 6, borderRadius: 2 }} />
-                                        Net: {formatMoney(net)}
-                                      </div>
-                                    </div>
-                                  </div>
-                                );
-                              }}
-                            />
-                            <Legend />
-                            <Line type="monotone" dataKey="income"   name="Income"      stroke="#2ecc71" strokeWidth={2} dot={false} activeDot={{ r: 5 }} />
-                            <Line type="monotone" dataKey="expenses" name="Expenses"    stroke="#e74c3c" strokeWidth={2} dot={false} activeDot={{ r: 5 }} />
-                            <Line type="monotone" dataKey="net"      name="Net Balance" stroke="#3498db" strokeWidth={2} dot={false} activeDot={{ r: 5 }} />
-                          </LineChart>
-                        )}
-                      </ResponsiveContainer>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>{/* /grouped section */}
-          </div>
-        </div>
-      )}
+        )}
+      </section>
     </div>
   );
 }
