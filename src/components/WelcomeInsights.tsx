@@ -36,7 +36,7 @@ export default function WelcomeInsights() {
         <div className="card shadow-sm h-100">
           <div className="card-body">
             <h5 className="card-title mb-3">Income vs. Expenses (preview)</h5>
-            <div style={{ height: 220 }}>
+            <div className="welcome-insights-chart">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={incomeVsExpense} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" />
@@ -66,7 +66,7 @@ export default function WelcomeInsights() {
         <div className="card shadow-sm h-100">
           <div className="card-body">
             <h5 className="card-title mb-3">Budget vs. Actual (preview)</h5>
-            <div style={{ height: 220 }}>
+            <div className="welcome-insights-chart">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={stacked} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" />

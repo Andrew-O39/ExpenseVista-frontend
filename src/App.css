@@ -653,6 +653,133 @@ html[data-bs-theme="dark"] .hero-welcome {
 }
 
 /* =========================================================
+   Welcome / onboarding page (in-app)
+   ========================================================= */
+.welcome-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ev-space-6);
+  padding-top: var(--ev-space-6);
+  padding-bottom: var(--ev-space-8);
+}
+
+.welcome-intro {
+  margin-bottom: 0;
+}
+
+.welcome-intro-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--bs-body-color);
+  margin-bottom: var(--ev-space-2);
+}
+
+.welcome-intro-subtitle {
+  font-size: 0.9375rem;
+  color: var(--bs-secondary-color, #6c757d);
+  margin-bottom: 0;
+  max-width: 36em;
+}
+
+.welcome-cards {
+  margin-bottom: 0;
+}
+
+.welcome-card .card {
+  height: 100%;
+  border: 1px solid var(--ev-border-subtle);
+  border-radius: 0.75rem;
+  box-shadow: var(--ev-shadow-sm);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.welcome-card .card:hover {
+  box-shadow: var(--ev-shadow-md);
+  border-color: var(--bs-primary);
+}
+
+.welcome-card .card-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ev-space-3);
+  padding: var(--ev-space-5);
+}
+
+.welcome-card-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 0;
+  color: var(--bs-body-color);
+}
+
+.welcome-card-text {
+  font-size: 0.9375rem;
+  color: var(--bs-secondary-color, #6c757d);
+  margin-bottom: 0;
+  flex: 1 1 auto;
+}
+
+.welcome-card-action {
+  margin-top: auto;
+}
+
+.welcome-section-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--bs-body-color);
+  margin-bottom: var(--ev-space-3);
+}
+
+.welcome-insights-section {
+  margin-bottom: 0;
+}
+
+.welcome-insights-section .card {
+  height: 100%;
+  border: 1px solid var(--ev-border-subtle);
+  border-radius: 0.75rem;
+  box-shadow: var(--ev-shadow-sm);
+}
+
+.welcome-insights-section .card-body {
+  padding: var(--ev-space-4);
+}
+
+.welcome-insights-section .card-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: var(--ev-space-3);
+}
+
+.welcome-insights-chart {
+  height: 220px;
+}
+
+.welcome-insights-section .small,
+.welcome-insights-section .text-muted {
+  font-size: 0.875rem;
+}
+
+.welcome-continue {
+  padding-top: var(--ev-space-2);
+  border-top: 1px solid var(--ev-border-subtle);
+}
+
+.welcome-continue .btn {
+  min-width: 180px;
+}
+
+@media (max-width: 768px) {
+  .welcome-page {
+    padding-top: var(--ev-space-4);
+    padding-bottom: var(--ev-space-6);
+  }
+  .welcome-intro-title {
+    font-size: 1.25rem;
+  }
+}
+
+/* =========================================================
    Finance Assistant (floating panel)
    ========================================================= */
 .assistant-wrap {

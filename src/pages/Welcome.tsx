@@ -45,88 +45,101 @@ export default function Welcome() {
   const isLoggedIn = !!user;
 
   return (
-    <div className="container container-app py-5">
-      <div className="mb-4">
-        <h1 className="h3 mb-2">
+    <div className="welcome-page container container-app">
+      <header className="welcome-intro">
+        <h1 className="welcome-intro-title">
           Welcome{isLoggedIn && user?.username ? `, ${user.username}` : ""}! 👋
         </h1>
-        <p className="text-muted">
+        <p className="welcome-intro-subtitle">
           Track expenses, manage budgets, and keep an eye on your income — all in one place.
         </p>
+      </header>
+
+      <section className="welcome-cards row g-4" aria-label="Get started">
+        <div className="col-12 col-md-4">
+          <div className="welcome-card">
+            <div className="card shadow-sm h-100">
+              <div className="card-body">
+                <h2 className="welcome-card-title">Add an Expense</h2>
+                <p className="welcome-card-text">
+                  Log a new expense to keep your spending up to date.
+                </p>
+                <div className="welcome-card-action">
+                  {isLoggedIn ? (
+                    <Link to="/create-expense?return=/welcome&onboarding=1" className="btn btn-primary">
+                      Add Expense
+                    </Link>
+                  ) : (
+                    <Link to="/login?redirect=/create-expense" className="btn btn-primary">Login to continue</Link>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="col-12 col-md-4">
+          <div className="welcome-card">
+            <div className="card shadow-sm h-100">
+              <div className="card-body">
+                <h2 className="welcome-card-title">Create a Budget</h2>
+                <p className="welcome-card-text">
+                  Set limits by category (monthly, weekly, yearly, etc.).
+                </p>
+                <div className="welcome-card-action">
+                  {isLoggedIn ? (
+                    <Link to="/create-budget?return=/welcome&onboarding=1" className="btn btn-primary">
+                      Create Budget
+                    </Link>
+                  ) : (
+                    <Link to="/login?redirect=/create-budget" className="btn btn-primary">Login to continue</Link>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="col-12 col-md-4">
+          <div className="welcome-card">
+            <div className="card shadow-sm h-100">
+              <div className="card-body">
+                <h2 className="welcome-card-title">Add Income</h2>
+                <p className="welcome-card-text">
+                  Record an income entry (salary, freelance, etc.).
+                </p>
+                <div className="welcome-card-action">
+                  {isLoggedIn ? (
+                    <Link to="/create-income?return=/welcome&onboarding=1" className="btn btn-outline-primary">
+                      Add income
+                    </Link>
+                  ) : (
+                    <Link to="/login?redirect=/create-income" className="btn btn-primary">Login to continue</Link>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="welcome-insights-section" aria-label="Tips and preview">
+        <h2 className="welcome-section-title">See what you can do</h2>
+        <WelcomeInsights />
+      </section>
+
+      <div className="welcome-continue">
+        <button
+          className="btn btn-primary"
+          onClick={() => {
+            const id = user?.id ? `:${user.id}` : "";
+            localStorage.setItem(`has_seen_welcome${id}`, "1");
+            window.location.href = "/dashboard";
+          }}
+        >
+          Continue to Dashboard
+        </button>
       </div>
-
-      {/* CTA cards */}
-      <div className="row g-3">
-        <div className="col-12 col-md-4">
-          <div className="card shadow-sm h-100">
-            <div className="card-body">
-              <h5 className="card-title">Add an Expense</h5>
-              <p className="card-text text-muted">
-                Log a new expense to keep your spending up to date.
-              </p>
-              {isLoggedIn ? (
-                <Link to="/create-expense?return=/welcome&onboarding=1" className="btn btn-primary">
-                  Add Expense
-                </Link>
-              ) : (
-                <Link to="/login?redirect=/create-expense" className="btn btn-primary">Login to continue</Link>
-              )}
-            </div>
-          </div>
-        </div>
-
-        <div className="col-12 col-md-4">
-          <div className="card shadow-sm h-100">
-            <div className="card-body">
-              <h5 className="card-title">Create a Budget</h5>
-              <p className="card-text text-muted">
-                Set limits by category (monthly, weekly, yearly, etc.).
-              </p>
-              {isLoggedIn ? (
-                <Link to="/create-budget?return=/welcome&onboarding=1" className="btn btn-primary">
-                  Create Budget
-                </Link>
-              ) : (
-                <Link to="/login?redirect=/create-budget" className="btn btn-primary">Login to continue</Link>
-              )}
-            </div>
-          </div>
-        </div>
-
-        <div className="col-12 col-md-4">
-          <div className="card shadow-sm h-100">
-            <div className="card-body">
-              <h5 className="card-title">Add Income</h5>
-              <p className="card-text text-muted">
-                Record an income entry (salary, freelance, etc.).
-              </p>
-              {isLoggedIn ? (
-                <Link to="/create-income?return=/welcome&onboarding=1" className="btn btn-outline-primary btn-sm">
-                  Add income
-                </Link>
-              ) : (
-                <Link to="/login?redirect=/create-income" className="btn btn-primary">Login to continue</Link>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* 👇 New tips & preview charts section */}
-      <WelcomeInsights />
-
-      {/* (Optional) Keep your “Continue to Dashboard” button */}
-      <button
-        className="btn btn-primary mt-3"
-        onClick={() => {
-          // keep your existing “seen” flag logic if desired
-          const id = user?.id ? `:${user.id}` : "";
-          localStorage.setItem(`has_seen_welcome${id}`, "1");
-          window.location.href = "/dashboard";
-        }}
-      >
-        Continue to Dashboard
-      </button>
     </div>
   );
 }
