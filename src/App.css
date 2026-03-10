@@ -652,6 +652,179 @@ html[data-bs-theme="dark"] .hero-welcome {
   border: 1px solid var(--ev-border-subtle);
 }
 
+/* =========================================================
+   Finance Assistant (floating panel)
+   ========================================================= */
+.assistant-wrap {
+  position: fixed;
+  right: var(--ev-space-4);
+  bottom: var(--ev-space-4);
+  z-index: 3000;
+  pointer-events: auto;
+}
+
+.assistant-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ev-space-2);
+  padding: var(--ev-space-2) var(--ev-space-4);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  border-radius: 9999px;
+  border: 1px solid var(--ev-border-subtle);
+  background: var(--ev-surface-elevated);
+  color: var(--bs-body-color);
+  box-shadow: var(--ev-shadow-md);
+  transition: box-shadow 0.2s ease, transform 0.15s ease;
+}
+
+.assistant-trigger:hover {
+  box-shadow: var(--ev-shadow-lg);
+  color: var(--bs-body-color);
+  background: var(--ev-surface-elevated);
+  border-color: var(--ev-border-subtle);
+}
+
+.assistant-trigger:focus-visible {
+  outline: 2px solid var(--bs-primary);
+  outline-offset: 2px;
+}
+
+.assistant-panel {
+  display: flex;
+  flex-direction: column;
+  width: 380px;
+  max-width: 92vw;
+  height: 70vh;
+  max-height: 85vh;
+  background: var(--ev-surface-elevated);
+  color: var(--bs-body-color);
+  border: 1px solid var(--ev-border-subtle);
+  border-radius: 0.75rem;
+  box-shadow: var(--ev-shadow-lg);
+  overflow: hidden;
+}
+
+.assistant-header {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ev-space-2);
+  padding: var(--ev-space-3) var(--ev-space-4);
+  background: var(--bs-primary);
+  color: #fff;
+}
+
+.assistant-header-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.assistant-header-close {
+  flex-shrink: 0;
+  padding: var(--ev-space-1) var(--ev-space-2);
+  font-size: 0.875rem;
+  border-radius: 0.375rem;
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #fff;
+}
+
+.assistant-header-close:hover {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.4);
+  color: #fff;
+}
+
+.assistant-quick-bar {
+  flex: 0 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ev-space-2);
+  padding: var(--ev-space-2) var(--ev-space-3);
+  background: var(--bs-tertiary-bg);
+  border-bottom: 1px solid var(--ev-border-subtle);
+}
+
+.assistant-quick-bar .btn {
+  font-size: 0.8125rem;
+  padding: var(--ev-space-1) var(--ev-space-2);
+  border-radius: 0.5rem;
+}
+
+.assistant-body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: var(--ev-space-3);
+  background: var(--bs-body-bg);
+}
+
+.assistant-messages {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ev-space-2);
+}
+
+.assistant-bubble {
+  white-space: pre-wrap;
+  max-width: 85%;
+  padding: var(--ev-space-2) var(--ev-space-3);
+  border-radius: 0.5rem;
+  border: 1px solid var(--ev-border-subtle);
+  font-size: 0.9375rem;
+  line-height: 1.45;
+}
+
+.assistant-bubble--user {
+  align-self: flex-end;
+  background: var(--bs-primary-bg-subtle);
+  color: var(--bs-body-color);
+}
+
+.assistant-bubble--assistant {
+  align-self: flex-start;
+  background: var(--bs-tertiary-bg);
+  color: var(--bs-body-color);
+}
+
+.assistant-bubble--system {
+  align-self: flex-start;
+  background: var(--bs-secondary-bg);
+  color: var(--bs-body-color);
+}
+
+.assistant-input-bar {
+  flex: 0 0 auto;
+  display: flex;
+  gap: var(--ev-space-2);
+  align-items: center;
+  padding: var(--ev-space-3);
+  background: var(--bs-tertiary-bg);
+  border-top: 1px solid var(--ev-border-subtle);
+}
+
+.assistant-input-bar .form-control {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 0.9375rem;
+}
+
+.assistant-input-bar .btn-primary {
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .assistant-wrap {
+    right: var(--ev-space-3);
+    bottom: var(--ev-space-3);
+  }
+  .assistant-panel {
+    width: calc(100vw - var(--ev-space-6));
+  }
+}
+
 /* Login page links: use brand link colors instead of Bootstrap blue */
 .login-page a,
 .login-page a:visited {

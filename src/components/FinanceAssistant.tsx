@@ -91,122 +91,34 @@ export default function FinanceAssistant() {
     }
   }
 
-  // Floating styles (unchanged)
-const wrap: React.CSSProperties = {
-  position: "fixed",
-  right: 16,
-  bottom: 16,
-  zIndex: 3000,
-  pointerEvents: "auto",
-};
-
-// Panel uses theme variables
-const panel: React.CSSProperties = {
-  width: 360,
-  maxWidth: "92vw",
-  height: "70vh",
-  maxHeight: "85vh",
-  display: "flex",
-  flexDirection: "column",
-  boxShadow: "0 6px 24px rgba(0,0,0,0.15)",
-  borderRadius: 12,
-  overflow: "hidden",
-  background: "var(--bs-body-bg)",
-  color: "var(--bs-body-color)",
-  border: "1px solid var(--bs-border-color)",
-};
-
-// Header uses primary color & contrast
-const header: React.CSSProperties = {
-  background: "var(--bs-primary)",
-  color: "var(--bs-primary-contrast)",
-  padding: "10px 12px",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "space-between",
-  flex: "0 0 auto",
-};
-
-// Quick prompts bar uses subtle surface + border
-const quickBar: React.CSSProperties = {
-  background: "var(--bs-tertiary-bg)",
-  borderBottom: "1px solid var(--bs-border-color)",
-  padding: "8px 10px",
-  display: "flex",
-  flexWrap: "wrap",
-  gap: 8,
-  flex: "0 0 auto",
-};
-
-// Body uses body surface/colors
-const body: React.CSSProperties = {
-  background: "var(--bs-body-bg)",
-  color: "var(--bs-body-color)",
-  overflowY: "auto",
-  padding: 12,
-  flex: "1 1 auto",
-};
-
-// Input bar matches quickBar surface
-const inputBar: React.CSSProperties = {
-  background: "var(--bs-tertiary-bg)",
-  padding: 10,
-  display: "flex",
-  gap: 8,
-  alignItems: "center",
-  borderTop: "1px solid var(--bs-border-color)",
-  flex: "0 0 auto",
-};
-
-// Chat bubbles adapt by role, all variable-driven
-const bubble = (role: ChatMsg["role"]): React.CSSProperties => {
-  // Subtle backgrounds that flip with theme
-  const bg =
-    role === "user"
-      ? "var(--bs-primary-bg-subtle)"
-      : role === "system"
-      ? "var(--bs-secondary-bg)"
-      : "var(--bs-tertiary-bg)";
-
-  return {
-    whiteSpace: "pre-wrap",
-    alignSelf: role === "user" ? "flex-end" : "flex-start",
-    background: bg,
-    color: "var(--bs-body-color)",
-    border: "1px solid var(--bs-border-color)",
-    borderRadius: 10,
-    padding: "8px 10px",
-    maxWidth: "85%",
-    marginBottom: 8,
-  };
-};
-
   return (
-    <div style={wrap}>
+    <div className="assistant-wrap">
       {!open ? (
         <button
           type="button"
-          className="btn btn-primary rounded-pill shadow"
+          className="assistant-trigger"
           onClick={() => setOpen(true)}
+          aria-label="Open Finance Assistant"
         >
-          💬 Finance Assistant
+          <span aria-hidden>💬</span>
+          Finance Assistant
         </button>
       ) : (
-        <div style={panel}>
-          <div style={header}>
-            <strong>Finance Assistant</strong>
+        <div className="assistant-panel">
+          <div className="assistant-header">
+            <span className="assistant-header-title">Finance Assistant</span>
             <button
-             type="button"
-             className="btn btn-sm btn-outline-light"
-             onClick={() => setOpen(false)}
-             disabled={busy}
-           >
-             Close
+              type="button"
+              className="assistant-header-close"
+              onClick={() => setOpen(false)}
+              disabled={busy}
+              aria-label="Close assistant"
+            >
+              Close
             </button>
           </div>
 
-          {/* Quick prompts for Expenses, Budgets, and Income */}
-          <div style={quickBar}>
+          <div className="assistant-quick-bar">
             {quickPrompts.map((q, i) => (
               <button
                 key={i}
@@ -221,21 +133,28 @@ const bubble = (role: ChatMsg["role"]): React.CSSProperties => {
             ))}
           </div>
 
-          <div style={body} ref={scrollRef}>
-            <div className="d-flex flex-column">
+          <div className="assistant-body" ref={scrollRef}>
+            <div className="assistant-messages">
               {msgs.map((m, i) => (
-                <div key={i} style={bubble(m.role)}>
+                <div
+                  key={i}
+                  className={`assistant-bubble assistant-bubble--${m.role}`}
+                >
                   <div>{m.text}</div>
                   {m.actions && m.actions.length > 0 && (
                     <AssistantActions actions={m.actions} />
                   )}
                 </div>
               ))}
-              {busy && <div style={bubble("assistant")}>Thinking…</div>}
+              {busy && (
+                <div className="assistant-bubble assistant-bubble--assistant">
+                  Thinking…
+                </div>
+              )}
             </div>
           </div>
 
-          <div style={inputBar}>
+          <div className="assistant-input-bar">
             <input
               type="text"
               className="form-control"
@@ -244,6 +163,7 @@ const bubble = (role: ChatMsg["role"]): React.CSSProperties => {
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={onKeyDown}
               disabled={busy}
+              aria-label="Message the assistant"
             />
             <button
               type="button"
