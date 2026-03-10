@@ -1,6 +1,6 @@
 import './App.css';
 import { useEffect } from "react";
-import { Routes, Route, Link, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { WELCOME_KEY } from "./constants/onboarding";
 
 import Dashboard from "./pages/Dashboard";
@@ -25,6 +25,7 @@ import SessionWatcher from "./components/SessionWatcher";
 import FinanceAssistant from "./components/FinanceAssistant";
 import ResendVerification from "./components/ResendVerification";
 import AppShell from "./components/AppShell";
+import LandingHero from "./components/LandingHero";
 
 import { isTokenValid } from "./utils/auth";
 
@@ -38,22 +39,7 @@ function Page({ title, children }: { title: string; children: React.ReactNode })
 
 /* ---------- Public splash (no auth / no API calls) ---------- */
 function WelcomeHero() {
-  return (
-    <div className="hero-welcome">
-      <h1 className="hero-welcome-title">Welcome to ExpenseVista</h1>
-      <p className="hero-welcome-subtitle">
-        Track expenses, manage budgets, and take control of your finances.
-      </p>
-      <div className="hero-welcome-actions">
-        <Link to="/login" className="btn btn-primary btn-lg shadow-sm">
-          Login
-        </Link>
-        <Link to="/register" className="btn btn-outline-primary btn-lg shadow-sm">
-          Register
-        </Link>
-      </div>
-    </div>
-  );
+  return <LandingHero />;
 }
 
 /* ---------- Home router element: choose Hero or full Welcome page ---------- */

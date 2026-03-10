@@ -238,6 +238,14 @@ html[data-bs-theme="dark"] .progress {
   padding: var(--ev-space-6);
 }
 
+.hero-welcome-inner {
+  width: 100%;
+  max-width: 720px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
 html[data-bs-theme="dark"] .hero-welcome {
   background: linear-gradient(120deg, #2B2927, #1F1E1C);
   color: var(--bs-body-color);
@@ -283,6 +291,93 @@ html[data-bs-theme="dark"] .hero-welcome {
 .hero-welcome .btn-outline-primary:hover {
   background-color: var(--bs-primary);
   color: #fff;
+}
+
+/* Hero product preview (logged-out landing) */
+.hero-preview {
+  width: 100%;
+  max-width: 640px;
+  margin-top: var(--ev-space-8);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--ev-space-4);
+}
+
+.hero-preview-card {
+  width: 100%;
+  background: var(--ev-surface-elevated);
+  border: 1px solid var(--ev-border-subtle);
+  border-radius: 0.75rem;
+  box-shadow: var(--ev-shadow-md);
+  padding: var(--ev-space-4);
+}
+
+.hero-preview-chart {
+  width: 100%;
+  height: 180px;
+}
+
+.hero-preview-caption {
+  font-size: 0.8125rem;
+  color: var(--bs-secondary-color, #6c757d);
+  margin: var(--ev-space-2) 0 0;
+}
+
+.hero-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--ev-space-3);
+}
+
+.hero-metric-card {
+  background: var(--ev-surface-elevated);
+  border: 1px solid var(--ev-border-subtle);
+  border-radius: 0.5rem;
+  box-shadow: var(--ev-shadow-sm);
+  padding: var(--ev-space-2) var(--ev-space-4);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 100px;
+}
+
+.hero-metric-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--bs-secondary-color, #6c757d);
+  margin-bottom: var(--ev-space-1);
+}
+
+.hero-metric-value {
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.hero-metric-value--success {
+  color: var(--bs-success);
+}
+
+.hero-metric-value--neutral {
+  color: var(--bs-body-color);
+}
+
+@media (max-width: 768px) {
+  .hero-preview {
+    margin-top: var(--ev-space-6);
+  }
+  .hero-metrics {
+    gap: var(--ev-space-2);
+  }
+  .hero-metric-card {
+    min-width: 80px;
+    padding: var(--ev-space-2) var(--ev-space-3);
+  }
+  .hero-metric-value {
+    font-size: 1rem;
+  }
 }
 
 /* =========================================================
