@@ -712,6 +712,14 @@ html[data-bs-theme="dark"] .hero-welcome {
   justify-content: flex-end;
 }
 
+.dashboard-chart-legend-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 6px;
+  border-radius: 2px;
+}
+
 /* =========================================================
    Form layout (create/edit pages)
    ========================================================= */

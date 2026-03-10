@@ -12,6 +12,9 @@ import { getSummary, getBudgets, getOverview } from '../services/api';
 import { isTokenValid } from '../utils/auth';
 
 import BudgetVsExpensesChart from '../components/BudgetVsExpensesChart';
+import DashboardKpiCard from '../components/DashboardKpiCard';
+import DashboardSectionHeader from '../components/DashboardSectionHeader';
+import DashboardMetricCard from '../components/DashboardMetricCard';
 import { formatMoney } from "../utils/currency";
 import type { CurrentPeriod } from '../types/period';
 
@@ -410,6 +413,47 @@ export default function Dashboard() {
   /* =========================
      Render
   ========================= */
+  const renderGroupedTooltip = ({
+    active,
+    payload,
+    label,
+  }: {
+    active?: boolean;
+    payload?: Array<{ dataKey?: string; value?: number }>;
+    label?: string | number;
+  }) => {
+    if (!active || !payload?.length) return null;
+    const inc = payload.find((p) => p.dataKey === "income")?.value ?? 0;
+    const exp = payload.find((p) => p.dataKey === "expenses")?.value ?? 0;
+    const net = payload.find((p) => p.dataKey === "net")?.value ?? 0;
+    const labelStr = typeof label === "string" ? label : String(label ?? "");
+    const span = labelStr ? spanFromLabel(labelStr) : null;
+    return (
+      <div className="card shadow-sm p-2" style={{ minWidth: 220 }}>
+        <div className="fw-semibold mb-1">{labelStr}</div>
+        {span && (
+          <div className="text-muted small mb-2">
+            {fmtDDMMYYYY(span.start)} — {fmtDDMMYYYY(span.end)}
+          </div>
+        )}
+        <div className="small">
+          <div>
+            <span className="dashboard-chart-legend-dot" style={{ background: "#2ecc71" }} aria-hidden />
+            Income: {formatMoney(inc)}
+          </div>
+          <div>
+            <span className="dashboard-chart-legend-dot" style={{ background: "#e74c3c" }} aria-hidden />
+            Expenses: {formatMoney(exp)}
+          </div>
+          <div>
+            <span className="dashboard-chart-legend-dot" style={{ background: "#3498db" }} aria-hidden />
+            Net: {formatMoney(net)}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   if (loading) return <div className="container container-app mt-5">Loading your dashboard...</div>;
   if (error)   return <div className="container container-app mt-5 text-danger">{String(error)}</div>;
 
@@ -420,78 +464,62 @@ export default function Dashboard() {
       {overview && (
         <section className="dashboard-section">
           <div className="row g-3 dashboard-kpi-row">
-            {/* Income (always global) */}
             <div className="col-md-4">
-              <div className="card shadow-sm h-100 dashboard-kpi-card">
-                <div className="card-body">
-                  <div className="dashboard-kpi-label">
-                    Total Income · {prettyPeriod(summary.period)}
-                  </div>
-                  <div className="dashboard-kpi-value">
-                    {formatMoney(overview.total_income || 0)}
-                  </div>
-                  {overview.start && overview.end && (
-                    <div className="small text-muted">
-                      {formatRange(overview.start, overview.end)}
-                    </div>
-                  )}
-                </div>
-              </div>
+              <DashboardKpiCard
+                label={`Total Income · ${prettyPeriod(summary.period)}`}
+                value={formatMoney(overview.total_income || 0)}
+                subtitle={
+                  overview.start && overview.end
+                    ? formatRange(overview.start, overview.end)
+                    : undefined
+                }
+              />
             </div>
-
-            {/* Expenses (category-specific when selected) */}
             <div className="col-md-4">
-              <div className="card shadow-sm h-100 dashboard-kpi-card">
-                <div className="card-body">
-                  <div className="dashboard-kpi-label">
-                    {appliedCategory
-                      ? <>Expenses · {prettyPeriod(summary.period)} · <strong>{appliedCategory}</strong></>
-                      : <>Total Expenses · {prettyPeriod(summary.period)}</>
-                    }
-                  </div>
-                  <div className="dashboard-kpi-value">
-                    {formatMoney(
-                      appliedCategory
-                        ? (overviewCat?.total_expenses ?? 0)
-                        : (overview.total_expenses ?? 0)
-                    )}
-                  </div>
-                  {(appliedCategory ? overviewCat?.start : overview.start) &&
-                   (appliedCategory ? overviewCat?.end   : overview.end) && (
-                    <div className="small text-muted">
-                      {formatRange(
+              <DashboardKpiCard
+                label={
+                  appliedCategory ? (
+                    <>Expenses · {prettyPeriod(summary.period)} · <strong>{appliedCategory}</strong></>
+                  ) : (
+                    <>Total Expenses · {prettyPeriod(summary.period)}</>
+                  )
+                }
+                value={formatMoney(
+                  appliedCategory
+                    ? overviewCat?.total_expenses ?? 0
+                    : overview.total_expenses ?? 0
+                )}
+                subtitle={
+                  (appliedCategory ? overviewCat?.start : overview.start) &&
+                  (appliedCategory ? overviewCat?.end : overview.end)
+                    ? formatRange(
                         appliedCategory ? overviewCat!.start! : overview.start!,
-                        appliedCategory ? overviewCat!.end!   : overview.end!
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
+                        appliedCategory ? overviewCat!.end! : overview.end!
+                      )
+                    : undefined
+                }
+              />
             </div>
-
-            {/* Net (computed when category is selected) */}
             <div className="col-md-4">
-              <div className="card shadow-sm h-100 dashboard-kpi-card">
-                <div className="card-body">
-                  <div className="dashboard-kpi-label">
-                    {appliedCategory
-                      ? <>Net after <strong>{appliedCategory}</strong> · {prettyPeriod(summary.period)}</>
-                      : <>Net Balance · {prettyPeriod(summary.period)}</>
-                    }
-                  </div>
-                  <div
-                    className={`dashboard-kpi-value ${
-                      Number(
-                        appliedCategory ? (computedNet ?? 0) : (overview.net_balance ?? 0)
-                      ) >= 0 ? 'text-success' : 'text-danger'
-                    }`}
-                  >
-                    {formatMoney(
-                      appliedCategory ? (computedNet ?? 0) : (overview.net_balance ?? 0)
-                    )}
-                  </div>
-                </div>
-              </div>
+              <DashboardKpiCard
+                label={
+                  appliedCategory ? (
+                    <>Net after <strong>{appliedCategory}</strong> · {prettyPeriod(summary.period)}</>
+                  ) : (
+                    <>Net Balance · {prettyPeriod(summary.period)}</>
+                  )
+                }
+                value={formatMoney(
+                  appliedCategory ? computedNet ?? 0 : overview.net_balance ?? 0
+                )}
+                valueClassName={
+                  Number(
+                    appliedCategory ? computedNet ?? 0 : overview.net_balance ?? 0
+                  ) >= 0
+                    ? "text-success"
+                    : "text-danger"
+                }
+              />
             </div>
           </div>
         </section>
@@ -545,15 +573,15 @@ export default function Dashboard() {
 
       {/* Spending summary + budgets + advanced reporting */}
       <section className="dashboard-section">
-        <div className="dashboard-section-header">
-          <div>
-            <h2 className="dashboard-section-title mb-1">Spending by category</h2>
-            <p className="dashboard-section-subtitle mb-0 text-muted">
+        <DashboardSectionHeader
+          title="Spending by category"
+          subtitle={
+            <>
               For {prettyPeriod(summary.period)}
               {appliedCategory ? <> · focusing on <strong>{appliedCategory}</strong></> : null}
-            </p>
-          </div>
-        </div>
+            </>
+          }
+        />
 
         {chartData.length === 0 ? (
           <p className="text-muted">No results found for this filter.</p>
@@ -678,85 +706,29 @@ export default function Dashboard() {
 
                 {/* Totals for grouped chart (independent) */}
                 <div className="row g-3 mb-3 dashboard-secondary-metrics">
-                  {/* Income (green) */}
                   <div className="col-md-4">
-                    <div className="card shadow-sm h-100">
-                      <div className="card-body">
-                        <div className="text-muted small">
-                          Total Income for {prettyGroupedWindow('yearly')}
-                        </div>
-                        <div className="fs-4 fw-bold" style={{ color: '#2ecc71' }}>
-                          {formatMoney(overviewTotals?.income ?? 0)}
-                        </div>
-                        <div className="small mt-1">
-                          <span
-                            style={{
-                              display: 'inline-block',
-                              width: 10,
-                              height: 10,
-                              background: '#2ecc71',
-                              marginRight: 6,
-                              borderRadius: 2,
-                            }}
-                          />
-                          Income series color in chart
-                        </div>
-                      </div>
-                    </div>
+                    <DashboardMetricCard
+                      label={`Total Income for ${prettyGroupedWindow("yearly")}`}
+                      value={formatMoney(overviewTotals?.income ?? 0)}
+                      color="#2ecc71"
+                      legendText="Income series color in chart"
+                    />
                   </div>
-
-                  {/* Expenses (red) */}
                   <div className="col-md-4">
-                    <div className="card shadow-sm h-100">
-                      <div className="card-body">
-                        <div className="text-muted small">
-                          Total Expenses for {prettyGroupedWindow('yearly')}
-                        </div>
-                        <div className="fs-4 fw-bold" style={{ color: '#e74c3c' }}>
-                          {formatMoney(overviewTotals?.expenses ?? 0)}
-                        </div>
-                        <div className="small mt-1">
-                          <span
-                            style={{
-                              display: 'inline-block',
-                              width: 10,
-                              height: 10,
-                              background: '#e74c3c',
-                              marginRight: 6,
-                              borderRadius: 2,
-                            }}
-                          />
-                          Expenses series color in chart
-                        </div>
-                      </div>
-                    </div>
+                    <DashboardMetricCard
+                      label={`Total Expenses for ${prettyGroupedWindow("yearly")}`}
+                      value={formatMoney(overviewTotals?.expenses ?? 0)}
+                      color="#e74c3c"
+                      legendText="Expenses series color in chart"
+                    />
                   </div>
-
-                  {/* Net (blue) */}
                   <div className="col-md-4">
-                    <div className="card shadow-sm h-100">
-                      <div className="card-body">
-                        <div className="text-muted small">
-                          Net Balance for {prettyGroupedWindow('yearly')}
-                        </div>
-                        <div className="fs-4 fw-bold" style={{ color: '#3498db' }}>
-                          {formatMoney(overviewTotals?.net ?? 0)}
-                        </div>
-                        <div className="small mt-1">
-                          <span
-                            style={{
-                              display: 'inline-block',
-                              width: 10,
-                              height: 10,
-                              background: '#3498db',
-                              marginRight: 6,
-                              borderRadius: 2,
-                            }}
-                          />
-                          Net series color in chart
-                        </div>
-                      </div>
-                    </div>
+                    <DashboardMetricCard
+                      label={`Net Balance for ${prettyGroupedWindow("yearly")}`}
+                      value={formatMoney(overviewTotals?.net ?? 0)}
+                      color="#3498db"
+                      legendText="Net series color in chart"
+                    />
                   </div>
                 </div>
 
@@ -798,85 +770,7 @@ export default function Dashboard() {
                               <CartesianGrid strokeDasharray="3 3" />
                               <XAxis dataKey="label" />
                               <YAxis />
-                              <Tooltip
-                                content={({ active, payload, label }) => {
-                                  if (!active || !payload?.length) return null;
-                                  const inc =
-                                    payload.find(
-                                      (p) => (p as any).dataKey === 'income'
-                                    )?.value ?? 0;
-                                  const exp =
-                                    payload.find(
-                                      (p) => (p as any).dataKey === 'expenses'
-                                    )?.value ?? 0;
-                                  const net =
-                                    payload.find(
-                                      (p) => (p as any).dataKey === 'net'
-                                    )?.value ?? 0;
-                                  const span =
-                                    typeof label === 'string'
-                                      ? spanFromLabel(label)
-                                      : null;
-
-                                  return (
-                                    <div
-                                      className="card shadow-sm p-2"
-                                      style={{ minWidth: 220 }}
-                                    >
-                                      <div className="fw-semibold mb-1">
-                                        {String(label ?? '')}
-                                      </div>
-                                      {span && (
-                                        <div className="text-muted small mb-2">
-                                          {fmtDDMMYYYY(span.start)} —{' '}
-                                          {fmtDDMMYYYY(span.end)}
-                                        </div>
-                                      )}
-                                      <div className="small">
-                                        <div>
-                                          <span
-                                            style={{
-                                              display: 'inline-block',
-                                              width: 8,
-                                              height: 8,
-                                              background: '#2ecc71',
-                                              marginRight: 6,
-                                              borderRadius: 2,
-                                            }}
-                                          />
-                                          Income: {formatMoney(inc)}
-                                        </div>
-                                        <div>
-                                          <span
-                                            style={{
-                                              display: 'inline-block',
-                                              width: 8,
-                                              height: 8,
-                                              background: '#e74c3c',
-                                              marginRight: 6,
-                                              borderRadius: 2,
-                                            }}
-                                          />
-                                          Expenses: {formatMoney(exp)}
-                                        </div>
-                                        <div>
-                                          <span
-                                            style={{
-                                              display: 'inline-block',
-                                              width: 8,
-                                              height: 8,
-                                              background: '#3498db',
-                                              marginRight: 6,
-                                              borderRadius: 2,
-                                            }}
-                                          />
-                                          Net: {formatMoney(net)}
-                                        </div>
-                                      </div>
-                                    </div>
-                                  );
-                                }}
-                              />
+                              <Tooltip content={renderGroupedTooltip} />
                               <Legend />
                               <Bar dataKey="income" name="Income" fill="#2ecc71" />
                               <Bar
@@ -898,85 +792,7 @@ export default function Dashboard() {
                               <CartesianGrid strokeDasharray="3 3" />
                               <XAxis dataKey="label" />
                               <YAxis />
-                              <Tooltip
-                                content={({ active, payload, label }) => {
-                                  if (!active || !payload?.length) return null;
-                                  const inc =
-                                    payload.find(
-                                      (p) => (p as any).dataKey === 'income'
-                                    )?.value ?? 0;
-                                  const exp =
-                                    payload.find(
-                                      (p) => (p as any).dataKey === 'expenses'
-                                    )?.value ?? 0;
-                                  const net =
-                                    payload.find(
-                                      (p) => (p as any).dataKey === 'net'
-                                    )?.value ?? 0;
-                                  const span =
-                                    typeof label === 'string'
-                                      ? spanFromLabel(label)
-                                      : null;
-
-                                  return (
-                                    <div
-                                      className="card shadow-sm p-2"
-                                      style={{ minWidth: 220 }}
-                                    >
-                                      <div className="fw-semibold mb-1">
-                                        {String(label ?? '')}
-                                      </div>
-                                      {span && (
-                                        <div className="text-muted small mb-2">
-                                          {fmtDDMMYYYY(span.start)} —{' '}
-                                          {fmtDDMMYYYY(span.end)}
-                                        </div>
-                                      )}
-                                      <div className="small">
-                                        <div>
-                                          <span
-                                            style={{
-                                              display: 'inline-block',
-                                              width: 8,
-                                              height: 8,
-                                              background: '#2ecc71',
-                                              marginRight: 6,
-                                              borderRadius: 2,
-                                            }}
-                                          />
-                                          Income: {formatMoney(inc)}
-                                        </div>
-                                        <div>
-                                          <span
-                                            style={{
-                                              display: 'inline-block',
-                                              width: 8,
-                                              height: 8,
-                                              background: '#e74c3c',
-                                              marginRight: 6,
-                                              borderRadius: 2,
-                                            }}
-                                          />
-                                          Expenses: {formatMoney(exp)}
-                                        </div>
-                                        <div>
-                                          <span
-                                            style={{
-                                              display: 'inline-block',
-                                              width: 8,
-                                              height: 8,
-                                              background: '#3498db',
-                                              marginRight: 6,
-                                              borderRadius: 2,
-                                            }}
-                                          />
-                                          Net: {formatMoney(net)}
-                                        </div>
-                                      </div>
-                                    </div>
-                                  );
-                                }}
-                              />
+                              <Tooltip content={renderGroupedTooltip} />
                               <Legend />
                               <Line
                                 type="monotone"
