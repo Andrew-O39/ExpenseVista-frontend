@@ -839,7 +839,7 @@ html[data-bs-theme="dark"] .hero-welcome {
   background: var(--ev-surface-elevated);
   border: 1px solid var(--ev-border-subtle);
   border-radius: 0.5rem;
-  overflow: hidden;
+  overflow: visible;
   box-shadow: var(--ev-shadow-sm);
 }
 
