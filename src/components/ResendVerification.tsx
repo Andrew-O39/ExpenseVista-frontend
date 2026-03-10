@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { resendVerificationEmail } from "../services/api";
 
 export default function ResendVerification() {
@@ -39,40 +40,57 @@ export default function ResendVerification() {
   const isAuthed = Boolean(localStorage.getItem("access_token"));
 
   return (
-    <div className="d-flex flex-column justify-content-center align-items-center vh-100 bg-light">
-      <h2 className="mb-3">Resend Verification</h2>
+    <div className="auth-page">
+      <div className="auth-card">
+        <h1 className="auth-card-title">Resend Verification</h1>
+        <p className="auth-card-subtitle">
+          Enter your email to receive a new verification link.
+        </p>
 
-      {!isAuthed ? (
-        <form onSubmit={handleSubmit} className="bg-white p-4 rounded shadow" style={{ width: 360 }}>
-          <div className="mb-3">
-            <input
-              type="email"
-              placeholder="Your email address"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="form-control"
-              required
-            />
+        {!isAuthed ? (
+          <form onSubmit={handleSubmit} className="auth-form">
+            <div className="mb-3">
+              <label htmlFor="resend-email" className="form-label">Email</label>
+              <input
+                id="resend-email"
+                type="email"
+                placeholder="Your email address"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="form-control"
+                required
+              />
+            </div>
+            <div className="auth-alerts">
+              {msg && (
+                <div className={`alert ${status === "error" ? "alert-danger" : "alert-info"}`}>
+                  {msg}
+                </div>
+              )}
+            </div>
+            <div className="auth-cta">
+              <button type="submit" className="btn btn-primary w-100" disabled={status === "sending"}>
+                {status === "sending" ? "Sending..." : "Send verification email"}
+              </button>
+            </div>
+          </form>
+        ) : (
+          <div>
+            <div className="auth-alerts">
+              {msg && (
+                <div className={`alert ${status === "error" ? "alert-danger" : "alert-info"}`}>
+                  {msg}
+                </div>
+              )}
+            </div>
+            {status === "sending" && <p className="text-muted mb-0">Sending verification email…</p>}
           </div>
-          {msg && (
-            <div className={`alert ${status === "error" ? "alert-danger" : "alert-info"}`}>
-              {msg}
-            </div>
-          )}
-          <button type="submit" className="btn btn-primary w-100" disabled={status === "sending"}>
-            {status === "sending" ? "Sending..." : "Send verification email"}
-          </button>
-        </form>
-      ) : (
-        <div className="bg-white p-4 rounded shadow" style={{ width: 360 }}>
-          {msg && (
-            <div className={`alert ${status === "error" ? "alert-danger" : "alert-info"}`}>
-              {msg}
-            </div>
-          )}
-          {status === "sending" && <p>Sending verification email…</p>}
+        )}
+
+        <div className="auth-links">
+          <Link to="/login">Back to Login</Link>
         </div>
-      )}
+      </div>
     </div>
   );
 }

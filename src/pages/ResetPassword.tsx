@@ -50,52 +50,60 @@ export default function ResetPassword() {
   };
 
   return (
-    <div className="container p-4" style={{ maxWidth: 420 }}>
-      <h2 className="mb-3">Reset Password</h2>
-      {!token && (
-        <div className="alert alert-warning">
-          No token found. Open the link from your email, or{" "}
-          <Link to="/forgot-password">request a new reset link</Link>.
-        </div>
-      )}
+    <div className="auth-page">
+      <div className="auth-card">
+        <h1 className="auth-card-title">Reset Password</h1>
 
-      {msg && <div className="alert alert-success">{msg}</div>}
-      {err && <div className="alert alert-danger">{err}</div>}
-
-      <form onSubmit={onSubmit}>
-        <div className="mb-3">
-          <label className="form-label">New Password</label>
-          <input
-            type="password"
-            className="form-control"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            disabled={submitting}
-            required
-            minLength={8}
-          />
-          <div className="form-text">At least 8 characters.</div>
+        <div className="auth-alerts">
+          {!token && (
+            <div className="alert alert-warning">
+              No token found. Open the link from your email, or{" "}
+              <Link to="/forgot-password">request a new reset link</Link>.
+            </div>
+          )}
+          {msg && <div className="alert alert-success">{msg}</div>}
+          {err && <div className="alert alert-danger">{err}</div>}
         </div>
 
-        <div className="mb-3">
-          <label className="form-label">Confirm New Password</label>
-          <input
-            type="password"
-            className="form-control"
-            value={confirm}
-            onChange={(e) => setConfirm(e.target.value)}
-            disabled={submitting}
-            required
-          />
+        <form onSubmit={onSubmit} className="auth-form">
+          <div className="mb-3">
+            <label htmlFor="reset-password" className="form-label">New Password</label>
+            <input
+              id="reset-password"
+              type="password"
+              className="form-control"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              disabled={submitting}
+              required
+              minLength={8}
+            />
+            <div className="form-text">At least 8 characters.</div>
+          </div>
+
+          <div className="mb-3">
+            <label htmlFor="reset-confirm" className="form-label">Confirm New Password</label>
+            <input
+              id="reset-confirm"
+              type="password"
+              className="form-control"
+              value={confirm}
+              onChange={(e) => setConfirm(e.target.value)}
+              disabled={submitting}
+              required
+            />
+          </div>
+
+          <div className="auth-cta">
+            <button type="submit" className="btn btn-primary w-100" disabled={submitting || !token}>
+              {submitting ? "Resetting…" : "Reset Password"}
+            </button>
+          </div>
+        </form>
+
+        <div className="auth-links">
+          <Link to="/login">Back to Login</Link>
         </div>
-
-        <button type="submit" className="btn btn-primary w-100" disabled={submitting || !token}>
-          {submitting ? "Resetting…" : "Reset Password"}
-        </button>
-      </form>
-
-      <div className="mt-3">
-        <Link to="/login">Back to Login</Link>
       </div>
     </div>
   );

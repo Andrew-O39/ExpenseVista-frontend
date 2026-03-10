@@ -39,13 +39,12 @@ function Page({ title, children }: { title: string; children: React.ReactNode })
 /* ---------- Public splash (no auth / no API calls) ---------- */
 function WelcomeHero() {
   return (
-    <div className="hero-welcome min-vh-100 d-flex flex-column align-items-center justify-content-center text-center p-4">
-      <h1 className="display-3 fw-bold mb-3 text-primary">Welcome to ExpenseVista</h1>
-      <p className="lead mb-4 text-muted">
+    <div className="hero-welcome">
+      <h1 className="hero-welcome-title">Welcome to ExpenseVista</h1>
+      <p className="hero-welcome-subtitle">
         Track expenses, manage budgets, and take control of your finances.
       </p>
-
-      <div className="d-flex gap-3 flex-wrap justify-content-center">
+      <div className="hero-welcome-actions">
         <Link to="/login" className="btn btn-primary btn-lg shadow-sm">
           Login
         </Link>

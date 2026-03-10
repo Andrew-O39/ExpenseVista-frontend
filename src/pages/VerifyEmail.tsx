@@ -45,9 +45,9 @@ export default function VerifyEmail() {
   }, [token, navigate]);
 
   return (
-    <div className="d-flex justify-content-center align-items-start mt-5">
-      <div className="p-4 border rounded bg-white shadow" style={{ maxWidth: 520, width: "100%" }}>
-        <h3 className="mb-3">Verify your email</h3>
+    <div className="auth-page">
+      <div className="auth-card">
+        <h1 className="auth-card-title">Verify your email</h1>
 
         {status === "loading" && (
           <div className="d-flex align-items-center">
@@ -60,17 +60,20 @@ export default function VerifyEmail() {
         )}
 
         {status === "success" && (
-          <div className="alert alert-success">
-            <div className="fw-semibold mb-1">Success</div>
-            <div>{message}</div>
-            <div className="mt-3">
-              <Link to="/login" className="btn btn-primary">Go to Login</Link>
+          <div className="auth-alerts">
+            <div className="alert alert-success">
+              <div className="fw-semibold mb-1">Success</div>
+              <div>{message}</div>
+              <div className="mt-3">
+                <Link to="/login" className="btn btn-primary">Go to Login</Link>
+              </div>
             </div>
           </div>
         )}
 
         {status === "error" && (
-          <div className="alert alert-danger">
+          <div className="auth-alerts">
+            <div className="alert alert-danger">
             <div className="fw-semibold mb-1">Verification failed</div>
             <div>{error}</div>
             <div className="mt-3 d-flex gap-2">
@@ -78,6 +81,7 @@ export default function VerifyEmail() {
             </div>
             <div className="text-muted small mt-3">
               Tip: If the link expired, log in and click “Resend verification link.”
+            </div>
             </div>
           </div>
         )}

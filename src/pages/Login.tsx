@@ -126,8 +126,8 @@ export default function Login() {
     if (!looksUnverified) return null;
 
     return (
-      <div className="alert alert-warning mt-3 w-100" style={{ maxWidth: 360 }}>
-        <div className="d-flex justify-content-between align-items-center">
+      <div className="alert alert-warning mt-3 w-100">
+        <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
           <div>
             <strong>Email not verified.</strong> Some features are limited until
             you verify your address.
@@ -149,35 +149,31 @@ export default function Login() {
   };
 
   return (
-  <div className="login-page d-flex flex-column justify-content-center align-items-center vh-100 bg-body">
-    <h2 className="mb-4">Login</h2>
+  <div className="auth-page">
+    <div className="auth-card">
+      <h1 className="auth-card-title">Login</h1>
 
-      {/* Optional alert if session expired */}
-      {msg === "session_expired" && (
-        <div className="alert alert-warning w-100" style={{ maxWidth: 360 }}>
-          Your session expired. Please sign in again to continue.
-        </div>
-      )}
-
-      {/* Info banner (e.g., verified success or resend success) */}
-      {info && (
-        <div className="alert alert-success w-100" style={{ maxWidth: 360 }}>
-          {info}
-        </div>
-      )}
+      <div className="auth-alerts">
+        {msg === "session_expired" && (
+          <div className="alert alert-warning">
+            Your session expired. Please sign in again to continue.
+          </div>
+        )}
+        {info && (
+          <div className="alert alert-success">
+            {info}
+          </div>
+        )}
+      </div>
 
       <form
         onSubmit={handleSubmit}
-        className="p-4 rounded shadow border"
-        style={{
-          width: 320,
-          background: "var(--bs-body-bg)",
-          color: "var(--bs-body-color)",
-          borderColor: "var(--bs-border-color)",
-        }}
+        className="auth-form"
       >
         <div className="mb-3">
+          <label htmlFor="login-username" className="form-label">Username</label>
           <input
+            id="login-username"
             type="text"
             placeholder="Username"
             autoComplete="username"
@@ -189,7 +185,9 @@ export default function Login() {
         </div>
 
         <div className="mb-3 position-relative">
+          <label htmlFor="login-password" className="form-label">Password</label>
           <input
+            id="login-password"
             type={showPassword ? "text" : "password"}
             placeholder="Password"
             autoComplete="current-password"
@@ -210,22 +208,21 @@ export default function Login() {
           </button>
         </div>
 
-        <div className="mt-3 text-center">
-          <Link to="/forgot-password">Forgot your password?</Link>
+        <div className="auth-cta">
+          {error && <p className="text-danger small mb-2">{error}</p>}
+          <button type="submit" className="btn btn-primary w-100">
+            Login
+          </button>
         </div>
-
-        <div className="mt-2 text-center">
-          <Link to="/resend-verification">Resend verification email</Link>
-        </div>
-
-        {error && <p className="text-danger small mb-3">{error}</p>}
-
-        <button type="submit" className="btn btn-primary w-100">
-          Login
-        </button>
 
         {maybeResendHint()}
       </form>
+
+      <div className="auth-links">
+        <Link to="/forgot-password">Forgot your password?</Link>
+        <Link to="/resend-verification">Resend verification email</Link>
+      </div>
     </div>
+  </div>
   );
 }

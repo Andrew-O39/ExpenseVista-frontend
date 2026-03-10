@@ -224,11 +224,18 @@ html[data-bs-theme="dark"] .progress {
 }
 
 /* =========================================================
-   🏠 Hero Welcome Section Styling
+   🏠 Hero Welcome Section Styling (logged-out landing)
    ========================================================= */
 .hero-welcome {
   background: linear-gradient(120deg, #FFF6E8, #FFEED6);
   color: var(--bs-body-color);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: var(--ev-space-6);
 }
 
 html[data-bs-theme="dark"] .hero-welcome {
@@ -236,7 +243,27 @@ html[data-bs-theme="dark"] .hero-welcome {
   color: var(--bs-body-color);
 }
 
-/* Hero buttons adopt brand palette */
+.hero-welcome-title {
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  font-weight: 600;
+  color: var(--bs-primary);
+  margin-bottom: var(--ev-space-3);
+}
+
+.hero-welcome-subtitle {
+  font-size: 1.125rem;
+  color: var(--bs-secondary-color, #6c757d);
+  margin-bottom: var(--ev-space-6);
+  max-width: 28em;
+}
+
+.hero-welcome-actions {
+  display: flex;
+  gap: var(--ev-space-3);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
 .hero-welcome .btn-primary {
   background-color: var(--bs-primary);
   border-color: var(--bs-primary);
@@ -258,9 +285,120 @@ html[data-bs-theme="dark"] .hero-welcome {
   color: #fff;
 }
 
-/* Subtle shadow to lift hero section on bright background */
-.hero-welcome {
-  box-shadow: 0 4px 20px rgba(108, 78, 47, 0.08);
+/* =========================================================
+   Auth pages (Login, Register, Forgot Password, etc.)
+   ========================================================= */
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--ev-space-6);
+  background: var(--ev-surface-page);
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 400px;
+  background: var(--ev-surface-elevated);
+  color: var(--bs-body-color);
+  border: 1px solid var(--ev-border-subtle);
+  border-radius: 0.75rem;
+  box-shadow: var(--ev-shadow-md);
+  padding: var(--ev-space-6);
+}
+
+.auth-card-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--bs-body-color);
+  margin-bottom: var(--ev-space-2);
+}
+
+.auth-card-subtitle {
+  font-size: 0.9375rem;
+  color: var(--bs-secondary-color, #6c757d);
+  margin-bottom: var(--ev-space-4);
+}
+
+.auth-form .form-label {
+  font-weight: 500;
+  margin-bottom: var(--ev-space-1);
+}
+
+.auth-form .mb-3 {
+  margin-bottom: var(--ev-space-3) !important;
+}
+
+.auth-form .form-control {
+  font-size: 0.9375rem;
+}
+
+.auth-form .form-text {
+  font-size: 0.875rem;
+  margin-top: var(--ev-space-1);
+}
+
+.auth-alerts {
+  margin-bottom: var(--ev-space-4);
+}
+
+.auth-alerts .alert {
+  margin-bottom: var(--ev-space-2);
+}
+
+.auth-alerts .alert:last-child {
+  margin-bottom: 0;
+}
+
+.auth-links {
+  margin-top: var(--ev-space-4);
+  padding-top: var(--ev-space-3);
+  border-top: 1px solid var(--ev-border-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: var(--ev-space-2);
+  align-items: center;
+  font-size: 0.9375rem;
+}
+
+.auth-cta {
+  margin-top: var(--ev-space-4);
+}
+
+.auth-cta .btn-primary {
+  width: 100%;
+  padding: var(--ev-space-2) var(--ev-space-4);
+  font-weight: 500;
+}
+
+.auth-page a,
+.auth-page a:visited {
+  color: var(--bs-link-color);
+  text-decoration: none;
+}
+
+.auth-page a:hover,
+.auth-page a:focus {
+  color: var(--bs-link-hover-color);
+  text-decoration: underline;
+}
+
+.auth-page a:focus-visible {
+  outline: 2px solid var(--bs-primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+@media (max-width: 768px) {
+  .auth-page {
+    padding: var(--ev-space-4);
+    align-items: stretch;
+  }
+  .auth-card {
+    max-width: 100%;
+  }
 }
 
 /* =========================================================
@@ -950,23 +1088,4 @@ html[data-bs-theme="dark"] .hero-welcome {
   .assistant-panel {
     width: calc(100vw - var(--ev-space-6));
   }
-}
-
-/* Login page links: use brand link colors instead of Bootstrap blue */
-.login-page a,
-.login-page a:visited {
-  color: var(--bs-link-color);
-  text-decoration: underline;       /* optional: keeps linky feel */
-}
-
-.login-page a:hover,
-.login-page a:focus {
-  color: var(--bs-link-hover-color);
-  text-decoration-color: currentColor;
-}
-
-.login-page a:focus-visible {
-  outline: 2px solid var(--bs-primary);
-  outline-offset: 2px;
-  border-radius: 4px;
 }

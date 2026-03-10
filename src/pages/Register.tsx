@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { registerUser } from '../services/api';
 
 export default function Register() {
@@ -57,87 +57,103 @@ export default function Register() {
   };
 
   return (
-    <div className="container mt-5" style={{ maxWidth: '400px' }}>
-      <h2 className="mb-4">Register</h2>
-      {error && <div className="alert alert-danger">{error}</div>}
+    <div className="auth-page">
+      <div className="auth-card">
+        <h1 className="auth-card-title">Register</h1>
+        <p className="auth-card-subtitle">
+          Create an account to start tracking expenses and managing budgets.
+        </p>
 
-      <form onSubmit={handleSubmit} noValidate>
-        <div className="mb-3">
-          <label htmlFor="username" className="form-label">Username</label>
-          <input
-            type="text"
-            className="form-control"
-            id="username"
-            value={username}
-            onChange={e => setUsername(e.target.value)}
-            disabled={loading}
-            required
-          />
+        <div className="auth-alerts">
+          {error && <div className="alert alert-danger">{error}</div>}
         </div>
 
-        <div className="mb-3">
-          <label htmlFor="email" className="form-label">Email address</label>
-          <input
-            type="email"
-            className="form-control"
-            id="email"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            disabled={loading}
-            required
-          />
-        </div>
+        <form onSubmit={handleSubmit} noValidate className="auth-form">
+          <div className="mb-3">
+            <label htmlFor="username" className="form-label">Username</label>
+            <input
+              type="text"
+              className="form-control"
+              id="username"
+              value={username}
+              onChange={e => setUsername(e.target.value)}
+              disabled={loading}
+              required
+            />
+          </div>
 
-        <div className="mb-3 position-relative">
-          <label htmlFor="password" className="form-label">Password</label>
-          <input
-            type={showPassword ? 'text' : 'password'}
-            className="form-control"
-            id="password"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            disabled={loading}
-            required
-            minLength={6}
-          />
-          <button
-            type="button"
-            onClick={() => setShowPassword(!showPassword)}
-            className="btn btn-outline-secondary position-absolute top-50 end-0 translate-middle-y me-2"
-            style={{ zIndex: 2 }}
-            tabIndex={-1}
-          >
-            {showPassword ? 'Hide' : 'Show'}
-          </button>
-        </div>
+          <div className="mb-3">
+            <label htmlFor="email" className="form-label">Email address</label>
+            <input
+              type="email"
+              className="form-control"
+              id="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              disabled={loading}
+              required
+            />
+          </div>
 
-        <div className="mb-3 position-relative">
-          <label htmlFor="confirmPassword" className="form-label">Confirm Password</label>
-          <input
-            type={showPassword ? 'text' : 'password'}
-            className="form-control"
-            id="confirmPassword"
-            value={confirmPassword}
-            onChange={e => setConfirmPassword(e.target.value)}
-            disabled={loading}
-            required
-            minLength={6}
-          />
-          <button
-            type="button"
-            onClick={() => setShowPassword(!showPassword)}
-            className="btn btn-outline-secondary position-absolute top-50 end-0 translate-middle-y me-2"
-            style={{ zIndex: 2 }}
-            tabIndex={-1}
-          >
-            {showPassword ? 'Hide' : 'Show'}
-          </button>
-        </div>
+          <div className="mb-3 position-relative">
+            <label htmlFor="password" className="form-label">Password</label>
+            <input
+              type={showPassword ? 'text' : 'password'}
+              className="form-control"
+              id="password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              disabled={loading}
+              required
+              minLength={6}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="btn btn-outline-secondary position-absolute top-50 end-0 translate-middle-y me-2"
+              style={{ zIndex: 2 }}
+              tabIndex={-1}
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+            >
+              {showPassword ? 'Hide' : 'Show'}
+            </button>
+          </div>
 
-        <button type="submit" className="btn btn-primary w-100" disabled={loading}>
-          {loading ? 'Registering...' : 'Register'}
-        </button>
-      </form>
+          <div className="mb-3 position-relative">
+            <label htmlFor="confirmPassword" className="form-label">Confirm Password</label>
+            <input
+              type={showPassword ? 'text' : 'password'}
+              className="form-control"
+              id="confirmPassword"
+              value={confirmPassword}
+              onChange={e => setConfirmPassword(e.target.value)}
+              disabled={loading}
+              required
+              minLength={6}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="btn btn-outline-secondary position-absolute top-50 end-0 translate-middle-y me-2"
+              style={{ zIndex: 2 }}
+              tabIndex={-1}
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+            >
+              {showPassword ? 'Hide' : 'Show'}
+            </button>
+          </div>
+
+          <div className="auth-cta">
+            <button type="submit" className="btn btn-primary w-100" disabled={loading}>
+              {loading ? 'Registering...' : 'Register'}
+            </button>
+          </div>
+        </form>
+
+        <div className="auth-links">
+          <Link to="/login">Already have an account? Log in</Link>
+        </div>
+      </div>
     </div>
   );
 }

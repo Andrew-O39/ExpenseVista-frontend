@@ -28,35 +28,42 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className="container p-4" style={{ maxWidth: 420 }}>
-      <h2 className="mb-3">Forgot Password</h2>
-      <p className="text-muted">
-        Enter the email you used to register. If an account exists, we’ll email a reset link.
-      </p>
+    <div className="auth-page">
+      <div className="auth-card">
+        <h1 className="auth-card-title">Forgot Password</h1>
+        <p className="auth-card-subtitle">
+          Enter the email you used to register. If an account exists, we'll email a reset link.
+        </p>
 
-      {msg && <div className="alert alert-success">{msg}</div>}
-      {err && <div className="alert alert-danger">{err}</div>}
-
-      <form onSubmit={onSubmit}>
-        <div className="mb-3">
-          <label className="form-label">Email</label>
-          <input
-            type="email"
-            className="form-control"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            disabled={submitting}
-            required
-          />
+        <div className="auth-alerts">
+          {msg && <div className="alert alert-success">{msg}</div>}
+          {err && <div className="alert alert-danger">{err}</div>}
         </div>
 
-        <button type="submit" className="btn btn-primary w-100" disabled={submitting}>
-          {submitting ? "Sending…" : "Send Reset Link"}
-        </button>
-      </form>
+        <form onSubmit={onSubmit} className="auth-form">
+          <div className="mb-3">
+            <label htmlFor="forgot-email" className="form-label">Email</label>
+            <input
+              id="forgot-email"
+              type="email"
+              className="form-control"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={submitting}
+              required
+            />
+          </div>
 
-      <div className="mt-3">
-        <Link to="/login">Back to Login</Link>
+          <div className="auth-cta">
+            <button type="submit" className="btn btn-primary w-100" disabled={submitting}>
+              {submitting ? "Sending…" : "Send Reset Link"}
+            </button>
+          </div>
+        </form>
+
+        <div className="auth-links">
+          <Link to="/login">Back to Login</Link>
+        </div>
       </div>
     </div>
   );
