@@ -42,7 +42,7 @@ export default function LandingHero() {
         animate="show"
       >
         <motion.h1 className="hero-welcome-title" variants={item}>
-          Your finance dashboard, simplified
+          Welcome to ExpenseVista - Your finance dashboard, simplified
         </motion.h1>
         <motion.p className="hero-welcome-subtitle" variants={item}>
           Track expenses, manage budgets, and see your income at a glance. ExpenseVista brings clarity to your personal finances.
