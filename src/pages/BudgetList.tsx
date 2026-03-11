@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { isTokenValid } from '../utils/auth';
 import { getCurrencyCode, formatMoney } from "../utils/currency";
 import ListActionsDropdown from "../components/ListActionsDropdown";
+import { exportTableToPdf } from "../utils/pdfExport";
 
 type Budget = {
   id: number;
@@ -188,6 +189,51 @@ export default function BudgetList() {
     [budgets]
   );
 
+  const handleExportPdf = () => {
+    if (budgets.length === 0) {
+      alert("There is no data to export for the current filters.");
+      return;
+    }
+
+    const filterParts: string[] = [];
+    if (search) filterParts.push(`Search: "${search}"`);
+    if (period && period !== "all") filterParts.push(`Period: ${period}`);
+    if (range && range !== "all") filterParts.push(`Range: ${range}`);
+    if (range === "custom" && (startDate || endDate)) {
+      filterParts.push(
+        `Custom dates: ${startDate || "?"} → ${endDate || "?"}`
+      );
+    }
+    const filterSummary =
+      filterParts.length > 0
+        ? `Filters: ${filterParts.join(" · ")}`
+        : "Filters: none (all time)";
+
+    exportTableToPdf({
+      title: "Budgets Report",
+      fileName: "budgets-report.pdf",
+      columns: [
+        { header: "Category", accessor: "category" },
+        { header: "Period", accessor: "period" },
+        { header: `Limit (${currencyCode})`, accessor: "limitFormatted" },
+        { header: "Notes", accessor: "notes" },
+        { header: "Created At", accessor: "createdAt" },
+      ],
+      rows: budgets.map((b) => ({
+        category: b.category,
+        period: b.period,
+        limitFormatted: money(b.limit_amount),
+        notes: b.notes || "-",
+        createdAt: fmt(b.created_at),
+      })),
+      filterSummary,
+      totalsSummary: {
+        "Total limit (this view)": money(totalBudgetLimit),
+        "Items exported": budgets.length,
+      },
+    });
+  };
+
   return (
     <div className="container container-app p-4 list-page">
       <header className="list-page-header">
@@ -197,12 +243,21 @@ export default function BudgetList() {
             {budgets.length} {budgets.length === 1 ? "item" : "items"} · {money(totalBudgetLimit)} total limit
           </p>
         </div>
-        <button
-          className="btn btn-secondary btn-sm"
-          onClick={() => navigate("/dashboard")}
-        >
-          Back to Dashboard
-        </button>
+        <div className="list-page-actions">
+          <button
+            type="button"
+            className="btn btn-outline-secondary btn-sm"
+            onClick={handleExportPdf}
+          >
+            Export PDF
+          </button>
+          <button
+            className="btn btn-secondary btn-sm"
+            onClick={() => navigate("/dashboard")}
+          >
+            Back to Dashboard
+          </button>
+        </div>
       </header>
 
       <section className="list-page-filters">

@@ -4,6 +4,7 @@ import { getExpenses, deleteExpense } from "../services/api";
 import { isTokenValid } from "../utils/auth";
 import { getCurrencyCode, formatMoney } from "../utils/currency";
 import ListActionsDropdown from "../components/ListActionsDropdown";
+import { exportTableToPdf } from "../utils/pdfExport";
 
 type Expense = {
   id: number;
@@ -282,6 +283,50 @@ export default function ExpenseList() {
     [expenses]
   );
 
+  const handleExportPdf = () => {
+    if (expenses.length === 0) {
+      alert("There is no data to export for the current filters.");
+      return;
+    }
+
+    const filterParts: string[] = [];
+    if (search) filterParts.push(`Search: "${search}"`);
+    if (range && range !== "all") filterParts.push(`Range: ${range}`);
+    if (range === "custom" && (startDate || endDate)) {
+      filterParts.push(
+        `Custom dates: ${startDate || "?"} → ${endDate || "?"}`
+      );
+    }
+    const filterSummary =
+      filterParts.length > 0
+        ? `Filters: ${filterParts.join(" · ")}`
+        : "Filters: none (all time)";
+
+    exportTableToPdf({
+      title: "Expenses Report",
+      fileName: "expenses-report.pdf",
+      columns: [
+        { header: "Category", accessor: "category" },
+        { header: `Amount (${currencyCode})`, accessor: "amountFormatted" },
+        { header: "Description", accessor: "description" },
+        { header: "Notes", accessor: "notes" },
+        { header: "Created At", accessor: "createdAt" },
+      ],
+      rows: expenses.map((e) => ({
+        category: e.category,
+        amountFormatted: money(e.amount),
+        description: e.description || "-",
+        notes: e.notes || "-",
+        createdAt: fmt(e.created_at),
+      })),
+      filterSummary,
+      totalsSummary: {
+        "Total amount (this view)": money(totalExpenses),
+        "Items exported": expenses.length,
+      },
+    });
+  };
+
   return (
     <div className="container container-app p-4 list-page">
       <header className="list-page-header">
@@ -302,6 +347,13 @@ export default function ExpenseList() {
             <option value={25}>25 / page</option>
             <option value={50}>50 / page</option>
           </select>
+          <button
+            type="button"
+            className="btn btn-outline-secondary btn-sm"
+            onClick={handleExportPdf}
+          >
+            Export PDF
+          </button>
           <button className="btn btn-secondary btn-sm" onClick={() => navigate("/dashboard")}>
             Back to Dashboard
           </button>

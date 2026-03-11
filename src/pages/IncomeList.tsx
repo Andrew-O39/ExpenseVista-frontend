@@ -4,6 +4,7 @@ import { getIncomes, deleteIncome } from "../services/api";
 import { isTokenValid } from "../utils/auth";
 import { formatMoney, getCurrencyCode } from "../utils/currency";
 import ListActionsDropdown from "../components/ListActionsDropdown";
+import { exportTableToPdf } from "../utils/pdfExport";
 
 type Income = {
   id: number;
@@ -273,6 +274,50 @@ export default function IncomeList() {
     [incomes]
   );
 
+  const handleExportPdf = () => {
+    if (incomes.length === 0) {
+      alert("There is no data to export for the current filters.");
+      return;
+    }
+
+    const filterParts: string[] = [];
+    if (search) filterParts.push(`Search: "${search}"`);
+    if (range && range !== "all") filterParts.push(`Range: ${range}`);
+    if (range === "custom" && (startDate || endDate)) {
+      filterParts.push(
+        `Custom dates: ${startDate || "?"} → ${endDate || "?"}`
+      );
+    }
+    const filterSummary =
+      filterParts.length > 0
+        ? `Filters: ${filterParts.join(" · ")}`
+        : "Filters: none (all time)";
+
+    exportTableToPdf({
+      title: "Incomes Report",
+      fileName: "incomes-report.pdf",
+      columns: [
+        { header: "Source", accessor: "source" },
+        { header: "Category", accessor: "category" },
+        { header: `Amount (${currencyCode})`, accessor: "amountFormatted" },
+        { header: "Notes", accessor: "notes" },
+        { header: "Received At", accessor: "receivedAt" },
+      ],
+      rows: incomes.map((e) => ({
+        source: e.source,
+        category: e.category || "-",
+        amountFormatted: formatMoney(e.amount),
+        notes: e.notes || "-",
+        receivedAt: fmt(e.received_at),
+      })),
+      filterSummary,
+      totalsSummary: {
+        "Total amount (this view)": formatMoney(totalIncomes),
+        "Items exported": incomes.length,
+      },
+    });
+  };
+
   return (
     <div className="container container-app p-4 list-page">
       <header className="list-page-header">
@@ -293,6 +338,13 @@ export default function IncomeList() {
             <option value={25}>25 / page</option>
             <option value={50}>50 / page</option>
           </select>
+          <button
+            type="button"
+            className="btn btn-outline-secondary btn-sm"
+            onClick={handleExportPdf}
+          >
+            Export PDF
+          </button>
           <button
             className="btn btn-secondary btn-sm"
             onClick={() => navigate("/dashboard")}

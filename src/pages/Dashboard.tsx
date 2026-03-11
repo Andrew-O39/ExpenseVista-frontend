@@ -16,6 +16,7 @@ import DashboardKpiCard from '../components/DashboardKpiCard';
 import DashboardSectionHeader from '../components/DashboardSectionHeader';
 import DashboardMetricCard from '../components/DashboardMetricCard';
 import { formatMoney } from "../utils/currency";
+import { exportTableToPdf } from "../utils/pdfExport";
 import type { CurrentPeriod } from '../types/period';
 
 
@@ -636,6 +637,67 @@ export default function Dashboard() {
                     No budget set, but spending occurred
                   </div>
                 </div>
+              </div>
+
+              <div className="d-flex justify-content-between align-items-center mb-2 gap-2">
+                <h3 className="h6 mb-0">Budgets vs actual spending (table)</h3>
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary btn-sm"
+                  onClick={() => {
+                    if (filteredCombinedData.length === 0) {
+                      alert("There is no data to export for the current dashboard filters.");
+                      return;
+                    }
+                    const filterParts: string[] = [];
+                    filterParts.push(`Period: ${prettyPeriod(summary.period)}`);
+                    if (appliedCategory) {
+                      filterParts.push(`Category: ${appliedCategory}`);
+                    }
+                    const filterSummary =
+                      filterParts.length > 0
+                        ? `Filters: ${filterParts.join(" · ")}`
+                        : "Filters: none";
+
+                    exportTableToPdf({
+                      title: "Budget vs Actual Spending Report",
+                      fileName: "budget-vs-actual-report.pdf",
+                      columns: [
+                        { header: "Category", accessor: "category" },
+                        { header: "Budgeted Amount", accessor: "budgetFormatted" },
+                        { header: "Amount Spent", accessor: "spentFormatted" },
+                        { header: "Remaining", accessor: "remainingFormatted" },
+                      ],
+                      rows: filteredCombinedData.map(({ category, spent, budget }) => {
+                        let remaining = 0;
+                        let isOverBudget = false;
+                        if (budget > 0) {
+                          remaining = budget - spent;
+                          isOverBudget = remaining < 0;
+                        } else if (spent > 0) {
+                          remaining = -spent;
+                          isOverBudget = true;
+                        }
+                        const remainingLabel = `${remaining < 0 ? "-" : ""}${formatMoney(
+                          Math.abs(remaining)
+                        )}${isOverBudget ? " (over)" : ""}`;
+
+                        return {
+                          category,
+                          budgetFormatted: budget > 0 ? formatMoney(budget) : "No Budget",
+                          spentFormatted: formatMoney(spent),
+                          remainingFormatted: remainingLabel,
+                        };
+                      }),
+                      filterSummary,
+                      totalsSummary: {
+                        "Rows exported": filteredCombinedData.length,
+                      },
+                    });
+                  }}
+                >
+                  Export PDF
+                </button>
               </div>
 
               <div className="table-responsive mb-4">
