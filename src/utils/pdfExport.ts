@@ -89,6 +89,18 @@ export function exportTableToPdf({
     })
   );
 
+  // Constrain any "Notes" column to a reasonable width and force wrapping.
+  const columnStyles: Record<number, any> = {};
+  columns.forEach((col, index) => {
+    const headerLower = col.header.toLowerCase();
+    if (headerLower.includes("notes")) {
+      columnStyles[index] = {
+        cellWidth: 180,
+        overflow: "linebreak",
+      };
+    }
+  });
+
   autoTable(doc, {
     startY: cursorY,
     head,
@@ -104,6 +116,7 @@ export function exportTableToPdf({
       fillColor: [245, 247, 250],
     },
     margin: { left: marginLeft, right: 40 },
+    columnStyles: Object.keys(columnStyles).length ? columnStyles : undefined,
   });
 
   doc.save(fileName);
