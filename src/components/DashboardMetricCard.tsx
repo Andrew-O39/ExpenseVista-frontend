@@ -1,8 +1,12 @@
+type Variant = "income" | "expenses" | "net";
+
 type Props = {
   label: string;
   value: string;
   color: string;
   legendText: string;
+  /** Optional variant for accent border (matches Income vs Expenses semantics). */
+  variant?: Variant;
 };
 
 /**
@@ -13,9 +17,20 @@ export default function DashboardMetricCard({
   value,
   color,
   legendText,
+  variant,
 }: Props) {
+  const cardClass = [
+    "card",
+    "shadow-sm",
+    "h-100",
+    "dashboard-metric-card",
+    variant ? `dashboard-metric-card--${variant}` : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
-    <div className="card shadow-sm h-100">
+    <div className={cardClass}>
       <div className="card-body">
         <div className="text-muted small">{label}</div>
         <div className="fs-4 fw-bold dashboard-metric-value" style={{ color }}>

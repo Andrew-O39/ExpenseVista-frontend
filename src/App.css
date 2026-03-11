@@ -891,6 +891,109 @@ html[data-bs-theme="dark"] .hero-welcome {
   border-radius: 2px;
 }
 
+/* ---- Budget vs Expenses cards (Part 1) ---- */
+.dashboard-budget-exp-card {
+  border-radius: 0.75rem;
+  border: 1px solid var(--ev-border-subtle);
+  border-top: 3px solid var(--bs-info);
+  background: var(--ev-surface-elevated);
+  box-shadow: var(--ev-shadow-sm);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+  animation: dashboard-secondary-enter 0.4s ease-out backwards;
+}
+
+.dashboard-budget-exp-section .row.g-3.mb-3 .col-md-4:nth-child(1) .dashboard-budget-exp-card { animation-delay: 0.05s; }
+.dashboard-budget-exp-section .row.g-3.mb-3 .col-md-4:nth-child(2) .dashboard-budget-exp-card { animation-delay: 0.1s; }
+.dashboard-budget-exp-section .row.g-3.mb-3 .col-md-4:nth-child(3) .dashboard-budget-exp-card { animation-delay: 0.15s; }
+
+.dashboard-budget-exp-card:hover {
+  box-shadow: var(--ev-shadow-md);
+  transform: translateY(-2px);
+}
+
+@keyframes dashboard-secondary-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ---- Budget vs Expenses chart container (Part 3) ---- */
+.dashboard-budget-exp-chart-card {
+  border-radius: 0.75rem;
+  border: 1px solid var(--ev-border-subtle);
+  background: var(--ev-surface-elevated);
+  box-shadow: var(--ev-shadow-md);
+  transition: box-shadow 0.25s ease, transform 0.2s ease;
+  animation: dashboard-chart-enter 0.4s ease-out backwards;
+}
+
+.dashboard-budget-exp-chart-card:hover {
+  box-shadow: var(--ev-shadow-lg);
+  transform: translateY(-2px);
+}
+
+/* ---- Income vs Expenses over time metric cards (Part 2) ---- */
+.dashboard-metric-card {
+  border-radius: 0.75rem;
+  border: 1px solid var(--ev-border-subtle);
+  background: var(--ev-surface-elevated);
+  box-shadow: var(--ev-shadow-sm);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+  animation: dashboard-secondary-enter 0.4s ease-out backwards;
+}
+
+.dashboard-metric-card--income {
+  border-top: 3px solid var(--bs-success);
+}
+
+.dashboard-metric-card--expenses {
+  border-top: 3px solid var(--bs-warning);
+}
+
+.dashboard-metric-card--net {
+  border-top: 3px solid var(--bs-info);
+}
+
+.dashboard-secondary-metrics .col-md-4:nth-child(1) .dashboard-metric-card { animation-delay: 0.05s; }
+.dashboard-secondary-metrics .col-md-4:nth-child(2) .dashboard-metric-card { animation-delay: 0.1s; }
+.dashboard-secondary-metrics .col-md-4:nth-child(3) .dashboard-metric-card { animation-delay: 0.15s; }
+
+.dashboard-metric-card:hover {
+  box-shadow: var(--ev-shadow-md);
+  transform: translateY(-2px);
+}
+
+/* ---- Chart containers: pie + table card, grouped chart (Part 3) ---- */
+.dashboard-chart-card {
+  border-radius: 0.75rem;
+  border: 1px solid var(--ev-border-subtle);
+  background: var(--ev-surface-elevated);
+  box-shadow: var(--ev-shadow-md);
+  transition: box-shadow 0.25s ease, transform 0.2s ease;
+  animation: dashboard-chart-enter 0.4s ease-out backwards;
+}
+
+.dashboard-chart-card:hover {
+  box-shadow: var(--ev-shadow-lg);
+  transform: translateY(-2px);
+}
+
+@keyframes dashboard-chart-enter {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* =========================================================
    Form layout (create/edit pages)
    ========================================================= */

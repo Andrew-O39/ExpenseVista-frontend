@@ -469,6 +469,8 @@ export default function Dashboard() {
                 variant="income"
                 label={`Total Income · ${prettyPeriod(summary.period)}`}
                 value={formatMoney(overview.total_income || 0)}
+                numericValue={overview.total_income ?? 0}
+                formatValue={formatMoney}
                 subtitle={
                   overview.start && overview.end
                     ? formatRange(overview.start, overview.end)
@@ -491,6 +493,12 @@ export default function Dashboard() {
                     ? overviewCat?.total_expenses ?? 0
                     : overview.total_expenses ?? 0
                 )}
+                numericValue={
+                  appliedCategory
+                    ? overviewCat?.total_expenses ?? 0
+                    : overview.total_expenses ?? 0
+                }
+                formatValue={formatMoney}
                 subtitle={
                   (appliedCategory ? overviewCat?.start : overview.start) &&
                   (appliedCategory ? overviewCat?.end : overview.end)
@@ -515,6 +523,10 @@ export default function Dashboard() {
                 value={formatMoney(
                   appliedCategory ? computedNet ?? 0 : overview.net_balance ?? 0
                 )}
+                numericValue={
+                  appliedCategory ? computedNet ?? 0 : overview.net_balance ?? 0
+                }
+                formatValue={formatMoney}
                 valueClassName={
                   Number(
                     appliedCategory ? computedNet ?? 0 : overview.net_balance ?? 0
@@ -589,7 +601,7 @@ export default function Dashboard() {
         {chartData.length === 0 ? (
           <p className="text-muted">No results found for this filter.</p>
         ) : (
-          <div className="card shadow-sm dashboard-chart-and-table-card">
+          <div className="card shadow-sm dashboard-chart-and-table-card dashboard-chart-card">
             <div className="card-body">
               <div className="row mb-4">
                 <div className="col-md-6" style={{ height: 300 }}>
@@ -711,6 +723,7 @@ export default function Dashboard() {
                 <div className="row g-3 mb-3 dashboard-secondary-metrics">
                   <div className="col-md-4">
                     <DashboardMetricCard
+                      variant="income"
                       label={`Total Income for ${prettyGroupedWindow("yearly")}`}
                       value={formatMoney(overviewTotals?.income ?? 0)}
                       color="#2ecc71"
@@ -719,6 +732,7 @@ export default function Dashboard() {
                   </div>
                   <div className="col-md-4">
                     <DashboardMetricCard
+                      variant="expenses"
                       label={`Total Expenses for ${prettyGroupedWindow("yearly")}`}
                       value={formatMoney(overviewTotals?.expenses ?? 0)}
                       color="#e74c3c"
@@ -727,6 +741,7 @@ export default function Dashboard() {
                   </div>
                   <div className="col-md-4">
                     <DashboardMetricCard
+                      variant="net"
                       label={`Net Balance for ${prettyGroupedWindow("yearly")}`}
                       value={formatMoney(overviewTotals?.net ?? 0)}
                       color="#3498db"
@@ -756,7 +771,7 @@ export default function Dashboard() {
                 </div>
 
                 {/* Grouped chart */}
-                <div className="card shadow-sm">
+                <div className="card shadow-sm dashboard-chart-card">
                   <div className="card-body">
                     {overviewSeries.length === 0 ? (
                       <p className="text-muted mb-0">

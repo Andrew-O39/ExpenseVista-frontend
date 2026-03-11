@@ -237,7 +237,7 @@ export default function BudgetVsExpensesChart({
   );
 
   return (
-    <div className="mt-5">
+    <div className="mt-5 dashboard-budget-exp-section">
       {/* Header + controls */}
       <div className="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
         <h3 className="mb-0">Budget vs Expenses Over Time (Advanced Reporting)</h3>
@@ -312,7 +312,7 @@ export default function BudgetVsExpensesChart({
       {/* Totals (match series colors) */}
       <div className="row g-3 mb-3">
         <div className="col-md-4">
-          <div className="card shadow-sm">
+          <div className="card shadow-sm dashboard-budget-exp-card">
             <div className="card-body">
               <div className="text-muted small">Total Budget ({windowPeriod})</div>
               <div className="fs-4 fw-bold" style={{ color: COLOR_BUDGET }}>
@@ -327,7 +327,7 @@ export default function BudgetVsExpensesChart({
         </div>
 
         <div className="col-md-4">
-          <div className="card shadow-sm">
+          <div className="card shadow-sm dashboard-budget-exp-card">
             <div className="card-body">
               <div className="text-muted small">Total Expenses ({windowPeriod})</div>
               <div className="fs-4 fw-bold" style={{ color: COLOR_EXP }}>
@@ -342,7 +342,7 @@ export default function BudgetVsExpensesChart({
         </div>
 
         <div className="col-md-4">
-          <div className="card shadow-sm">
+          <div className="card shadow-sm dashboard-budget-exp-card">
             <div className="card-body">
               <div className="text-muted small">Remaining ({windowPeriod})</div>
               <div className="fs-4 fw-bold" style={{ color: COLOR_REM }}>
@@ -358,7 +358,7 @@ export default function BudgetVsExpensesChart({
       </div>
 
       {/* Chart */}
-      <div className="card shadow-sm">
+      <div className="card shadow-sm dashboard-budget-exp-chart-card">
         <div className="card-body">
           {loading ? (
             <p className="text-muted mb-0">Loading…</p>
