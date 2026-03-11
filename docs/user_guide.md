@@ -1,259 +1,406 @@
-# 🧭 ExpenseVista User Guide (Frontend Edition)
+# 🧭 ExpenseVista User Guide
 
 Welcome to **ExpenseVista** — your smart personal finance companion.  
-This guide shows you how to use every feature of the ExpenseVista web app, from onboarding to dashboards, dark mode, and the built-in AI assistant.
+This guide walks you through everything you need to know to make the most of your budgets, expenses, incomes, reports, and AI-powered insights.
 
 ---
 
-## 🌅 Welcome & Onboarding
+## 🪄 What Is ExpenseVista?
 
-When you log in for the first time, you’ll see a **Welcome Page** introducing the main features of ExpenseVista.
+**ExpenseVista** helps you take full control of your personal finances.
 
-The welcome page includes:
-- A preview of **Income vs Expenses** and **Budget vs Actual** charts  
-- Quick links to explore **expenses**, **budgets**, and **income** pages  
-- A short guide on **filtering and searching** lists  
-- A reminder that you can revisit this page anytime via the **Actions Dropdown → “Onboarding / Welcome Tips”**
+You can:
+- Create and manage **budgets** by category and period
+- Track **daily expenses** and **income**
+- Compare **budget vs actual spending**
+- Visualize **income vs expenses**
+- Export filtered **PDF reports**
+- Get **AI-powered insights** about your spending
+- Change **currency** and **theme** (light/dark mode)
+- View a **Welcome Insights** page to explore how the app works
+- Stay aware of your **session duration** for security
 
-> 💡 The Welcome page helps new users understand what to expect before using the full dashboard.
-
-Returning users will go directly to the dashboard but can revisit the welcome anytime.
-
----
-
-## 💱 Choosing Your Currency
-
-ExpenseVista supports **all major world currencies** 🌍.
-
-### To change your currency:
-1. Open the **Actions dropdown** (top-right corner on the dashboard).  
-2. Click **“Change currency…”**.  
-3. Select your desired currency (e.g. USD $, EUR €, GBP £, NGN ₦, JPY ¥).  
-4. All amounts across dashboards, charts, and reports will instantly update.
-
-Your choice is saved locally and persists between sessions.
-
-> 💡 Tip: The currency code and symbol automatically appear when entering or viewing amounts.
+Whether you’re an individual, freelancer, or household manager, ExpenseVista keeps your financial picture clear, simple, and empowering.
 
 ---
 
-## 🌗 Theme & Dark Mode Toggle
+# 🧭 Navigating the App
 
-ExpenseVista offers a **Theme Toggle** that lets you choose your preferred appearance.
+ExpenseVista uses a **clean sidebar navigation layout** so you can move quickly between features.
 
-### To change the theme:
-1. Open the **Actions dropdown** from your dashboard.  
-2. Use the **Theme** buttons:
-   - ☀️ **Light** – Cream-colored elegant look  
-   - 🌙 **Dark** – Soothing dark interface for night use  
-   - ⚙️ **Auto** – Automatically adapts to your system theme (light during day, dark at night)
+### Sidebar Sections
 
-The entire app — including charts, modals, and forms — adjusts instantly.
+The **left sidebar** contains the main navigation:
 
-> 🎨 The default light mode uses a **warm cream background** with bronze accents.  
-> In dark mode, forms and cards adopt subtle contrasts for readability.
+**Overview**
+- Dashboard
+
+**Create**
+- Record Income
+- Add Expense
+- Create Budget
+
+**Lists**
+- Income List
+- Expense List
+- Budget List
+
+**Account**
+- Logout
+
+This layout ensures the most important financial actions are always visible and easy to access.
 
 ---
 
-## 🧭 Dashboard Overview
+# 🔐 Getting Started
 
-After logging in, you’ll see your **Financial Dashboard**, showing:
+## 1️⃣ Sign Up or Log In
+
+1. Go to your ExpenseVista web app (e.g. `https://expensevista.com`).
+2. Click **Register** if you’re new, or **Log In** if you already have an account.
+3. Verify your email through the link sent to your inbox.
+
+Once verified, you can sign in securely. ExpenseVista uses **JWT authentication** to protect your session.
+
+---
+
+# 🌅 Welcome Page (Onboarding)
+
+When you log in for the first time, you’ll see the **Welcome Page**, a friendly walkthrough showing:
+
+- How to record your first **income** and **expense**
+- How to set **budgets**
+- Preview charts for **Income vs Expenses** and **Budget vs Actuals**
+- A summary of how filtering and list pages work
+- Tips on navigating the app
+
+You can revisit this page anytime via the **User Menu → Onboarding / Welcome Tips**.
+
+---
+
+# 👤 User Menu (Top Navigation)
+
+At the **top-right corner of the app**, your **username appears as a dropdown menu**.
+
+This menu contains your **personal preferences and account utilities**:
+
+- 🌗 **Theme** (Light / Dark / Auto)
+- 💱 **Change Currency**
+- 💡 **Onboarding / Welcome Tips**
+- 🕒 **Session Info**
+
+Primary navigation (Dashboard, lists, creating entries) is located in the **sidebar**, while personal settings remain in this menu.
+
+---
+
+# 💰 Currency & Locale Settings
+
+ExpenseVista supports **any currency in the world** 🌍.
+
+To change your currency or locale format:
+
+1. Click your **Username → Change Currency**
+2. Choose your preferred **ISO code** (e.g. USD, EUR, GHS, INR).
+3. Optionally adjust **locale** (affects separators and symbol position).
+4. Click **Apply** — the app refreshes and updates all monetary values.
+
+This setting persists across all pages until you change it again.
+
+---
+
+# 🎨 Light / Dark Mode
+
+ExpenseVista supports both **light** and **dark** themes — plus an **auto mode** that follows your system preference.
+
+To switch themes:
+
+1. Click **Username → Theme**
+2. Select **Light**, **Dark**, or **Auto**
+
+The theme is remembered even after you log out.
+
+---
+
+# 🏠 Dashboard Overview
+
+Once signed in, your dashboard provides a complete financial snapshot.
+
+## Key Metrics
 
 - 💰 **Total Income**
 - 💸 **Total Expenses**
-- 💹 **Net Balance (Income – Expenses)**
-- 📊 **Charts by category and time period**
-- ⚙️ **Actions Dropdown** for quick navigation and preferences
+- 💹 **Net Balance**
 
-You can quickly navigate to:
-- Record income or expense  
-- Create a new budget  
-- View list pages  
-- Change currency  
-- Revisit onboarding  
-- Log out  
+These cards update automatically as you add financial records.
 
-> The dashboard is your financial command center — everything is just one click away.
+## Charts
 
----
+ExpenseVista includes several visual insights:
 
-## 🎯 Managing Budgets
+### Spending by Category
+Shows where your money goes.
 
-Budgets help you control how much you plan to spend per category and time frame.
+### Budget vs Actual Spending
+Compare planned budgets against real spending.
 
-### ➕ Create a New Budget
-1. Go to **Budgets → Add Budget**.  
-2. Fill in:
-   - **Category** (e.g. groceries, utilities, transport)  
-   - **Limit amount**  
-   - **Period** (weekly, monthly, quarterly, yearly)  
-3. Click **Create Budget**.
+### Income vs Expenses Over Time
+See financial trends across:
+- Weekly
+- Monthly
+- Quarterly
+- Yearly
 
-### ✏️ Edit or Delete
-- Edit existing budgets using the **Edit** button.  
-- Delete by clicking the **trash icon**.
-
-ExpenseVista automatically monitors your progress and alerts you as you approach or exceed your limit.
+Each chart updates dynamically as you log new data.
 
 ---
 
-## 💸 Recording Expenses
+# 🎯 Managing Budgets
 
-1. Go to **Expenses → Add Expense**.  
-2. Fill in:
-   - **Amount**  
-   - **Category**  
-   - Optional **Description** and **Notes**  
-3. Click **Create Expense**.
+Budgets help you plan and control spending.
 
-### 🤖 Smart AI Category Suggestion
-You can click **Suggest** beside the category field — ExpenseVista’s AI will analyze your description and auto-suggest the most likely category.
+## ➕ Create a Budget
 
-> Example: Typing “Uber ride to airport” might suggest “Transport 🚗”.
-
----
-
-## 💰 Recording Income
-
-1. Go to **Incomes → Add Income**.  
+1. Go to **Sidebar → Create Budget**
 2. Enter:
-   - **Amount**
-   - **Category** (e.g. salary, interest)
-   - Optional **Source** and **Notes**
-3. Click **Create Income**.
+   - Category
+   - Limit amount
+   - Period (weekly / monthly / quarterly / yearly)
+3. Save.
 
-All income entries are included in your net balance and charts.
+## 📊 Budget vs Actual
 
----
+ExpenseVista automatically compares:
 
-## 📊 List Views & Filters
+**Budgeted amount vs Actual spending**
 
-Every list page (Expenses, Budgets, Incomes) supports **powerful filtering and search** tools.
+Overspending is clearly highlighted in both the **dashboard** and **budget lists**.
 
-You can:
-- Filter by **date range** or **period**
-- Search by **description**, **category**, or **source**
-- Sort by **amount** or **date**
-- Paginate through long lists efficiently
+## ✏️ Edit or Delete Budgets
 
-> 💡 Example: On the Expenses List, you can search “transport” or “January” to instantly narrow results.
+From **Budget List** you can:
 
----
+- Edit budgets
+- Delete budgets
 
-## 🤖 The Finance Assistant (Bubble Chat)
-
-You’ll notice a **💬 Finance Assistant bubble** floating at the **bottom right corner** of every page.  
-Click it anytime to open a chat panel where you can ask questions naturally.
-
-### 🗣️ You can ask:
-- “How much did I spend this week?”
-- “Am I over budget on groceries this month?”
-- “Compare my income vs expenses this year.”
-- “What’s my top spending category this quarter?”
-
-### ⚡ Quick Prompts
-Inside the chat, you’ll see quick buttons like:
-- “This week spend”
-- “Groceries last month”
-- “Over budget?”
-- “Income vs expenses”
-
-### ✨ The Assistant Can:
-- Read your actual data  
-- Explain your budget usage  
-- Suggest categories  
-- Give summarized insights  
-
-The assistant stays open as you navigate, so you can chat while reviewing your data.
+Deleting a budget **does not remove past expenses**.
 
 ---
 
-## 💬 Email Alerts
+# 🧾 Adding and Tracking Expenses
 
-ExpenseVista automatically sends you friendly alerts when:
-- You hit **50%, 80%, or 100%** of a budget  
-- You exceed a budget limit  
+## ➕ Add an Expense
 
-Each message includes your name, category, and remaining balance — sent securely via **AWS SES**.
+1. Go to **Sidebar → Add Expense**
+2. Enter:
+   - Category
+   - Amount
+   - Description (optional)
+   - Notes (optional)
 
----
+### 🤖 AI Category Suggestion
 
-## 🔐 Session Management
-
-For your security:
-- ExpenseVista automatically keeps you securely signed in for up to **60 minutes** at a time.
-- When your session nears expiration, a small notification appears 5 minutes before expiry.  
-- You can log out manually from the **Actions dropdown**.  
-- If you’d like to see exactly how much time is left in your current session:
-	1.	Go to your Dashboard.
-	2.	Click the Actions dropdown (top right).
-	3.	Select “Session info…”
-- A small modal will appear showing time remaining (live countdown in minutes and seconds), exact expiration time (in your local timezone), a subtle progress bar showing how far through your session you are
-
-Your account stays safe, even if left idle — you can also check your remaining time anytime without being interrupted.
-
-- When your session expires, you’ll be safely logged out and redirected to the login page.
-Your data remains secure, and you can sign in again instantly.
+You can click **Suggest Category** and the AI will recommend a category based on your description.
 
 ---
 
-## 🌈 Visual Themes Summary
+# 💰 Recording Income
 
-| Mode | Description | Use case |
-|------|--------------|-----------|
-| **Light** | Warm cream theme with bronze accents | Everyday use |
-| **Dark** | Sleek dark mode with soft contrasts | Night use |
-| **Auto** | Adapts to your system preference | Set it and forget it |
+## ➕ Record Income
 
----
+1. Go to **Sidebar → Record Income**
+2. Enter:
+   - Category
+   - Amount
+   - Source (optional)
+   - Date received
 
-## 🧩 Tips for New Users
-
-- Start with the **Welcome Page** — it previews everything.  
-- Add one or two budgets first, then record your daily expenses.  
-- Try asking the **Finance Assistant** something fun, like:  
-  > “Which month had my highest expenses?”  
-- Adjust your currency anytime via the Actions dropdown.  
-- Try dark mode at night — it’s easier on the eyes.
+Income entries appear in the **Income List**.
 
 ---
 
-## 💡 Frequently Asked Questions
+# 📋 List Pages
 
-**Q: Why can’t I see any charts yet?**  
-A: You need at least one budget, income, and expense entry before the dashboard shows insights.
+ExpenseVista provides powerful list views for:
 
-**Q: How do I change my password?**  
-A: Use “Forgot Password” on the login screen to receive a reset link.
+- **Income List**
+- **Expense List**
+- **Budget List**
 
-**Q: Can I use multiple currencies?**  
-A: You can view data in one selected currency at a time — switch anytime from the Actions dropdown.
+Each list includes:
 
-**Q: Why is the AI Assistant not responding?**  
-A: Check your internet connection or ensure you’re logged in with a valid token.
+- Search
+- Date filters
+- Range filters
+- Pagination
+- Totals for the current view
 
----
-
-## 🎯 Summary
-
-ExpenseVista brings together everything you need to manage your money intelligently:
-- 📊 Budgets, Expenses, and Income tracking  
-- 💬 AI Finance Assistant  
-- 💱 Flexible currency support  
-- 🌗 Light/Dark/Auto themes  
-- 💌 Smart alerts and insights  
-- 🧭 Clear onboarding and easy navigation  
-
-It’s your all-in-one finance dashboard — designed for clarity, control, and confidence.
+These tools help you analyze your data quickly.
 
 ---
 
-## 💬 Support
+# 📄 Exporting Reports (PDF)
 
-Need help or have ideas?  
-📧 **Email:** support@expensevista.com  
-🐙 **GitHub Issues:** [github.com/Andrew-O39/expense_vista/issues](https://github.com/Andrew-O39/expense_vista/issues)
+ExpenseVista allows you to export your financial data as **PDF reports**.
+
+## Supported Exports
+
+You can export:
+
+- **Income List**
+- **Expense List**
+- **Budget List**
+- **Budget vs Actual Spending table (Dashboard)**
+
+Exports include:
+
+- The **currently loaded data**
+- **Active filters**
+- **Totals summary**
+- **Export timestamp**
+
+### How to Export
+
+1. Open any **List page**.
+2. Apply filters if desired.
+3. Click **Export PDF**.
+
+The exported file will contain exactly the **data visible in the current view**.
+
+### Dashboard Export
+
+From the **Budget vs Actual Spending table** on the Dashboard, you can also click:
+
+**Export PDF**
+
+This generates a report showing:
+
+- Category
+- Budgeted amount
+- Amount spent
+- Remaining budget
+
+Charts themselves are not exported — only the tabular data.
 
 ---
 
-© 2025 **ExpenseVista** — Personal Finance Simplified 💰
+# 📧 Email Notifications
+
+ExpenseVista sends automated emails when:
+
+- You approach **50%**, **80%**, or **100%** of a budget.
+- You verify your email.
+- You reset your password.
+
+Emails include helpful reminders and links back to your dashboard.
+
+Example:
+
+> “Hi Andrew, you’ve used 80% of your transport budget this month — keep an eye on your spending!”
+
+---
+
+# 🤖 Finance Assistant
+
+A 💬 **Finance Assistant bubble** appears at the **bottom-right corner** of the app.
+
+You can ask questions like:
+
+- “How much did I spend on groceries last month?”
+- “What is my largest expense category this quarter?”
+- “Am I over budget this month?”
+
+The assistant uses your existing data and provides insights in conversational form.
+
+---
+
+# 💡 Additional Features
+
+## 🕓 Session Management
+
+- Each login session lasts **60 minutes**
+- A warning appears **5 minutes before expiration**
+- You can extend your session or log back in
+
+## 🌐 Multi-Currency Support
+
+All financial values automatically update when you change currency.
+
+## 🪄 Welcome Insights Page
+
+You can revisit the onboarding guide anytime via:
+
+**Username Menu → Onboarding / Welcome Tips**
+
+---
+
+# 💡 FAQ
+
+### Why do my totals differ from my bank account?
+
+ExpenseVista only reports what you manually record.
+
+### Can I track multiple bank accounts?
+
+Not yet — future versions may support multiple wallets or linked accounts.
+
+### How do I reset my password?
+
+Click **Forgot Password** on the login screen.
+
+### Why does my session expire?
+
+For security, sessions expire after **60 minutes** of inactivity.
+
+---
+
+# 🛠️ Troubleshooting
+
+| Issue | Possible Fix |
+|------|--------------|
+| AI Assistant not responding | Ensure you are logged in and connected to the internet |
+| Emails not sending | Check spam folder or verify your email |
+| Budget alerts missing | Confirm your email is verified |
+| Theme not changing | Refresh the page after switching |
+| Currency not updating | Click **Apply** after selecting a new currency |
+
+---
+
+# 🌱 Smart Budgeting Tips
+
+- Set **realistic budget limits**
+- Review your **top spending categories monthly**
+- Use **AI Assistant insights**
+- Track both **income and expenses consistently**
+
+Example prompts:
+
+> “What is my biggest expense this month?”  
+> “Which category am I closest to exceeding?”
+
+---
+
+# 🧭 Summary
+
+ExpenseVista empowers you to:
+
+- Track expenses and income
+- Create and manage budgets
+- Compare budget vs actual spending
+- Visualize financial trends
+- Export filtered PDF reports
+- Receive smart alerts
+- Ask an AI assistant about your finances
+- Customize currency and themes
+
+ExpenseVista — **Personal Finance Simplified.**
+
+---
+
+# 💬 Support
+
+🐙 **GitHub Issues:**  
+https://github.com/Andrew-O39/expense_vista/issues
+
+---
+
+© 2025 **ExpenseVista** — Smarter Budgets, Simpler Life 💰
