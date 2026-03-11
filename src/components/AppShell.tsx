@@ -85,16 +85,19 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               {sidebarLink("/budgets", "Budget List")}
             </div>
           </div>
+          <div className="app-shell-sidebar-section app-shell-sidebar-section--account">
+            <div className="app-shell-sidebar-label">Account</div>
+            <div className="app-shell-sidebar-links">
+              <button
+                type="button"
+                className="app-shell-sidebar-link app-shell-sidebar-link--logout"
+                onClick={handleLogout}
+              >
+                Logout
+              </button>
+            </div>
+          </div>
         </nav>
-        <div className="app-shell-sidebar-footer">
-          <button
-            type="button"
-            className="app-shell-sidebar-logout"
-            onClick={handleLogout}
-          >
-            Logout
-          </button>
-        </div>
       </aside>
 
       <div className="app-shell-body">

@@ -466,6 +466,7 @@ export default function Dashboard() {
           <div className="row g-3 dashboard-kpi-row">
             <div className="col-md-4">
               <DashboardKpiCard
+                variant="income"
                 label={`Total Income · ${prettyPeriod(summary.period)}`}
                 value={formatMoney(overview.total_income || 0)}
                 subtitle={
@@ -477,6 +478,7 @@ export default function Dashboard() {
             </div>
             <div className="col-md-4">
               <DashboardKpiCard
+                variant="expenses"
                 label={
                   appliedCategory ? (
                     <>Expenses · {prettyPeriod(summary.period)} · <strong>{appliedCategory}</strong></>
@@ -502,6 +504,7 @@ export default function Dashboard() {
             </div>
             <div className="col-md-4">
               <DashboardKpiCard
+                variant="net"
                 label={
                   appliedCategory ? (
                     <>Net after <strong>{appliedCategory}</strong> · {prettyPeriod(summary.period)}</>

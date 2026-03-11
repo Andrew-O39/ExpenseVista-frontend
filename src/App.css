@@ -575,6 +575,29 @@ html[data-bs-theme="dark"] .hero-welcome {
   border-left-color: var(--bs-primary);
 }
 
+.app-shell-sidebar-link--logout {
+  appearance: none;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  font-size: 0.9375rem;
+  color: var(--bs-danger, #dc3545);
+  background: transparent;
+  border: none;
+  border-left: 3px solid transparent;
+  cursor: pointer;
+  padding: var(--ev-space-2) var(--ev-space-4);
+  border-radius: 0;
+  text-decoration: none;
+  display: block;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.app-shell-sidebar-link--logout:hover {
+  background: rgba(220, 53, 69, 0.08);
+  color: var(--bs-danger, #dc3545);
+}
+
 .app-shell-sidebar-footer {
   flex: 0 0 auto;
   padding: var(--ev-space-3) var(--ev-space-4);
@@ -707,14 +730,8 @@ html[data-bs-theme="dark"] .hero-welcome {
     flex-wrap: wrap;
     gap: var(--ev-space-1);
   }
-  .app-shell-sidebar-footer {
-    width: 100%;
-    order: 2;
-    border-top: 0;
-    padding: var(--ev-space-2) 0 0;
-    margin-top: 0;
-    border-top: 1px solid var(--ev-border-subtle);
-    padding-top: var(--ev-space-2);
+  .app-shell-sidebar-section--account {
+    margin-top: var(--ev-space-1);
   }
   .app-shell-container {
     padding: var(--ev-space-3);
@@ -753,6 +770,65 @@ html[data-bs-theme="dark"] .hero-welcome {
 
 .dashboard-kpi-row {
   margin: 0;
+}
+
+.dashboard-kpi-card {
+  border-radius: 0.75rem;
+  border: 1px solid var(--ev-border-subtle);
+  box-shadow: var(--ev-shadow-sm);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+  animation: dashboard-kpi-enter 0.4s ease-out backwards;
+}
+
+.dashboard-kpi-row .col-md-4:nth-child(1) .dashboard-kpi-card { animation-delay: 0.05s; }
+.dashboard-kpi-row .col-md-4:nth-child(2) .dashboard-kpi-card { animation-delay: 0.1s; }
+.dashboard-kpi-row .col-md-4:nth-child(3) .dashboard-kpi-card { animation-delay: 0.15s; }
+
+.dashboard-kpi-card:hover {
+  box-shadow: var(--ev-shadow-md);
+  transform: translateY(-2px);
+}
+
+.dashboard-kpi-card--income {
+  border-top: 3px solid var(--bs-success);
+  background: linear-gradient(to bottom, rgba(74, 111, 78, 0.07) 0%, var(--ev-surface-elevated) 28px);
+}
+
+.dashboard-kpi-card--income .dashboard-kpi-value:not(.text-danger) {
+  color: var(--bs-success);
+}
+
+.dashboard-kpi-card--expenses {
+  border-top: 3px solid var(--bs-warning);
+  background: linear-gradient(to bottom, rgba(182, 122, 35, 0.07) 0%, var(--ev-surface-elevated) 28px);
+}
+
+.dashboard-kpi-card--expenses .dashboard-kpi-value {
+  color: var(--bs-body-color);
+}
+
+.dashboard-kpi-card--net {
+  border-top: 3px solid var(--bs-info);
+  background: linear-gradient(to bottom, rgba(107, 122, 143, 0.07) 0%, var(--ev-surface-elevated) 28px);
+}
+
+.dashboard-kpi-card--net .dashboard-kpi-value.text-success {
+  color: var(--bs-success);
+}
+
+.dashboard-kpi-card--net .dashboard-kpi-value.text-danger {
+  color: var(--bs-danger);
+}
+
+@keyframes dashboard-kpi-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .dashboard-kpi-card .card-body {
