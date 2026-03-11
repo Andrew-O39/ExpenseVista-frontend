@@ -353,7 +353,7 @@ export default function BudgetList() {
               <th>Category</th>
               <th>Period</th>
               <th>Limit ({currencyCode})</th>
-              <th>Notes</th>
+              <th className="list-notes-col">Notes</th>
               <th>Created At</th>
               <th>Actions</th>
             </tr>
@@ -371,7 +371,7 @@ export default function BudgetList() {
                 <td>{b.category}</td>
                 <td>{b.period}</td>
                 <td>{money(b.limit_amount)}</td>
-                <td>{b.notes || '-'}</td>
+                <td className="list-notes-col">{b.notes || '-'}</td>
                 <td>{fmt(b.created_at)}</td>
                 <td>
                   <ListActionsDropdown

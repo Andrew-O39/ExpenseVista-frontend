@@ -1125,6 +1125,8 @@ html[data-bs-theme="dark"] .hero-welcome {
 .list-page-table {
   margin-bottom: 0;
   font-size: 0.9375rem;
+  width: 100%;
+  table-layout: fixed;
 }
 
 .list-page-table thead th {
@@ -1162,6 +1164,16 @@ html[data-bs-theme="dark"] .hero-welcome {
 
 .list-page-table .table-striped > tbody > tr:hover {
   --bs-table-accent-bg: var(--bs-tertiary-bg);
+}
+
+/* Notes column: slightly narrower and forced wrapping */
+.list-page-table thead th.list-notes-col,
+.list-page-table tbody td.list-notes-col {
+  max-width: 220px;
+  width: 22%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .list-page-summary-strip {

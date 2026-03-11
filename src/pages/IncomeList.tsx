@@ -428,7 +428,7 @@ export default function IncomeList() {
               <th>Source</th>
               <th>Category</th>
               <th>Amount ({currencyCode})</th>
-              <th>Notes</th>
+              <th className="list-notes-col">Notes</th>
               <th>Received At</th>
               <th>Actions</th>
             </tr>
@@ -442,23 +442,23 @@ export default function IncomeList() {
               </tr>
             ) : (
               incomes.map((e) => (
-                <tr key={e.id}>
-                  <td>{e.source}</td>
-                  <td>{e.category || "-"}</td>
-                  <td>{formatMoney(e.amount)}</td>
-                  <td>{e.notes || "-"}</td>
-                  <td>{fmt(e.received_at)}</td>
-                  <td>
-                    <ListActionsDropdown
-                      id={`income-actions-${e.id}`}
-                      items={[
-                        { label: "Edit", onClick: () => navigate(`/edit-income/${e.id}`) },
-                        { label: "Delete", onClick: () => handleDelete(e.id), variant: "danger" },
-                      ]}
-                    />
-                  </td>
-                </tr>
-              ))
+              <tr key={e.id}>
+                <td>{e.source}</td>
+                <td>{e.category || "-"}</td>
+                <td>{formatMoney(e.amount)}</td>
+                <td className="list-notes-col">{e.notes || "-"}</td>
+                <td>{fmt(e.received_at)}</td>
+                <td>
+                  <ListActionsDropdown
+                    id={`income-actions-${e.id}`}
+                    items={[
+                      { label: "Edit", onClick: () => navigate(`/edit-income/${e.id}`) },
+                      { label: "Delete", onClick: () => handleDelete(e.id), variant: "danger" },
+                    ]}
+                  />
+                </td>
+              </tr>
+            ))
             )}
           </tbody>
         </table>

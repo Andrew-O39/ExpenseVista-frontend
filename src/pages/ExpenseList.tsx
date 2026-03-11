@@ -432,7 +432,7 @@ export default function ExpenseList() {
               <th>Category</th>
               <th>Amount ({currencyCode})</th>
               <th>Description</th>
-              <th>Notes</th>
+              <th className="list-notes-col">Notes</th>
               <th>Created At</th>
               <th>Actions</th>
             </tr>
@@ -446,23 +446,23 @@ export default function ExpenseList() {
               </tr>
             ) : (
               expenses.map((e) => (
-                <tr key={e.id}>
-                  <td>{e.category}</td>
-                  <td>{money(e.amount)}</td>
-                  <td>{e.description || "-"}</td>
-                  <td>{e.notes || "-"}</td>
-                  <td>{fmt(e.created_at)}</td>
-                  <td>
-                    <ListActionsDropdown
-                      id={`expense-actions-${e.id}`}
-                      items={[
-                        { label: "Edit", onClick: () => navigate(`/edit-expense/${e.id}`) },
-                        { label: "Delete", onClick: () => handleDelete(e.id), variant: "danger" },
-                      ]}
-                    />
-                  </td>
-                </tr>
-              ))
+              <tr key={e.id}>
+                <td>{e.category}</td>
+                <td>{money(e.amount)}</td>
+                <td>{e.description || "-"}</td>
+                <td className="list-notes-col">{e.notes || "-"}</td>
+                <td>{fmt(e.created_at)}</td>
+                <td>
+                  <ListActionsDropdown
+                    id={`expense-actions-${e.id}`}
+                    items={[
+                      { label: "Edit", onClick: () => navigate(`/edit-expense/${e.id}`) },
+                      { label: "Delete", onClick: () => handleDelete(e.id), variant: "danger" },
+                    ]}
+                  />
+                </td>
+              </tr>
+            ))
             )}
           </tbody>
         </table>
