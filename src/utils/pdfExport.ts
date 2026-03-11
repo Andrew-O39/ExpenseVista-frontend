@@ -1,5 +1,6 @@
 import jsPDF from "jspdf";
-import autoTable, { RowInput } from "jspdf-autotable";
+import autoTable from "jspdf-autotable";
+import type { RowInput } from "jspdf-autotable";
 
 export type PdfColumn = {
   header: string;
@@ -100,4 +101,3 @@ export function exportTableToPdf({
 
   doc.save(fileName);
 }
-
