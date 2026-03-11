@@ -59,14 +59,21 @@ export function exportTableToPdf({
   // Totals summary block (key: value per line)
   if (totalsSummary && Object.keys(totalsSummary).length > 0) {
     const entries = Object.entries(totalsSummary);
-    const labelWidth = 80;
+
     entries.forEach(([key, value]) => {
+      const label = `${key}:`;
+
       doc.setFont("helvetica", "bold");
-      doc.text(`${key}:`, marginLeft, cursorY);
+      doc.text(label, marginLeft, cursorY);
+
+      const labelWidth = doc.getTextWidth(label) + 8;
+
       doc.setFont("helvetica", "normal");
       doc.text(String(value), marginLeft + labelWidth, cursorY);
+
       cursorY += 14;
     });
+
     cursorY += 6;
   }
 
