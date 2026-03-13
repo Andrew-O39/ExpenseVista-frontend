@@ -431,10 +431,10 @@ export default function ExpenseList() {
             <tr>
               <th>Category</th>
               <th>Amount ({currencyCode})</th>
-              <th>Description</th>
+              <th className="list-longtext-col">Description</th>
               <th className="list-notes-col">Notes</th>
               <th>Created At</th>
-              <th>Actions</th>
+              <th className="list-actions-col">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -449,7 +449,7 @@ export default function ExpenseList() {
               <tr key={e.id}>
                 <td>{e.category}</td>
                 <td>{money(e.amount)}</td>
-                <td>{e.description || "-"}</td>
+                <td className="list-longtext-col">{e.description || "-"}</td>
                 <td className="list-notes-col">{e.notes || "-"}</td>
                 <td>{fmt(e.created_at)}</td>
                 <td>

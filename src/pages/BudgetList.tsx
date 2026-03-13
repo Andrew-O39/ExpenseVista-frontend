@@ -355,7 +355,7 @@ export default function BudgetList() {
               <th>Limit ({currencyCode})</th>
               <th className="list-notes-col">Notes</th>
               <th>Created At</th>
-              <th>Actions</th>
+              <th className="list-actions-col">Actions</th>
             </tr>
           </thead>
           <tbody>

@@ -425,12 +425,12 @@ export default function IncomeList() {
         <table className="table table-striped list-page-table">
           <thead>
             <tr>
-              <th>Source</th>
+              <th className="list-longtext-col">Source</th>
               <th>Category</th>
               <th>Amount ({currencyCode})</th>
               <th className="list-notes-col">Notes</th>
               <th>Received At</th>
-              <th>Actions</th>
+              <th className="list-actions-col">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -443,7 +443,7 @@ export default function IncomeList() {
             ) : (
               incomes.map((e) => (
               <tr key={e.id}>
-                <td>{e.source}</td>
+                <td className="list-longtext-col">{e.source}</td>
                 <td>{e.category || "-"}</td>
                 <td>{formatMoney(e.amount)}</td>
                 <td className="list-notes-col">{e.notes || "-"}</td>

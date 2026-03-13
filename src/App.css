@@ -1113,7 +1113,7 @@ html[data-bs-theme="dark"] .hero-welcome {
   background: var(--ev-surface-elevated);
   border: 1px solid var(--ev-border-subtle);
   border-radius: 0.5rem;
-  overflow: visible;
+  overflow: hidden;
   box-shadow: var(--ev-shadow-sm);
 }
 
@@ -1127,6 +1127,7 @@ html[data-bs-theme="dark"] .hero-welcome {
   font-size: 0.9375rem;
   width: 100%;
   table-layout: fixed;
+  min-width: 720px;
 }
 
 .list-page-table thead th {
@@ -1174,6 +1175,32 @@ html[data-bs-theme="dark"] .hero-welcome {
   white-space: normal;
   overflow-wrap: anywhere;
   word-break: break-word;
+}
+
+/* Action column: keep compact and avoid wrapping buttons awkwardly */
+.list-page-table thead th.list-actions-col,
+.list-page-table tbody td.list-actions-col {
+  width: 1%;
+  white-space: nowrap;
+}
+
+/* General long-text columns (e.g., description, source) */
+.list-page-table thead th.list-longtext-col,
+.list-page-table tbody td.list-longtext-col {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+@media (max-width: 576px) {
+  .list-page-table thead th,
+  .list-page-table tbody td {
+    padding: var(--ev-space-2) var(--ev-space-3);
+  }
+
+  .list-page-table {
+    min-width: 640px;
+  }
 }
 
 .list-page-summary-strip {
