@@ -312,7 +312,6 @@ Potential future features include:
 - CSV exports
 - Chart image exports
 - Multi-account support
-- Mobile navigation improvements
 - Financial trend forecasting
 - Category management
 
