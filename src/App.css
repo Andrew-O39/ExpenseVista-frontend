@@ -747,6 +747,10 @@ html[data-bs-theme="dark"] .hero-welcome {
   gap: var(--ev-space-4);
 }
 
+.dashboard-page .dashboard-section {
+  margin-bottom: 0;
+}
+
 .dashboard-section {
   margin-bottom: var(--ev-space-4);
 }
@@ -759,13 +763,152 @@ html[data-bs-theme="dark"] .hero-welcome {
   margin-bottom: var(--ev-space-3);
 }
 
+.dashboard-section-header--static {
+  margin-bottom: var(--ev-space-3);
+}
+
 .dashboard-section-title {
   font-size: 1.125rem;
   font-weight: 600;
+  margin-bottom: 0;
 }
 
 .dashboard-section-subtitle {
   font-size: 0.875rem;
+}
+
+/* Collapsible dashboard sections */
+.dashboard-section-toggle {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--ev-space-3);
+  width: 100%;
+  padding: var(--ev-space-3) var(--ev-space-4);
+  margin-bottom: var(--ev-space-3);
+  text-align: left;
+  color: var(--bs-body-color);
+  background: var(--ev-surface-elevated);
+  border: 1px solid var(--ev-border-subtle);
+  border-radius: 0.5rem;
+  box-shadow: var(--ev-shadow-sm);
+  cursor: pointer;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.dashboard-section-toggle:hover {
+  border-color: var(--bs-primary);
+  box-shadow: var(--ev-shadow-md);
+}
+
+.dashboard-section-toggle:focus-visible {
+  outline: 2px solid var(--bs-primary);
+  outline-offset: 2px;
+}
+
+.dashboard-section-toggle-label {
+  flex: 1;
+  min-width: 0;
+}
+
+.dashboard-section-toggle-chevron {
+  display: block;
+  flex-shrink: 0;
+  width: 0.5rem;
+  height: 0.5rem;
+  margin-top: 0.4rem;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform 0.25s ease;
+}
+
+.dashboard-section-toggle[aria-expanded="true"] .dashboard-section-toggle-chevron {
+  transform: rotate(225deg);
+  margin-top: 0.55rem;
+}
+
+.dashboard-section-collapsible {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.3s ease;
+}
+
+.dashboard-section-collapsible[data-expanded="true"] {
+  grid-template-rows: 1fr;
+}
+
+.dashboard-section-collapsible-inner {
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Help / user guide */
+.help-page {
+  max-width: 52rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.help-markdown {
+  line-height: 1.65;
+  font-size: 0.9375rem;
+}
+
+.help-markdown h1,
+.help-markdown h2,
+.help-markdown h3 {
+  margin-top: var(--ev-space-6);
+  margin-bottom: var(--ev-space-3);
+  font-weight: 600;
+}
+
+.help-markdown h1 {
+  font-size: 1.5rem;
+}
+
+.help-markdown h2 {
+  font-size: 1.25rem;
+}
+
+.help-markdown h3 {
+  font-size: 1.05rem;
+}
+
+.help-markdown p,
+.help-markdown ul,
+.help-markdown ol {
+  margin-bottom: var(--ev-space-3);
+}
+
+.help-markdown ul,
+.help-markdown ol {
+  padding-left: 1.25rem;
+}
+
+.help-markdown hr {
+  margin: var(--ev-space-6) 0;
+  border: 0;
+  border-top: 1px solid var(--ev-border-subtle);
+}
+
+.help-markdown code {
+  font-size: 0.9em;
+  padding: 0.1em 0.35em;
+  border-radius: 0.25rem;
+  background: var(--bs-tertiary-bg);
+}
+
+.help-markdown pre {
+  padding: var(--ev-space-3);
+  border-radius: 0.5rem;
+  overflow-x: auto;
+  background: var(--bs-tertiary-bg);
+  border: 1px solid var(--ev-border-subtle);
+}
+
+.help-markdown pre code {
+  padding: 0;
+  background: none;
 }
 
 .dashboard-kpi-row {

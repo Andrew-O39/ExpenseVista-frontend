@@ -26,6 +26,7 @@ import FinanceAssistant from "./components/FinanceAssistant";
 import ResendVerification from "./components/ResendVerification";
 import AppShell from "./components/AppShell";
 import LandingHero from "./components/LandingHero";
+import Help from "./pages/Help";
 
 import { isTokenValid } from "./utils/auth";
 
@@ -81,6 +82,7 @@ function App() {
         <Route path="/expenses" element={<Page title="Expenses"><AppShell><ExpenseList /></AppShell></Page>} />
         <Route path="/budgets" element={<Page title="Budgets"><AppShell><BudgetList /></AppShell></Page>} />
         <Route path="/incomes" element={<Page title="Incomes"><AppShell><IncomeList /></AppShell></Page>} />
+        <Route path="/help" element={<Page title="Help"><AppShell><Help /></AppShell></Page>} />
         <Route path="/edit-expense/:id" element={<Page title="Edit Expense"><AppShell><ExpenseEdit /></AppShell></Page>} />
         <Route path="/edit-budget/:id" element={<Page title="Edit Budget"><AppShell><BudgetEdit /></AppShell></Page>} />
         <Route path="/edit-income/:id" element={<Page title="Edit Income"><AppShell><EditIncome /></AppShell></Page>} />

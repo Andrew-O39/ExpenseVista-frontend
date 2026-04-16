@@ -88,6 +88,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           <div className="app-shell-sidebar-section app-shell-sidebar-section--account">
             <div className="app-shell-sidebar-label">Account</div>
             <div className="app-shell-sidebar-links">
+              {sidebarLink("/help", "Help")}
               <button
                 type="button"
                 className="app-shell-sidebar-link app-shell-sidebar-link--logout"

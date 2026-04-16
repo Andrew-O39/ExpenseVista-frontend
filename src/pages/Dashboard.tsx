@@ -13,7 +13,7 @@ import { isTokenValid } from '../utils/auth';
 
 import BudgetVsExpensesChart from '../components/BudgetVsExpensesChart';
 import DashboardKpiCard from '../components/DashboardKpiCard';
-import DashboardSectionHeader from '../components/DashboardSectionHeader';
+import DashboardSection from '../components/DashboardSection';
 import DashboardMetricCard from '../components/DashboardMetricCard';
 import { formatMoney } from "../utils/currency";
 import { exportTableToPdf } from "../utils/pdfExport";
@@ -461,9 +461,12 @@ export default function Dashboard() {
   return (
     <div className="container container-app p-4 dashboard-page">
       <h1 className="app-shell-page-title mb-4">Overview</h1>
-      {/* Overview cards */}
       {overview && (
-        <section className="dashboard-section">
+        <DashboardSection
+          title="Key metrics"
+          collapsible={false}
+          subtitle="Income, expenses, and net"
+        >
           <div className="row g-3 dashboard-kpi-row">
             <div className="col-md-4">
               <DashboardKpiCard
@@ -538,11 +541,10 @@ export default function Dashboard() {
               />
             </div>
           </div>
-        </section>
+        </DashboardSection>
       )}
 
-      {/* Filters (top) */}
-      <section className="dashboard-section">
+      <DashboardSection title="Filters" defaultExpanded subtitle="Period and category">
         <div className="card shadow-sm dashboard-filters-card">
           <div className="card-body">
             <form
@@ -585,62 +587,85 @@ export default function Dashboard() {
             </form>
           </div>
         </div>
-      </section>
+      </DashboardSection>
 
-      {/* Spending summary + budgets + advanced reporting */}
-      <section className="dashboard-section">
-        <DashboardSectionHeader
+      {chartData.length === 0 ? (
+        <DashboardSection
           title="Spending by category"
+          defaultExpanded
           subtitle={
             <>
-              For {prettyPeriod(summary.period)}
-              {appliedCategory ? <> · focusing on <strong>{appliedCategory}</strong></> : null}
+              {prettyPeriod(summary.period)}
+              {appliedCategory ? (
+                <> · <strong>{appliedCategory}</strong></>
+              ) : null}
             </>
           }
-        />
-
-        {chartData.length === 0 ? (
-          <p className="text-muted">No results found for this filter.</p>
-        ) : (
-          <div className="card shadow-sm dashboard-chart-and-table-card dashboard-chart-card">
-            <div className="card-body">
-              <div className="row mb-4">
-                <div className="col-md-6" style={{ height: 300 }}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={chartData}
-                        dataKey="value"
-                        nameKey="name"
-                        cx="50%"
-                        cy="50%"
-                        outerRadius={100}
-                        label
-                      >
-                        {chartData.map((entry, index) => (
-                          <Cell
-                            key={`cell-${index}`}
-                            fill={
-                              entry.isOverspentNoBudget
-                                ? '#DC3545'
-                                : COLORS[index % COLORS.length]
-                            }
-                          />
-                        ))}
-                      </Pie>
-                      <Tooltip formatter={(val: number) => formatMoney(val)} />
-                      <Legend />
-                    </PieChart>
-                  </ResponsiveContainer>
-                  <div className="mt-2 small text-muted">
-                    <span style={{ color: '#DC3545', fontWeight: 'bold' }}>■</span>{' '}
-                    No budget set, but spending occurred
+        >
+          <p className="text-muted mb-0">No results found for this filter.</p>
+        </DashboardSection>
+      ) : (
+        <>
+          <DashboardSection
+            title="Spending by category"
+            defaultExpanded
+            subtitle={
+              <>
+                {prettyPeriod(summary.period)}
+                {appliedCategory ? (
+                  <> · <strong>{appliedCategory}</strong></>
+                ) : null}
+              </>
+            }
+          >
+            <div className="card shadow-sm dashboard-chart-and-table-card dashboard-chart-card">
+              <div className="card-body">
+                <div className="row mb-4">
+                  <div className="col-md-6" style={{ height: 300 }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={chartData}
+                          dataKey="value"
+                          nameKey="name"
+                          cx="50%"
+                          cy="50%"
+                          outerRadius={100}
+                          label
+                        >
+                          {chartData.map((entry, index) => (
+                            <Cell
+                              key={`cell-${index}`}
+                              fill={
+                                entry.isOverspentNoBudget
+                                  ? '#DC3545'
+                                  : COLORS[index % COLORS.length]
+                              }
+                            />
+                          ))}
+                        </Pie>
+                        <Tooltip formatter={(val: number) => formatMoney(val)} />
+                        <Legend />
+                      </PieChart>
+                    </ResponsiveContainer>
+                    <div className="mt-2 small text-muted">
+                      <span style={{ color: '#DC3545', fontWeight: 'bold' }}>■</span>{' '}
+                      No budget set, but spending occurred
+                    </div>
                   </div>
                 </div>
               </div>
+            </div>
+          </DashboardSection>
 
-              <div className="d-flex justify-content-between align-items-center mb-2 gap-2">
-                <h3 className="h6 mb-0">Budgets vs actual spending (table)</h3>
+          <DashboardSection
+            title="Budgets vs actual spending"
+            defaultExpanded
+            subtitle="Category table and budget vs expenses over time"
+          >
+            <div className="card shadow-sm dashboard-chart-and-table-card dashboard-chart-card">
+              <div className="card-body">
+              <div className="d-flex justify-content-end align-items-center mb-2 gap-2">
                 <button
                   type="button"
                   className="btn btn-outline-secondary btn-sm"
@@ -742,44 +767,39 @@ export default function Dashboard() {
                 </table>
               </div>
 
-              {/* Budget vs Expenses overview */}
               <div className="mt-4">
-                <h3 className="h6 mb-2">Budgets vs actual spending</h3>
-                <p className="text-muted small mb-3">
-                  Compare how your configured budgets track against real spending over time.
-                </p>
                 <BudgetVsExpensesChart
                   windowPeriod="yearly"
                   initialGroupBy="monthly"
-                  // category={appliedCategory || undefined}
                 />
               </div>
+            </div>
+          </div>
+          </DashboardSection>
 
-              {/* Income vs Expenses (grouped, independent) */}
-              <div className="mt-5">
-                <div className="dashboard-section-header mb-3">
-                  <div>
-                    <h3 className="dashboard-section-title mb-1">
-                      Income vs expenses over time
-                    </h3>
-                    <p className="dashboard-section-subtitle mb-0 text-muted">
-                      Aggregated yearly window, grouped by your selected interval.
-                    </p>
-                  </div>
-                  <div className="d-flex align-items-center gap-2">
-                    <label className="form-label mb-0">Group by</label>
-                    <select
-                      className="form-select form-select-sm w-auto"
-                      value={groupBy}
-                      onChange={(e) => setGroupBy(e.target.value as any)}
-                    >
-                      <option value="weekly">Weekly</option>
-                      <option value="monthly">Monthly</option>
-                      <option value="quarterly">Quarterly</option>
-                      <option value="half-yearly">Half-yearly</option>
-                    </select>
-                  </div>
-                </div>
+          <DashboardSection
+            title="Income vs expenses over time"
+            defaultExpanded={false}
+            subtitle="This year · grouped by interval"
+          >
+            <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+              <div className="d-flex align-items-center gap-2 ms-md-auto">
+                <label className="form-label mb-0" htmlFor="dashboard-group-by">
+                  Group by
+                </label>
+                <select
+                  id="dashboard-group-by"
+                  className="form-select form-select-sm w-auto"
+                  value={groupBy}
+                  onChange={(e) => setGroupBy(e.target.value as any)}
+                >
+                  <option value="weekly">Weekly</option>
+                  <option value="monthly">Monthly</option>
+                  <option value="quarterly">Quarterly</option>
+                  <option value="half-yearly">Half-yearly</option>
+                </select>
+              </div>
+            </div>
 
                 {/* Totals for grouped chart (independent) */}
                 <div className="row g-3 mb-3 dashboard-secondary-metrics">
@@ -908,11 +928,9 @@ export default function Dashboard() {
                     )}
                   </div>
                 </div>
-              </div>{/* /grouped section */}
-            </div>
-          </div>
-        )}
-      </section>
+          </DashboardSection>
+        </>
+      )}
     </div>
   );
 }

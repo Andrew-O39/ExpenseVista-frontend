@@ -398,8 +398,9 @@ ExpenseVista — **Personal Finance Simplified.**
 
 # 💬 Support
 
-🐙 **GitHub Issues:**  
-https://github.com/Andrew-O39/expense_vista/issues
+If you encounter any issues or have suggestions:  
+📧 **LinkedIn:** [LinkedIn](https://www.linkedin.com/in/andrew-owusu-backend/)  
+🐙 **GitHub Issues:** [github.com/Andrew-O39/expense_vista/issues](https://github.com/Andrew-O39/expense_vista/issues)
 
 ---
 
